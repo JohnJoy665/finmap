@@ -1,0 +1,14 @@
+# client
+client/node_modules
+client/dist
+
+# server (на будущее)
+server/node_modules
+
+# env
+.env
+.env.local
+
+# system
+.DS_Store
+Thumbs.db

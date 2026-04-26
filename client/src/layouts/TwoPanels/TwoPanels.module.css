@@ -1,0 +1,14 @@
+.container {
+    height: 100vh
+}
+
+.left {
+    width: 390px;
+    min-width: 390px;
+    max-width: 390px;
+}
+
+.right {
+    flex: 1;
+    border-left: 1px solid black;
+}
