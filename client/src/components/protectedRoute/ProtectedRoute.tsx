@@ -6,7 +6,7 @@ function ProtectedRoute() {
     const isAuth = useAuthStore(state => state.isAuth)
 
     if (!isAuth) {
-        return <Navigate to="Login/" replace/>
+        return <Navigate to="/login" replace/>
     }
     
     return <Outlet/>
