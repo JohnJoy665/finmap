@@ -1,7 +1,14 @@
+import { useAuthStore } from "../../store/authStore";
+
 function Login() {
-    return (
-        <p>Логин</p>
-    )
+  const login = useAuthStore((state) => state.login);
+
+  return (
+    <>
+      <p>Логин</p>
+      <button onClick={login}>Войти</button>
+    </>
+  );
 }
 
 export default Login;

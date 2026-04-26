@@ -13,10 +13,6 @@ function RightPanel() {
     return <Analytics />;
   }
 
-//   if (pathname.includes("settings")) {
-//     return <SettingsPreview />;
-//   }
-
   return null;
 }
 
