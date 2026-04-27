@@ -6,6 +6,8 @@
     width: 390px;
     min-width: 390px;
     max-width: 390px;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
 .right {
