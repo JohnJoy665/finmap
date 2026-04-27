@@ -10,5 +10,5 @@
 
 .right {
     flex: 1;
-    border-left: 1px solid black;
+    border-left: 1px solid var(--ant-color-border);
 }

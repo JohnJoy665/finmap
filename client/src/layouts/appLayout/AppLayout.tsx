@@ -1,13 +1,13 @@
-
 import { Outlet } from "react-router-dom";
 import Header from "../../components/header/Header";
+import style from "./AppLayout.module.css"
 
 function AppLayout() {
   return (
-    <>
-      <Header/>
+    <div className={style.wrapper}>
+      <Header />
       <Outlet />
-    </>
+    </div>
   );
 }
 

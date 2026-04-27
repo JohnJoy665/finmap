@@ -1,0 +1,4 @@
+.wrapper {
+    background: var(--ant-color-bg-layout);
+    min-height: 100%;
+  }
