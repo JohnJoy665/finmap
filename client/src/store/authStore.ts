@@ -1,19 +1,25 @@
 import { create } from "zustand";
+import { useUserStore } from "./userStore";
+
+type LoginPayLoad = {
+    id: number;
+    login: string;
+    mail: string;
+}
+
 
 type AuthState = {
-  isAuth: boolean;
-  login: () => void;
+  login: (user: LoginPayLoad) => void;
   logout: () => void;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuth: false,
+export const useAuthStore = create<AuthState>(() => ({
 
-  login: () => {
-    set({ isAuth: true });
+  login: (user: LoginPayLoad) => {
+    useUserStore.getState().setUser(user)
   },
 
   logout: () => {
-    set({ isAuth: false });
+    useUserStore.getState().clearUser();
   },
 }));

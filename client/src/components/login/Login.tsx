@@ -19,7 +19,11 @@ function Login() {
   function handleSubmit(values: LoginFormValues) {
     console.log(values);
 
-    login();
+    login({
+        id: Date.now(),
+        login: values.email,
+        mail: values.email
+    });
     navigate("/app/operations");
   }
 
