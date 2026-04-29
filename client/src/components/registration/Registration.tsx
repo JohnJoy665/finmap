@@ -2,10 +2,14 @@ import { Button, Form, Input } from "antd";
 import style from "./Registration.module.css";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import type { RuleObject } from "antd/es/form";
+import { Link } from "react-router-dom";
+
+const Item = Form.Item;
 
 type RegistrationFormValues = {
   email: string;
   password: string;
+  confirmPassword: string;
 };
 
 function handleSubmit(value: RegistrationFormValues) {
@@ -26,14 +30,14 @@ function validateConfirmPassword(
   };
 }
 
-function Registeration() {
+function Registration() {
   return (
     <div className={style.container}>
       <Form className={style.form} layout="vertical" onFinish={handleSubmit}>
-        <Form.Item>
-            <h1>Регистрация</h1>
-        </Form.Item>
-        <Form.Item
+        <Item>
+          <h1>Регистрация</h1>
+        </Item>
+        <Item
           name="email"
           rules={[
             { required: true, message: "Введите email" },
@@ -41,23 +45,19 @@ function Registeration() {
           ]}
         >
           <Input prefix={<MailOutlined />} placeholder="Email" />
-        </Form.Item>
+        </Item>
 
-        <Form.Item
+        <Item
           name="password"
           rules={[
             { required: true, message: "Введите пароль" },
             { min: 5, message: "Пароль не должен быть менее 5 символов" },
           ]}
         >
-          <Input
-            prefix={<LockOutlined />}
-            type="password"
-            placeholder="Password"
-          />
-        </Form.Item>
+          <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+        </Item>
 
-        <Form.Item
+        <Item
           name="confirmPassword"
           dependencies={["password"]}
           rules={[
@@ -66,22 +66,21 @@ function Registeration() {
             ({ getFieldValue }) => validateConfirmPassword(getFieldValue),
           ]}
         >
-          <Input
+          <Input.Password
             prefix={<LockOutlined />}
-            type="password"
             placeholder="Повторите пароль"
           />
-        </Form.Item>
+        </Item>
 
-        <Form.Item>
+        <Item>
           <Button block type="primary" htmlType="submit">
             Регистрация
           </Button>
-          или <a href="/login">Войти если есть логин</a>
-        </Form.Item>
+          или <Link to={"/login"}>войти под своим логином</Link>
+        </Item>
       </Form>
     </div>
   );
 }
 
-export default Registeration;
+export default Registration;

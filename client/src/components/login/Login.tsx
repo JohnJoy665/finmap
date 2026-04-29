@@ -1,9 +1,11 @@
 import { Button, Form, Input } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import style from "./Login.module.css";
 // import type { RuleObject } from "antd/es/form";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
+
+const Item = Form.Item;
 
 type LoginFormValues = {
   email: string;
@@ -24,11 +26,11 @@ function Login() {
   return (
     <div className={style.container}>
       <Form className={style.form} layout="vertical" onFinish={handleSubmit}>
-        <Form.Item>
+        <Item>
           <h1>Вход</h1>
-        </Form.Item>
+        </Item>
 
-        <Form.Item
+        <Item
           name="email"
           rules={[
             { required: true, message: "Введите email" },
@@ -36,28 +38,24 @@ function Login() {
           ]}
         >
           <Input prefix={<MailOutlined />} placeholder="Email" />
-        </Form.Item>
+        </Item>
 
-        <Form.Item
+        <Item
           name="password"
           rules={[
             { required: true, message: "Введите пароль" },
             { min: 5, message: "Пароль не должен быть менее 5 символов" },
           ]}
         >
-          <Input
-            prefix={<LockOutlined />}
-            type="password"
-            placeholder="Password"
-          />
-        </Form.Item>
+          <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+        </Item>
 
-        <Form.Item>
+        <Item>
           <Button block type="primary" htmlType="submit">
             Войти
           </Button>
-          or <a href="/registeration">Регистрация!</a>
-        </Form.Item>
+          or <Link to={"/registration"}>Регистрация!</Link>
+        </Item>
       </Form>
     </div>
   );
