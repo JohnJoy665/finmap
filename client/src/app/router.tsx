@@ -5,7 +5,7 @@ import Main from "../pages/main/Main";
 import Operations from "../components/operations/Operations";
 import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import AppLayout from "../layouts/appLayout/AppLayout";
-import Registeration from "../components/registeration/Registeration";
+import Registration from "../components/registration/Registration";
 
 export const router = createBrowserRouter([
   {
@@ -21,8 +21,8 @@ export const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "registeration",
-        element: <Registeration />,
+        path: "registration",
+        element: <Registration />,
       },
       {
         path: "app",
