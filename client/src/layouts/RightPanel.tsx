@@ -5,7 +5,7 @@ import Analytics from "../components/analytics/Analytics";
 function RightPanel() {
   const { pathname } = useLocation();
 
-  if (pathname.includes("login") || pathname.includes("register")) {
+  if (pathname.includes("login") || pathname.includes("registration")) {
     return <Preview />;
   }
 
