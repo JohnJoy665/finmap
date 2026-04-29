@@ -54,7 +54,7 @@ function Login() {
           <Button block type="primary" htmlType="submit">
             Войти
           </Button>
-          or <Link to={"/registeration"}>Регистрация!</Link>
+          or <Link to={"/registration"}>Регистрация!</Link>
         </Item>
       </Form>
     </div>
