@@ -20,20 +20,24 @@ export const router = createBrowserRouter([
       {
         element: <FreeRoute />,
         children: [
-            {
-                path: "login",
-                element: <Login />,
-              },
-              {
-                path: "registration",
-                element: <Registration />,
-              },
-        ]
+          {
+            path: "login",
+            element: <Login />,
+          },
+          {
+            path: "registration",
+            element: <Registration />,
+          },
+        ],
       },
       {
         path: "app",
         element: <ProtectedRoute />,
         children: [
+          {
+            index: true,
+            element: <Navigate to="/app/operations" replace />,
+          },
           {
             element: <AppLayout />,
             children: [

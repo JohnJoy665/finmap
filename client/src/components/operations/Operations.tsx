@@ -1,7 +1,9 @@
+import SearchGroup from "../searchGroup/SearchGroup";
+
 function Operations() {
   return (
     <>
-      <p>Operations</p>
+      <SearchGroup></SearchGroup>
     </>
   );
 }
