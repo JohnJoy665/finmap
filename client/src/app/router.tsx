@@ -6,6 +6,7 @@ import Operations from "../components/operations/Operations";
 import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import AppLayout from "../layouts/appLayout/AppLayout";
 import Registration from "../components/registration/Registration";
+import FreeRoute from "../components/freeRoute/FreeRoute";
 
 export const router = createBrowserRouter([
   {
@@ -17,12 +18,17 @@ export const router = createBrowserRouter([
         element: <Navigate to="/login" replace />,
       },
       {
-        path: "login",
-        element: <Login />,
-      },
-      {
-        path: "registration",
-        element: <Registration />,
+        element: <FreeRoute />,
+        children: [
+            {
+                path: "login",
+                element: <Login />,
+              },
+              {
+                path: "registration",
+                element: <Registration />,
+              },
+        ]
       },
       {
         path: "app",

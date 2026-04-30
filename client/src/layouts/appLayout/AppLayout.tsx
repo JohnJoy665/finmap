@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
 import Header from "../../components/header/Header";
-import style from "./AppLayout.module.css"
+import { Flex } from "antd";
 
 function AppLayout() {
   return (
-    <div className={style.wrapper}>
+    <Flex vertical gap={'middle'}>
       <Header />
       <Outlet />
-    </div>
+    </Flex>
   );
 }
 
