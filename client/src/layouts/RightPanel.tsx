@@ -1,19 +1,16 @@
-import { useLocation } from "react-router-dom";
 import Preview from "../components/preview/Preview";
 import Analytics from "../components/analytics/Analytics";
+import { useUserStore } from "../store/userStore";
 
 function RightPanel() {
-  const { pathname } = useLocation();
+  const user = useUserStore((state) => state.user);
 
-  if (pathname.includes("login") || pathname.includes("registration")) {
+  if (!user) {
     return <Preview />;
   }
 
-  if (pathname.includes("operations")) {
-    return <Analytics />;
-  }
+  return <Analytics />;
 
-  return null;
 }
 
-export default RightPanel
+export default RightPanel;

@@ -3,11 +3,13 @@
 }
 
 .left {
+    background: var(--ant-color-bg-layout);
     width: 390px;
     min-width: 390px;
     max-width: 390px;
-    padding-left: 4px;
-    padding-right: 4px;
+    padding-left: 11px;
+    padding-right: 11px;
+    padding-top: 10px;
 }
 
 .right {
