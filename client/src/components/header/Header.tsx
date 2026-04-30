@@ -14,7 +14,7 @@ function Header() {
   return (
     <Flex align="center" justify={"space-between"} vertical={false}>
       <BalanceButton
-        amount={12345}
+        amount={0}
         currency={"RSD"}
         onClick={handleBalanceClick}
       />
