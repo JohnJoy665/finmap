@@ -1,5 +1,6 @@
-import { Flex, Grid } from "antd";
+import { Flex } from "antd";
 import style from "./TwoPanels.module.css";
+import useIsMobile from "../../hooks/useIsMobile";
 
 type TwoPanelsProps = {
   left: React.ReactNode;
@@ -7,9 +8,9 @@ type TwoPanelsProps = {
 };
 
 function TwoPanels({ left, right }: TwoPanelsProps) {
-  const { useBreakpoint } = Grid;
-  const screens = useBreakpoint();
-  const isMobile = !screens.sm;
+  const {isMobile} = useIsMobile();
+
+  console.log(isMobile + ' для значения sm')
 
   return (
     <Flex className={style.container} vertical={false}>
