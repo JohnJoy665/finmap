@@ -3,6 +3,8 @@
     height: 40px;
     border-radius: 50%;
     padding: 0;
+
+    background-color: var(--app-accent);
   
     display: flex;
     align-items: center;
@@ -11,7 +13,11 @@
     transition: opacity 0.2s ease;
   }
   
-  .button:hover {
+  .button:hover,
+  .button:focus,
+  .button:active {
+    background: var(--app-accent) !important;
+    border-color: var(--app-accent) !important;
     opacity: 0.8;
   }
   
