@@ -1,20 +1,22 @@
 import styles from "./GroupButton.module.css";
-import FoodIcon from "../../assets/icons/FoodIcon";
-import { Flex } from "antd";
+import type React from "react";
 
-function GroupButton() {
+type GroupButtonProps = {
+  id: string;
+  children: React.ReactNode;
+};
+
+function GroupButton({ id, children }: GroupButtonProps) {
+  function handleClick(id: string) {
+    console.log(id);
+  }
   return (
-    <button className={styles.button} type="button">
-      <span
-        className={styles.title}
-      >
-        Транспорт по Нови-Саду и другие отчаянные грыппы туристов
-      </span>
-      <Flex align="center" justify="center">
-        <FoodIcon />
-      </Flex>
-
-      <span className={styles.amount}>- 2 000 RSD</span>
+    <button
+      className={styles.button}
+      type="button"
+      onClick={() => handleClick(id)}
+    >
+      {children}
     </button>
   );
 }

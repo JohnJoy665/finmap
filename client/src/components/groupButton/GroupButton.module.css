@@ -4,10 +4,6 @@
     min-height: 83px;
     aspect-ratio: 1 / 1;
   
-    display: grid;
-    grid-template-rows: 1fr 1fr auto;
-    gap: var(--ant-margin-xs);
-  
     padding: 10px;
   
     border: 1px solid var(--app-accent);
@@ -15,53 +11,4 @@
     background: var(--ant-color-bg-layout);
   
     cursor: pointer;
-  }
-  
-  .title {
-    align-self: center;
-    justify-self: center;
-  
-    max-width: 100%;
-  
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 16.8px;
-    letter-spacing: 0;
-    color: var(--ant-color-text-secondary);
-  
-    text-align: center;
-  
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  
-    overflow: hidden;
-}
-
-  
-  .icon {
-    align-self: center;
-    justify-self: center;
-  
-    font-size: 36px;
-    color: var(--ant-color-primary);
-  }
-  
-  .amount {
-    justify-self: end;
-  
-    font-size: 9px;
-    line-height: 1;
-    color: var(--ant-color-error);
-  
-    white-space: nowrap;
-  }
-
-
-
-  @media (max-width: 330px) {
-    .title {
-        font-size: 10px;
-        line-height: 13.8px;
-    }
   }
