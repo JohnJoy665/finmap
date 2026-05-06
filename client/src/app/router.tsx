@@ -7,6 +7,7 @@ import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import AppLayout from "../layouts/appLayout/AppLayout";
 import Registration from "../components/registration/Registration";
 import FreeRoute from "../components/freeRoute/FreeRoute";
+import Purchase from "../components/purchase/Purchase";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
                 path: "operations",
                 element: <Operations />,
               },
+              {
+                path: "operations/purchase",
+                element: <Purchase />
+              }
             ],
           },
         ],
