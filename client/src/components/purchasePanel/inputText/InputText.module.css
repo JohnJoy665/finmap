@@ -1,53 +1,42 @@
-.groupNameItem :global(.ant-form-item-row) {
-    flex-direction: column-reverse;
-  }
-  
-  .groupNameItem :global(.ant-form-item-label) {
-    padding: 0;
-    text-align: left;
-  }
-  
-  .groupNameItem :global(.ant-form-item-label > label) {
-    height: auto;
-    font-size: 9px;
-    color: var(--ant-color-text-secondary);
-  }
-  
-  .groupNameItem :global(.ant-form-item-additional) {
-    min-height: 0 !important;
-  }
-  
-  .extra {
-    font-size: 12px;
-    color: var(--ant-color-text-secondary);
-  }
-  
-  .errorExtra {
-    font-size: 12px;
-    color: var(--ant-color-error);
-  }
-  
-  .groupNameInput {
+.field {
     padding: 0;
     border: none;
     box-shadow: none;
     border-bottom: 1px solid var(--app-accent);
     border-radius: 0;
-  
+
     font-size: 28px;
     color: var(--ant-color-text-secondary);
 
     overflow: hidden;
-  }
-  
-  .groupNameInput::placeholder {
+}
+
+.field::placeholder {
     color: var(--ant-color-text-secondary);
-  }
-  
-  .groupNameInput:hover,
-  .groupNameInput:focus {
+}
+
+:global(.ant-form-item-has-error) .field {
+    border-bottom: 1px solid var(--ant-color-error);
+    color: var(--ant-color-text-secondary);
+}
+
+.field:hover,
+.field:focus {
     border: none;
     box-shadow: none;
     border-bottom: 1px solid var(--app-accent);
     border-radius: 0;
+}
+
+.field__message {
+    font-size: 12px;
+}
+
+  .field__message--lable {
+    color: var(--ant-color-text-secondary);
   }
+  
+  .field__message--error {
+    color: var(--ant-color-error);
+  }
+  

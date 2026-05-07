@@ -1,31 +1,37 @@
-.amountInput {
+.amount-input {
     display: flex;
     flex-direction: column;
     gap: 25px;
 }
 
-.display__container {
+.amount-input__display-container {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.display {
+.mount-input__display {
     font-size: 50px;
     display: flex;
     justify-content: center;
 }
 
-.display--empty {
+.mount-input__display--empty {
     color: var(--ant-color-text-disabled);
 }
 
-.display--full {
+.mount-input__display--full {
     color: var(--ant-color-text-secondary);
 }
 
-.display__message {
-    height: auto;
+.field__message {
     font-size: 12px;
+}
+
+.field__message--lable {
     color: var(--ant-color-text-secondary);
+}
+
+.field__message--error {
+    color: var(--ant-color-error);
 }

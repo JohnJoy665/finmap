@@ -2,54 +2,28 @@ import { Form, Input } from "antd";
 import styles from "./InputText.module.css";
 
 type InputTextProps = {
-  name: string;
-  placeholder?: string;
-  rules?: any[];
+  value?: string;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   autoFocus?: boolean;
-  extra?: string;
+  label: string;
 };
 
-function InputText({
-  name,
-  placeholder,
-  rules,
-  autoFocus,
-  extra,
-}: InputTextProps) {
-  const form = Form.useFormInstance();
+function InputText({ autoFocus, label, onChange, value }: InputTextProps) {
+  const { status, errors } = Form.Item.useStatus();
 
-  console.log('рендер формы инаута')
+  const message = status === "error" ? errors[0] : label;
 
   return (
-    <Form.Item noStyle shouldUpdate>
-      {() => {
-        const errors = form.getFieldError(name);
-        const errorMessage = errors[0];
-
-        return (
-          <Form.Item
-            className={styles.groupNameItem}
-            name={name}
-            rules={rules}
-            help=""
-            validateStatus={errorMessage ? "error" : undefined}
-            extra={
-              <span className={errorMessage ? styles.errorExtra : styles.extra}>
-                {errorMessage || extra}
-              </span>
-            }
- 
-          >
-            <Input
-              className={styles.groupNameInput}
-              placeholder={placeholder}
-              autoFocus={autoFocus}
-              variant="borderless"
-            />
-          </Form.Item>
-        );
-      }}
-    </Form.Item>
+    <>
+      <Input
+        onChange={onChange}
+        value={value}
+        className={styles.field}
+        autoFocus={autoFocus}
+        variant="borderless"
+      />
+      <span className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles['field__message--lable']}`}>{message}</span>
+    </>
   );
 }
 

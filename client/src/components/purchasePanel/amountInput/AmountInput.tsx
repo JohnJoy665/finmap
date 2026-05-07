@@ -5,12 +5,13 @@ import styles from "./AmountInput.module.css";
 type AmountInputProps = {
   value?: string;
   onChange?: (value: string) => void;
+  label: string;
 };
 
-function AmountInput({ value = "", onChange }: AmountInputProps) {
-  const { errors } = Form.Item.useStatus();
+function AmountInput({ value = "", onChange, label }: AmountInputProps) {
+  const { status, errors } = Form.Item.useStatus();
 
-  const errorMessage = errors[0];
+  const message = status === "error" ? errors[0] : label;
 
   function handlePress(key: string) {
     if (key === "<") {
@@ -24,21 +25,19 @@ function AmountInput({ value = "", onChange }: AmountInputProps) {
   }
 
   return (
-    <div className={styles.amountInput}>
-      <div className={styles.display__container}>
+    <div className={styles["amount-input"]}>
+      <div className={styles["amount-input__display-container"]}>
         <div
-          className={`${styles.display} ${
+          className={`${styles['mount-input__display']} ${
             value === ""
-              ? styles["display--empty"]
-              : styles["display--full"]
+              ? styles["mount-input__display--empty"]
+              : styles["mount-input__display--full"]
           }`}
         >
           {value || "00.00"}
         </div>
 
-        <span className={styles.display__message}>
-          {errorMessage || "Вот"}
-        </span>
+        <span className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles['field__message--lable']}`}>{message}</span>
       </div>
 
       <AmountKeyboard onPress={handlePress} />

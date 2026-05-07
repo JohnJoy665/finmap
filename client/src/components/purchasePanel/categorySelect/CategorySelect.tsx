@@ -1,56 +1,29 @@
 import { Form, Select } from "antd";
 import styles from "./CategorySelect.module.css";
 
-// type CategoryOption = {
-//     value: string;
-//     label: string;
-// }
-
 type CategorySelectProps = {
-  extra: string;
-  name: string;
-  placeholder: string;
-  // options: CategoryOption[];
-  rules: any[];
+  label: string;
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
-function CategorySelect({
-  extra,
-  name,
-  placeholder,
-  rules,
-}: CategorySelectProps) {
-  const form = Form.useFormInstance();
-  return (
-    <Form.Item noStyle shouldUpdate>
-      {() => {
-        const errors = form.getFieldError(name);
-        const errorMessage = errors[0];
+function CategorySelect({ label, value, onChange }: CategorySelectProps) {
+  const { status, errors } = Form.Item.useStatus();
 
-        return (
-          <Form.Item className={styles.groupNameItem}
-            extra={
-              <span className={errorMessage ? styles.errorExtra : styles.extra}>
-                {errorMessage || extra}
-              </span>
-            }
-            name={name}
-            rules={rules}
-            help=""
-            validateStatus={errorMessage ? "error" : undefined}
-          >
-            <Select
-              className={styles.groupNameSelect}
-              placeholder={placeholder}
-              options={[
-                { value: "ENT", label: "Развлечения" },
-                { value: "GRO", label: "Продукты питания" },
-              ]}
-            />
-          </Form.Item>
-        );
-      }}
-    </Form.Item>
+  const message = status === "error" ? errors[0] : label;
+  return (
+    <>
+      <Select
+        className={styles.field}
+        value={value}
+        onChange={onChange}
+        options={[
+          { value: "ENT", label: "Развлечения" },
+          { value: "GRO", label: "Продукты питания" },
+        ]}
+      />
+      <span className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles['field__message--lable']}`}>{message}</span>
+    </>
   );
 }
 

@@ -25,26 +25,30 @@ function PurchaseFrom() {
       layout="vertical"
       onFinish={handleFinish}
     >
-      <InputText
-        name="groupName"
-        extra="Название группы"
+      <Form.Item
+        className={styles.form__item}
+        name={"groupName"}
+        help={null}
         rules={[
           { required: true, message: "Заполните название группы" },
           { max: 25, message: "Достигнуто макисмальное число символов" },
         ]}
-        autoFocus
-      />
-
-      <CategorySelect
-        extra={"Категория"}
-        name={"category"}
-        placeholder={"Выберите категорию"}
-        rules={[{ required: true, message: "Выберите категорию" }]}
-      />
+      >
+        <InputText autoFocus={true} label={"Название группы"} />
+      </Form.Item>
 
       <Form.Item
+        className={styles.form__item}
+        name={"category"}
+        help={null}
+        rules={[{ required: true, message: "Выберите категорию" }]}
+      >
+        <CategorySelect label={"Категория"} />
+      </Form.Item>
+
+      <Form.Item
+      className={styles.form__item}
         name="amount"
-        help=""
         rules={[
           {
             validator: (_, value) => {
@@ -57,7 +61,7 @@ function PurchaseFrom() {
           },
         ]}
       >
-        <AmountInput />
+        <AmountInput label={"Сумма покупки"}/>
       </Form.Item>
 
       <Flex gap="middle">
@@ -74,3 +78,30 @@ function PurchaseFrom() {
 }
 
 export default PurchaseFrom;
+
+// autoFocus
+// />
+
+// <CategorySelect
+//   extra={"Категория"}
+//   name={"category"}
+//   placeholder={"Выберите категорию"}
+//   rules={[{ required: true, message: "Выберите категорию" }]}
+// />
+
+// <Form.Item
+//   name="amount"
+//   help=""
+//   rules={[
+//     {
+//       validator: (_, value) => {
+//         if (!value || Number(value) <= 0) {
+//           return Promise.reject(new Error("Введите сумму покупки"));
+//         }
+
+//         return Promise.resolve();
+//       },
+//     },
+//   ]}
+// >
+//   <AmountInput />
