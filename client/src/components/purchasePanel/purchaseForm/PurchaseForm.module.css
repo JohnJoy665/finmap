@@ -3,3 +3,11 @@
     flex-direction: column;
     gap: 25px
 }
+
+.form__item {
+    margin: 0 !important;
+}
+
+.form__item :global(.ant-form-item-additional) {
+    display: none;
+  }
