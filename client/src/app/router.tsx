@@ -7,7 +7,7 @@ import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
 import AppLayout from "../layouts/appLayout/AppLayout";
 import Registration from "../components/registration/Registration";
 import FreeRoute from "../components/freeRoute/FreeRoute";
-import Purchase from "../components/purchase/Purchase";
+import Purchase from "../components/purchasePanel/purchase/Purchase";
 
 export const router = createBrowserRouter([
   {
