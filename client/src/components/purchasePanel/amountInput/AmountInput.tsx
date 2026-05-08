@@ -28,10 +28,10 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
     <div className={styles["amount-input"]}>
       <div className={styles["amount-input__display-container"]}>
         <div
-          className={`${styles['mount-input__display']} ${
+          className={`${styles['amount-input__display']} ${
             value === ""
-              ? styles["mount-input__display--empty"]
-              : styles["mount-input__display--full"]
+              ? styles["amount-input__display--empty"]
+              : styles["amount-input__display--full"]
           }`}
         >
           {value || "00.00"}

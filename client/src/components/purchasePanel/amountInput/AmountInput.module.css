@@ -10,17 +10,17 @@
     gap: 2px;
 }
 
-.mount-input__display {
+.amount-input__display {
     font-size: 50px;
     display: flex;
     justify-content: center;
 }
 
-.mount-input__display--empty {
+.amount-input__display--empty {
     color: var(--ant-color-text-disabled);
 }
 
-.mount-input__display--full {
+.amount-input__display--full {
     color: var(--ant-color-text-secondary);
 }
 
