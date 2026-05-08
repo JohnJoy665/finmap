@@ -29,6 +29,7 @@
 
 .field__message {
     font-size: 12px;
+    display: block;
 }
 
 .field__message--lable {
