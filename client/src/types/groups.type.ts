@@ -5,5 +5,6 @@ export type Group = {
     title: string;
     category_icon: string;
     category_description: string;
+    category_id: string;
     amount: number;
 }

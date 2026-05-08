@@ -4,18 +4,65 @@ import AmountInput from "../amountInput/AmountInput";
 import InputText from "../inputText/InputText";
 import styles from "./PurchaseForm.module.css";
 import CategorySelect from "../categorySelect/CategorySelect";
+import { useState } from "react";
+import FieldTemplate from "../fieldTemplate/FieldTemplate";
 
-function PurchaseFrom() {
+type Group = {
+  groupName?: string;
+  groupId?: string;
+  isShowingTemplate?: boolean;
+};
+
+type Category = {
+  categoryName?: string;
+  categoryId?: string;
+  isShowingTemplate?: boolean;
+};
+
+type PurchaseFormProps = {
+  group?: Group;
+  category?: Category;
+};
+
+function PurchaseForm({ group, category }: PurchaseFormProps) {
+  const [isEditingCategory, setIsEditingCategory] = useState(category !== undefined);
+
   const [form] = Form.useForm();
+  const selectedCategory = Form.useWatch("category", form);
+
   const navigate = useNavigate();
 
+  function handleEditCategory() {
+    setIsEditingCategory(false);
+
+    form.setFieldsValue({
+      category: category.categoryId,
+    });
+  }
+
   function handleCancel() {
-    form.resetFields();
     navigate("/app/operations");
+    form.resetFields();
   }
 
   function handleFinish(values: string) {
     console.log(values);
+  }
+
+  function amountValidate(_, value: string) {
+    if (!value) {
+      return Promise.reject(new Error("Введите сумму покупки"));
+    }
+
+    if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+      return Promise.reject(new Error("Некорректный формат суммы"));
+    }
+
+    if (Number(value) <= 0) {
+      return Promise.reject(new Error("Сумма должна быть больше 0"));
+    }
+
+    return Promise.resolve();
   }
 
   return (
@@ -25,43 +72,51 @@ function PurchaseFrom() {
       layout="vertical"
       onFinish={handleFinish}
     >
-      <Form.Item
-        className={styles.form__item}
-        name={"groupName"}
-        help={null}
-        rules={[
-          { required: true, message: "Заполните название группы" },
-          { max: 25, message: "Достигнуто макисмальное число символов" },
-        ]}
-      >
-        <InputText autoFocus={true} label={"Название группы"} />
-      </Form.Item>
+      {group ? (
+        <FieldTemplate label={"Название группы"} fieldName={group.groupName} />
+      ) : (
+        <Form.Item
+          className={styles.form__item}
+          name={"groupName"}
+          help={null}
+          rules={[
+            { required: true, message: "Заполните название группы" },
+            { max: 25, message: "Достигнуто макисмальное число символов" },
+          ]}
+        >
+          <InputText autoFocus={true} label={"Название группы"} />
+        </Form.Item>
+      )}
+
+      {category && isEditingCategory ? (
+        <FieldTemplate
+          fieldName={category.categoryName}
+          onClick={handleEditCategory}
+          label={"Категория группы (можно изменить категорию покупки)"}
+        />
+      ) : (
+        <Form.Item
+          className={styles.form__item}
+          name={"category"}
+          help={null}
+          rules={[{ required: true, message: "Выберите категорию" }]}
+        >
+          <CategorySelect
+            label={
+              !category || selectedCategory === category.categoryId
+                ? "Категория группы"
+                : "Категория покупки"
+            }
+          />
+        </Form.Item>
+      )}
 
       <Form.Item
         className={styles.form__item}
-        name={"category"}
-        help={null}
-        rules={[{ required: true, message: "Выберите категорию" }]}
-      >
-        <CategorySelect label={"Категория"} />
-      </Form.Item>
-
-      <Form.Item
-      className={styles.form__item}
         name="amount"
-        rules={[
-          {
-            validator: (_, value) => {
-              if (!value || Number(value) <= 0) {
-                return Promise.reject(new Error("Введите сумму покупки"));
-              }
-
-              return Promise.resolve();
-            },
-          },
-        ]}
+        rules={[{ validator: amountValidate }]}
       >
-        <AmountInput label={"Сумма покупки"}/>
+        <AmountInput label={"Сумма покупки"} />
       </Form.Item>
 
       <Flex gap="middle">
@@ -77,31 +132,4 @@ function PurchaseFrom() {
   );
 }
 
-export default PurchaseFrom;
-
-// autoFocus
-// />
-
-// <CategorySelect
-//   extra={"Категория"}
-//   name={"category"}
-//   placeholder={"Выберите категорию"}
-//   rules={[{ required: true, message: "Выберите категорию" }]}
-// />
-
-// <Form.Item
-//   name="amount"
-//   help=""
-//   rules={[
-//     {
-//       validator: (_, value) => {
-//         if (!value || Number(value) <= 0) {
-//           return Promise.reject(new Error("Введите сумму покупки"));
-//         }
-
-//         return Promise.resolve();
-//       },
-//     },
-//   ]}
-// >
-//   <AmountInput />
+export default PurchaseForm;
