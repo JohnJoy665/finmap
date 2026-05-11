@@ -14,7 +14,6 @@ type LoginFormValues = {
 };
 
 function Login() {
-  //   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
   async function handleSubmit(values: LoginFormValues) {
