@@ -1,25 +1,27 @@
 import { create } from "zustand";
-import { useUserStore } from "./userStore";
-
-type LoginPayLoad = {
-    id: number;
-    login: string;
-    mail: string;
-}
+import type { User } from "../types/user.type";
+import { persist } from "zustand/middleware";
 
 
 type AuthState = {
-  login: (user: LoginPayLoad) => void;
-  logout: () => void;
-};
+    user: User | null;
+    token: string | null;
+    setAuth: (payload: { user: User; token: string }) => void;
+    logout: () => void;
+  };
 
-export const useAuthStore = create<AuthState>(() => ({
-
-  login: (user: LoginPayLoad) => {
-    useUserStore.getState().setUser(user)
-  },
-
-  logout: () => {
-    useUserStore.getState().clearUser();
-  },
-}));
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            user: null,
+            token: null,
+            setAuth: ({user, token}) => {
+                set({user, token})
+            },
+            logout: () => {
+                set({user: null, token: null})
+            },
+        }),
+        {name: "auth-storage"}
+    )
+);

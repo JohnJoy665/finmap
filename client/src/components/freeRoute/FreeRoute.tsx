@@ -1,8 +1,8 @@
 import { Navigate, Outlet  } from "react-router-dom";
-import { useUserStore } from "../../store/userStore";
+import { useAuthStore } from "../../store/authStore";
 
 function FreeRoute() {
-    const user = useUserStore((state) => state.user);
+    const user = useAuthStore((state) => state.user);
 
     if (!user) {
         return <Outlet/>

@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/authStore";
 import style from "./Login.module.css";
 // import type { RuleObject } from "antd/es/form";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
+import { loginRequest } from "../../api/authApi";
 
 const Item = Form.Item;
 
@@ -13,18 +14,24 @@ type LoginFormValues = {
 };
 
 function Login() {
-  const login = useAuthStore((state) => state.login);
+//   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
-  function handleSubmit(values: LoginFormValues) {
-    console.log(values);
+  async function handleSubmit(values: LoginFormValues) {
+    try {
+        const data = await loginRequest(values);
 
-    login({
-        id: Date.now(),
-        login: values.email,
-        mail: values.email
-    });
-    navigate("/app/operations");
+        useAuthStore.getState().setAuth({
+            user: data.user,
+            token: data.token,
+        })
+
+        navigate("/app/operations");
+    } catch (error) {
+        console.log(error);
+    }
+
+
   }
 
   return (
