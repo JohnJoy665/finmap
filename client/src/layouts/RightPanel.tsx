@@ -10,7 +10,6 @@ function RightPanel() {
   }
 
   return <Analytics />;
-
 }
 
 export default RightPanel;

@@ -1,49 +1,49 @@
 .button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
 
-    background-color: var(--app-accent);
-  
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  
-    transition: opacity 0.2s ease;
-  }
-  
-  .button:hover,
-  .button:focus,
-  .button:active {
-    background: var(--app-accent) !important;
-    border-color: var(--app-accent) !important;
-    opacity: 0.8;
-  }
-  
-  /* бургер-иконка */
-  .icon {
-    width: 16px;
-    height: 2px;
-    background: white;
-    position: relative;
-    display: block;
-  }
-  
-  .icon::before,
-  .icon::after {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 2px;
-    background: white;
-    left: 0;
-  }
-  
-  .icon::before {
-    top: -5px;
-  }
-  
-  .icon::after {
-    top: 5px;
-  }
+  background-color: var(--app-accent);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: opacity 0.2s ease;
+}
+
+.button:hover,
+.button:focus,
+.button:active {
+  background: var(--app-accent) !important;
+  border-color: var(--app-accent) !important;
+  opacity: 0.8;
+}
+
+/* бургер-иконка */
+.icon {
+  width: 16px;
+  height: 2px;
+  background: white;
+  position: relative;
+  display: block;
+}
+
+.icon::before,
+.icon::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 2px;
+  background: white;
+  left: 0;
+}
+
+.icon::before {
+  top: -5px;
+}
+
+.icon::after {
+  top: 5px;
+}

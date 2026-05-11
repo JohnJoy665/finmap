@@ -1,41 +1,40 @@
 .field {
-    padding: 0;
-    border: none;
-    box-shadow: none;
-    border-bottom: 1px solid var(--app-accent);
-    border-radius: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  border-bottom: 1px solid var(--app-accent);
+  border-radius: 0;
 
-    font-size: 28px;
-    color: var(--ant-color-text-secondary);
-
+  font-size: 28px;
+  color: var(--ant-color-text-secondary);
 }
 
 .field::placeholder {
-    color: var(--ant-color-text-secondary);
+  color: var(--ant-color-text-secondary);
 }
 
 :global(.ant-form-item-has-error) .field {
-    border-bottom: 1px solid var(--ant-color-error);
-    color: var(--ant-color-text-secondary);
+  border-bottom: 1px solid var(--ant-color-error);
+  color: var(--ant-color-text-secondary);
 }
 
 .field:hover,
 .field:focus {
-    border: none;
-    box-shadow: none;
-    border-bottom: 1px solid var(--app-accent);
-    border-radius: 0;
+  border: none;
+  box-shadow: none;
+  border-bottom: 1px solid var(--app-accent);
+  border-radius: 0;
 }
 
 .field__message {
-    font-size: 12px;
-    display: block;
+  font-size: 12px;
+  display: block;
 }
 
 .field__message--lable {
-    color: var(--ant-color-text-secondary);
+  color: var(--ant-color-text-secondary);
 }
 
 .field__message--error {
-    color: var(--ant-color-error);
+  color: var(--ant-color-error);
 }

@@ -1,22 +1,22 @@
 .preview {
-    width: 100%;
-    height: 100%;
-    min-height: 100vh;
-  
-    background-image: url(../../assets/images/preview-bg.png);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  
-    overflow: hidden;
-  }
-  
-  .preview__content {
-    max-width: 520px;
-    text-align: center;
-    color: white;
-  }
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+
+  background-image: url(../../assets/images/preview-bg.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.preview__content {
+  max-width: 520px;
+  text-align: center;
+  color: white;
+}

@@ -12,16 +12,15 @@ type LoginResponse = {
 };
 
 type MeResponse = {
-    user: User;
-  };
-
+  user: User;
+};
 
 export async function loginRequest(data: LoginDto) {
-    const response = await apiClient.post<LoginResponse>("/auth/login", data);
-    return response.data;
+  const response = await apiClient.post<LoginResponse>("/auth/login", data);
+  return response.data;
 }
 
 export async function meResponse() {
-    const response = await apiClient.get<MeResponse>("/me")
-    return response.data;
+  const response = await apiClient.get<MeResponse>("/me");
+  return response.data;
 }

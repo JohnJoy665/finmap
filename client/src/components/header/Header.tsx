@@ -13,11 +13,7 @@ function Header() {
 
   return (
     <Flex align="center" justify={"space-between"} vertical={false}>
-      <BalanceButton
-        amount={0}
-        currency={"RSD"}
-        onClick={handleBalanceClick}
-      />
+      <BalanceButton amount={0} currency={"RSD"} onClick={handleBalanceClick} />
       <Flex
         className={style.header__right}
         align="center"
