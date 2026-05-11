@@ -2,25 +2,24 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type User = {
-    id: number;
-    login: string;
-    mail: string;
-}
+  id: number;
+  login: string;
+  mail: string;
+};
 
 type UserState = {
-    user: User | null;
-    setUser: (user: User) => void;
-    clearUser: () => void;
-}
+  user: User | null;
+  setUser: (user: User) => void;
+  clearUser: () => void;
+};
 
 export const useUserStore = create<UserState>()(
-    persist(
-        (set) => ({
-            user: null,
-            setUser: (user) => set({user}),
-            clearUser: () => set({user: null})
-        }),
-        {name: "user-storage"}
-    )
-)
-
+  persist(
+    (set) => ({
+      user: null,
+      setUser: (user) => set({ user }),
+      clearUser: () => set({ user: null }),
+    }),
+    { name: "user-storage" }
+  )
+);

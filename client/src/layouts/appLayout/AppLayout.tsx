@@ -4,7 +4,7 @@ import { Flex } from "antd";
 
 function AppLayout() {
   return (
-    <Flex vertical gap={'large'}>
+    <Flex vertical gap={"large"}>
       <Header />
       <Outlet />
     </Flex>

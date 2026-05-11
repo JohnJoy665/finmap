@@ -6,11 +6,7 @@ function MenuButton() {
   const logout = useAuthStore((state) => state.logout);
 
   return (
-    <Button
-      onClick={logout}
-      type="text"
-      className={styles.button}
-    >
+    <Button onClick={logout} type="text" className={styles.button}>
       <span className={styles.icon} />
     </Button>
   );

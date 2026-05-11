@@ -25,7 +25,9 @@ type PurchaseFormProps = {
 };
 
 function PurchaseForm({ group, category }: PurchaseFormProps) {
-  const [isEditingCategory, setIsEditingCategory] = useState(category !== undefined);
+  const [isEditingCategory, setIsEditingCategory] = useState(
+    category !== undefined
+  );
 
   const [form] = Form.useForm();
   const selectedCategory = Form.useWatch("category", form);

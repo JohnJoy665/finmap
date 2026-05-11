@@ -9,8 +9,8 @@ createRoot(document.getElementById("root")!).render(
     <ConfigProvider
       theme={{
         cssVar: {
-            prefix: "ant",
-          },
+          prefix: "ant",
+        },
       }}
     >
       <App />

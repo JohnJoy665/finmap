@@ -1,29 +1,29 @@
 .container {
-    height: 100vh
+  height: 100vh;
 }
 
 .left {
-    /* background: var(--ant-color-bg-layout); */
+  /* background: var(--ant-color-bg-layout); */
 }
 
 .left--desctop {
-    width: 390px;
-    min-width: 390px;
-    max-width: 390px;
-    padding-left: 11px;
-    padding-right: 11px;
-    padding-top: 10px;
+  width: 390px;
+  min-width: 390px;
+  max-width: 390px;
+  padding-left: 11px;
+  padding-right: 11px;
+  padding-top: 10px;
 }
 
 .left--mobile {
-    width: 100%;
-    min-width: 290px;
-    padding-left: 11px;
-    padding-right: 11px;
-    padding-top: 10px;
+  width: 100%;
+  min-width: 290px;
+  padding-left: 11px;
+  padding-right: 11px;
+  padding-top: 10px;
 }
 
 .right {
-    flex: 1;
-    border-left: 1px solid var(--ant-color-border);
+  flex: 1;
+  border-left: 1px solid var(--ant-color-border);
 }

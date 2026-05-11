@@ -14,24 +14,22 @@ type LoginFormValues = {
 };
 
 function Login() {
-//   const login = useAuthStore((state) => state.login);
+  //   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
   async function handleSubmit(values: LoginFormValues) {
     try {
-        const data = await loginRequest(values);
+      const data = await loginRequest(values);
 
-        useAuthStore.getState().setAuth({
-            user: data.user,
-            token: data.token,
-        })
+      useAuthStore.getState().setAuth({
+        user: data.user,
+        token: data.token,
+      });
 
-        navigate("/app/operations");
+      navigate("/app/operations");
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
-
-
   }
 
   return (

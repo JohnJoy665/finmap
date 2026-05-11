@@ -1,14 +1,14 @@
 .button {
-    width: 100%;
-    min-width: 83px;
-    min-height: 83px;
-    aspect-ratio: 1 / 1;
-  
-    padding: 10px;
-  
-    border: 1px solid var(--app-accent);
-    border-radius: var(--ant-border-radius);
-    background: var(--ant-color-bg-layout);
-  
-    cursor: pointer;
-  }
+  width: 100%;
+  min-width: 83px;
+  min-height: 83px;
+  aspect-ratio: 1 / 1;
+
+  padding: 10px;
+
+  border: 1px solid var(--app-accent);
+  border-radius: var(--ant-border-radius);
+  background: var(--ant-color-bg-layout);
+
+  cursor: pointer;
+}

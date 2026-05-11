@@ -28,7 +28,7 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
     <div className={styles["amount-input"]}>
       <div className={styles["amount-input__display-container"]}>
         <div
-          className={`${styles['amount-input__display']} ${
+          className={`${styles["amount-input__display"]} ${
             value === ""
               ? styles["amount-input__display--empty"]
               : styles["amount-input__display--full"]
@@ -37,7 +37,11 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
           {value || "00.00"}
         </div>
 
-        <span className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles['field__message--lable']}`}>{message}</span>
+        <span
+          className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles["field__message--lable"]}`}
+        >
+          {message}
+        </span>
       </div>
 
       <AmountKeyboard onPress={handlePress} />

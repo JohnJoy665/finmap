@@ -1,32 +1,32 @@
 .button {
-    height: 40px;
-  
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding-left: 0;
-    padding-right: 0;
-  
-    background: transparent !important;
-  }
-  
-  .button:hover,
-  .button:focus {
-    background: transparent !important;
-  }
-  
-  .button:hover .amount {
-    opacity: 0.6;
-  }
-  
-  .amount {
-    font-size: var(--ant-font-size-heading-4);
-    font-weight: var(--ant-font-weight-strong);
-    color: var(--ant-color-success);
-    transition: opacity 0.2s ease;
-  }
-  
-  .icon {
-    font-size: var(--ant-font-size);
-    color: var(--ant-color-success);
-  }
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 0;
+  padding-right: 0;
+
+  background: transparent !important;
+}
+
+.button:hover,
+.button:focus {
+  background: transparent !important;
+}
+
+.button:hover .amount {
+  opacity: 0.6;
+}
+
+.amount {
+  font-size: var(--ant-font-size-heading-4);
+  font-weight: var(--ant-font-weight-strong);
+  color: var(--ant-color-success);
+  transition: opacity 0.2s ease;
+}
+
+.icon {
+  font-size: var(--ant-font-size);
+  color: var(--ant-color-success);
+}

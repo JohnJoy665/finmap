@@ -1,37 +1,37 @@
 .amount-input {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
 .amount-input__display-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .amount-input__display {
-    font-size: 50px;
-    display: flex;
-    justify-content: center;
+  font-size: 50px;
+  display: flex;
+  justify-content: center;
 }
 
 .amount-input__display--empty {
-    color: var(--ant-color-text-disabled);
+  color: var(--ant-color-text-disabled);
 }
 
 .amount-input__display--full {
-    color: var(--ant-color-text-secondary);
+  color: var(--ant-color-text-secondary);
 }
 
 .field__message {
-    font-size: 12px;
+  font-size: 12px;
 }
 
 .field__message--lable {
-    color: var(--ant-color-text-secondary);
+  color: var(--ant-color-text-secondary);
 }
 
 .field__message--error {
-    color: var(--ant-color-error);
+  color: var(--ant-color-error);
 }

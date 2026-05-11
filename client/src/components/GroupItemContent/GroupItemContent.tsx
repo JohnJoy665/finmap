@@ -1,5 +1,5 @@
 import { Flex } from "antd";
-import styles from "./GroupItemContent.module.css"
+import styles from "./GroupItemContent.module.css";
 
 type GroupItemContentProps = {
   title: string;
@@ -19,6 +19,5 @@ function GroupItemContent({ title, amount, Icon }: GroupItemContentProps) {
     </div>
   );
 }
-
 
 export default GroupItemContent;

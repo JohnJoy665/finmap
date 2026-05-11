@@ -4,12 +4,7 @@ type AmountKeyboardProps = {
   onPress: (key: string) => void;
 };
 
-const keys = [
-  "1", "2", "3",
-  "4", "5", "6",
-  "7", "8", "9",
-  ".", "0", "<",
-];
+const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "<"];
 
 function AmountKeyboard({ onPress }: AmountKeyboardProps) {
   return (

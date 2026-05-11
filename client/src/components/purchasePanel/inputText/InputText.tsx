@@ -22,7 +22,11 @@ function InputText({ autoFocus, label, onChange, value }: InputTextProps) {
         autoFocus={autoFocus}
         variant="borderless"
       />
-      <span className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles['field__message--lable']}`}>{message}</span>
+      <span
+        className={`${styles["field__message"]} ${status === "error" ? styles["field__message--error"] : styles["field__message--lable"]}`}
+      >
+        {message}
+      </span>
     </>
   );
 }
