@@ -1,11 +1,11 @@
 import { Flex } from "antd";
-import { useUserStore } from "../../store/userStore";
+import { useAuthStore } from "../../store/authStore";
 import MenuButton from "../menuButton/MenuButton";
 import style from "./Header.module.css";
 import BalanceButton from "../balanceButton/BalanceButton";
 
 function Header() {
-  const user = useUserStore().user;
+  const user = useAuthStore().user;
 
   function handleBalanceClick() {
     console.log("click");
@@ -21,7 +21,7 @@ function Header() {
         justify="flex-end"
       >
         <div className={style["header__user-container"]}>
-          <p>{user.login}</p>
+          <p>{user.name}</p>
         </div>
         <MenuButton />
       </Flex>
