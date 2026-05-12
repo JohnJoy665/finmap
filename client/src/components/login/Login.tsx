@@ -2,7 +2,6 @@ import { Button, Form, Input } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import style from "./Login.module.css";
-// import type { RuleObject } from "antd/es/form";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { loginRequest } from "../../api/authApi";
 
