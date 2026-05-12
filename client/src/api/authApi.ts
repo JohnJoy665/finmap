@@ -20,7 +20,7 @@ export async function loginRequest(data: LoginDto) {
   return response.data;
 }
 
-export async function meResponse() {
+export async function meRequest() {
   const response = await apiClient.get<MeResponse>("/me");
   return response.data;
 }

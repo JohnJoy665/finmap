@@ -10,8 +10,6 @@ type TwoPanelsProps = {
 function TwoPanels({ left, right }: TwoPanelsProps) {
   const { isMobile } = useIsMobile();
 
-  console.log(isMobile + " для значения sm");
-
   return (
     <Flex className={style.container} vertical={false}>
       <div
