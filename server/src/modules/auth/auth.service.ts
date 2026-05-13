@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { pool } from "../../db/pool";
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
+import { AppError } from "../../utils/AppError";
 
 type RegisterDto = {
   name: string;
@@ -10,9 +11,9 @@ type RegisterDto = {
 };
 
 type LoginDto = {
-    email: string;
-    password: string;
-  };
+  email: string;
+  password: string;
+};
 
 export async function registerUser({ name, email, password }: RegisterDto) {
   const existingUser = await pool.query(
@@ -38,46 +39,53 @@ export async function registerUser({ name, email, password }: RegisterDto) {
   return result.rows[0];
 }
 
-  
-  export async function loginUser({ email, password }: LoginDto) {
-    const result = await pool.query(
-      `
+export async function loginUser({ email, password }: LoginDto) {
+  const result = await pool.query(
+    `
         SELECT id, name, email, password_hash
         FROM users
         WHERE email = $1
       `,
-      [email]
+    [email]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw new AppError(
+      401,
+      "INVALID EMAIL OR PASSWORD",
+      "Invalid email or password"
     );
-  
-    const user = result.rows[0];
-  
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
-  
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-  
-    if (!isPasswordValid) {
-      throw new Error("Invalid email or password");
-    }
-  
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-      },
-      env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
-  
-    return {
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    };
   }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+  if (!isPasswordValid) {
+    throw new AppError(
+      401,
+      "INVALID EMAIL OR PASSWORD",
+      "Invalid email or password"
+    );
+  }
+
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+    },
+    env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+  };
+}

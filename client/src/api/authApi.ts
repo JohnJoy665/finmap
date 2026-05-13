@@ -1,5 +1,7 @@
-import { apiClient } from "./apiClient";
+// import { apiClient } from "./apiClient";
 import type { User } from "../types/user.type";
+import type { ApiSuccess } from "../shared/api/types";
+import { request } from "../shared/api/request";
 
 type LoginDto = {
   email: string;
@@ -11,16 +13,19 @@ type LoginResponse = {
   user: User;
 };
 
-type MeResponse = {
-  user: User;
-};
-
-export async function loginRequest(data: LoginDto) {
-  const response = await apiClient.post<LoginResponse>("/auth/login", data);
-  return response.data;
+export function getMeRequest(): Promise<ApiSuccess<User>> {
+  return request<User>({
+    method: "GET",
+    url: "/me",
+  });
 }
 
-export async function meRequest() {
-  const response = await apiClient.get<MeResponse>("/me");
-  return response.data;
+export async function getLoginRequest(
+  data: LoginDto
+): Promise<ApiSuccess<LoginResponse>> {
+  return request<LoginResponse>({
+    method: "POST",
+    url: "/auth/login",
+    data,
+  });
 }

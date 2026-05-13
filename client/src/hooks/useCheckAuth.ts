@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "../store/authStore";
-import { meRequest } from "../api/authApi";
+import { getMeRequest } from "../api/authApi";
 
 export function useCheckAuth() {
   const token = useAuthStore((state) => state.token);
@@ -22,8 +22,8 @@ export function useCheckAuth() {
       }
 
       try {
-        const data = await meRequest();
-        setUser(data.user);
+        const response = await getMeRequest();
+        setUser(response.data);
       } catch {
         logout();
       } finally {

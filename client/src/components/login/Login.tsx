@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import style from "./Login.module.css";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
-import { loginRequest } from "../../api/authApi";
+import { getLoginRequest } from "../../api/authApi";
 
 const Item = Form.Item;
 
@@ -17,11 +17,11 @@ function Login() {
 
   async function handleSubmit(values: LoginFormValues) {
     try {
-      const data = await loginRequest(values);
+      const response = await getLoginRequest(values);
 
       useAuthStore.getState().setAuth({
-        user: data.user,
-        token: data.token,
+        user: response.data.user,
+        token: response.data.token,
       });
 
       navigate("/app/operations");
