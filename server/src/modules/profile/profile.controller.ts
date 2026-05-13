@@ -2,17 +2,18 @@
 
 import { Request, Response, NextFunction } from "express";
 import { getUserProfile } from "./profile.service";
+import { sendSuccess } from "../../utils/apiResponse";
 
-export async function getProfile(req: Request, res: Response) {
+export async function getProfile(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const userId = (req as any).user.userId;
-
     const profile = await getUserProfile(userId);
-
-    res.json(profile);
+    return sendSuccess(res, profile);
   } catch (error) {
-    res.status(404).json({
-      message: error instanceof Error ? error.message : "profile not found",
-    });
+    next(error);
   }
 }

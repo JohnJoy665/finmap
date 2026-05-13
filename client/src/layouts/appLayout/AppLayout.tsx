@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/header/Header";
 import { Flex } from "antd";
 import { useEffect } from "react";
-import { profileRequest } from "../../api/profileApi";
+import { getProfileRequest } from "../../api/profileApi";
 import { useProfileStore } from "../../store/profileStore";
 
 function AppLayout() {
@@ -12,9 +12,8 @@ function AppLayout() {
     console.log("start Applayout");
 
     async function getProfile() {
-      const data = await profileRequest();
-
-      setProfile(data);
+      const response = await getProfileRequest();
+      setProfile(response.data);
     }
 
     getProfile();

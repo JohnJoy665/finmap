@@ -6,6 +6,9 @@ import BalanceButton from "../balanceButton/BalanceButton";
 import { useProfileStore } from "../../store/profileStore";
 
 function Header() {
+  const state = useProfileStore();
+
+  console.log(state);
   const user = useProfileStore((state) => state.user);
   const account = useProfileStore((state) => state.account);
 

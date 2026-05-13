@@ -1,4 +1,5 @@
 import { pool } from "../../db/pool";
+import { AppError } from "../../utils/AppError";
 
 export async function getUserProfile(userId: string) {
   const result = await pool.query(
@@ -24,7 +25,7 @@ export async function getUserProfile(userId: string) {
   );
 
   if (result.rows.length === 0) {
-    throw new Error("Account not found");
+    throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
   }
 
   const row = result.rows[0];
