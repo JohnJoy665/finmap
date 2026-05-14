@@ -6,6 +6,8 @@ import styles from "./PurchaseForm.module.css";
 import CategorySelect from "../categorySelect/CategorySelect";
 import { useState } from "react";
 import FieldTemplate from "../fieldTemplate/FieldTemplate";
+import { createGroup } from "../../../api/operationsApi";
+import { useProfileStore } from "../../../store/profileStore";
 
 type Group = {
   groupName?: string;
@@ -24,9 +26,20 @@ type PurchaseFormProps = {
   category?: Category;
 };
 
+type formSubmit = {
+  amount: string;
+  category: number;
+  groupName: string;
+};
+
 function PurchaseForm({ group, category }: PurchaseFormProps) {
   const [isEditingCategory, setIsEditingCategory] = useState(
     category !== undefined
+  );
+
+  const userAccount = useProfileStore((state) => state.account);
+  const updateAccountAmount = useProfileStore(
+    (state) => state.updateAccountAmount
   );
 
   const [form] = Form.useForm();
@@ -47,8 +60,22 @@ function PurchaseForm({ group, category }: PurchaseFormProps) {
     form.resetFields();
   }
 
-  function handleFinish(values: string) {
-    console.log(values);
+  function handleFinish(values: formSubmit) {
+    async function getNewGroup() {
+      const newGroup = await createGroup({
+        amount: values.amount,
+        groupName: values.groupName,
+        categoryId: values.category,
+        conversionFactor: 100,
+        currencyCode: userAccount.currencyCode,
+        accountId: userAccount.id,
+      });
+
+      updateAccountAmount(newGroup.data.accountAmount);
+    }
+
+    getNewGroup();
+    handleCancel();
   }
 
   function amountValidate(_, value: string) {

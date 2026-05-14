@@ -1,8 +1,8 @@
 import { Form, Select } from "antd";
 import styles from "./CategorySelect.module.css";
-import { categories as categoryMOCK } from "../../../mocks/categories";
 import CategoryOption from "../categoryOption/CategoryOption";
 import { categoryIcons } from "../../../assets/icons/categoryIcons";
+import { usePurchaseStore } from "../../../store/purchaseStore";
 
 type CategorySelectProps = {
   label: string;
@@ -12,14 +12,15 @@ type CategorySelectProps = {
 
 function CategorySelect({ label, value, onChange }: CategorySelectProps) {
   const { status, errors } = Form.Item.useStatus();
+  const categories = usePurchaseStore((state) => state.categories);
 
   const message = status === "error" ? errors[0] : label;
 
-  const categoryOptions = categoryMOCK.map((category) => ({
+  const categoryOptions = categories.map((category) => ({
     value: category.id,
     label: (
       <CategoryOption
-        categoryName={category.title}
+        categoryName={category.translation}
         Icon={categoryIcons[category.code]}
       />
     ),
