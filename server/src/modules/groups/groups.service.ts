@@ -1,15 +1,18 @@
 import { pool } from "../../db/pool";
+import { UserSettings } from "../../types/middlewares/userSettings.types";
 import { AppError } from "../../utils/AppError";
 import { changeAccountAmount } from "../accounts/accounts.service";
 
+type CreateGroupValues = {
+  groupName: string;
+  amount: string;
+  categoryId: number;
+};
+
 type CreateGroupRequest = {
   userId: string;
-  groupName: string;
-  categoryId: number;
-  amount: string;
-  conversionFactor: number;
-  currencyCode: string;
-  accountId: string;
+  userSettings: UserSettings;
+  reqValues: CreateGroupValues;
 };
 
 type SpendingGroupRow = {
@@ -23,18 +26,16 @@ type SpendingRow = {
 
 export async function createGroup({
   userId,
-  groupName,
-  categoryId,
-  amount,
-  conversionFactor,
-  currencyCode,
-  accountId,
+  userSettings,
+  reqValues,
 }: CreateGroupRequest) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const factoredAmount = BigInt(amount) * BigInt(conversionFactor);
-    const normalisedGroupName = groupName.trim().toLowerCase();
+
+    const factoredAmount =
+      BigInt(reqValues.amount) * BigInt(userSettings.conversionFactor);
+    const normalisedGroupName = reqValues.groupName.trim().toLowerCase();
     const oldGroup = await client.query<SpendingGroupRow>(
       "select sg.id, sg.name from spendings_group sg where trim(lower(sg.name)) = $1 and sg.user_id = $2;",
       [normalisedGroupName, userId]
@@ -48,7 +49,7 @@ export async function createGroup({
         "\
         insert into spendings_group (name, category_id, user_id)\
         values ( $1, $2, $3 ) RETURNING id, name;",
-        [groupName, categoryId, userId]
+        [reqValues.groupName, reqValues.categoryId, userId]
       );
       groupForSpending = newGroupId.rows[0];
     }
@@ -65,16 +66,16 @@ export async function createGroup({
       [
         factoredAmount.toString(),
         userId,
-        currencyCode,
+        userSettings.currencyCode,
         groupForSpending.id,
         product_name,
-        accountId,
-        categoryId,
+        userSettings.accountId,
+        reqValues.categoryId,
       ]
     );
 
     const changedAccount = await changeAccountAmount(client, {
-      accountId,
+      accountId: userSettings.accountId,
       userId,
       deltaAmount: -factoredAmount,
     });
@@ -85,7 +86,8 @@ export async function createGroup({
       groupId: groupForSpending.id,
       groupName: groupForSpending.name,
       spendingId: spendingResult.rows[0].id,
-      accountAmount: Number(changedAccount.amount) / Number(conversionFactor),
+      accountAmount:
+        Number(changedAccount.amount) / Number(userSettings.conversionFactor),
     };
   } catch (error: any) {
     await client.query("ROLLBACK");
@@ -108,7 +110,7 @@ export async function createGroup({
   }
 }
 
-export async function getGroups(userId) {
+export async function getGroups(userId: string) {
   try {
     const result = await pool.query(
       `
@@ -137,13 +139,13 @@ export async function getGroups(userId) {
         sg.category_id,
         cat.code,
         clg.translation
-      ORDER BY sg.name ASC;
+      ORDER BY sg.last_change_date DESC;
       `,
       [userId]
     );
 
     return result.rows;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AppError) {
       throw error;
     }

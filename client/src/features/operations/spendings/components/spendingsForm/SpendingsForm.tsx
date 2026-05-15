@@ -14,6 +14,7 @@ import type {
   SpendingsFormCategory,
   SpendingsFormGroup,
 } from "../../types/spendings.types";
+import { createNewSpending } from "../../api/createNewSpending";
 
 type SpendingsFormProps = {
   group?: SpendingsFormGroup;
@@ -25,7 +26,6 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
     category !== undefined
   );
 
-  const userAccount = useProfileStore((state) => state.account);
   const updateAccountAmount = useProfileStore(
     (state) => state.updateAccountAmount
   );
@@ -54,16 +54,23 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
         amount: values.amount,
         groupName: values.groupName,
         categoryId: values.category,
-        conversionFactor: 100,
-        currencyCode: userAccount.currencyCode,
-        accountId: userAccount.id,
       });
 
       updateAccountAmount(newGroup.data.accountAmount);
     }
 
+    async function getNewSpendng() {
+      const newSpending = await createNewSpending({
+        amount: values.amount,
+        groupId: group.groupId,
+        categoryId: values.category,
+      });
+
+      updateAccountAmount(newSpending.data.accountAmount);
+    }
+
     if (!values.groupName) {
-      console.log(`Добавление покупки. ID группы ${group.groupId}`);
+      getNewSpendng();
     } else {
       getNewGroup();
     }

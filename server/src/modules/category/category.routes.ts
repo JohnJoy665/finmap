@@ -3,4 +3,4 @@ import { categoriesController } from "./category.controller";
 
 export const categoriesRouter = Router();
 
-categoriesRouter.get("/categories", categoriesController);
+categoriesRouter.get("/", categoriesController);

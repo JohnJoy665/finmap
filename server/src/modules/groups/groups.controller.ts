@@ -1,5 +1,3 @@
-// src/modules/profile/profile.controller.ts
-
 import { Request, Response, NextFunction } from "express";
 import { createGroup, getGroups } from "./groups.service";
 import { sendSuccess } from "../../utils/apiResponse";
@@ -18,8 +16,18 @@ export async function createGroupController(
       throw new AppError(400, "VALIDATION_ERROR", error.message);
     }
 
-    const userId = (req as any).user.userId;
-    const createdGroup = await createGroup({ userId, ...value });
+    const userId = req.user?.userId;
+    const userSettings = req.userSettings;
+
+    if (!userId || !userSettings) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const createdGroup = await createGroup({
+      userId,
+      userSettings,
+      reqValues: value,
+    });
     return sendSuccess(res, createdGroup, "Группа создана");
   } catch (error) {
     next(error);
@@ -32,7 +40,7 @@ export async function getGroupsController(
   next: NextFunction
 ) {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const groups = await getGroups(userId);
     return sendSuccess(res, groups);
   } catch (error) {

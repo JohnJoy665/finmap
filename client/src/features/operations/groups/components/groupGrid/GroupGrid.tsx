@@ -54,7 +54,6 @@ function GroupGrid() {
         </GroupCard>
         {renderGroups}
       </div>
-      ;
     </>
   );
 }

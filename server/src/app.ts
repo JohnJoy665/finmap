@@ -7,6 +7,8 @@ import { profileRouter } from "./modules/profile/profile.routes";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { categoriesRouter } from "./modules/category/category.routes";
 import { groupsRouter } from "./modules/groups/groups.routers";
+import { userSettingsMiddleware } from "./middlewares/userSettingsMiddleware";
+import { spendingsRouter } from "./modules/spendings/spendings.routers";
 
 const app = express();
 
@@ -16,11 +18,13 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 
 app.use("/api", authMiddleware);
+app.use("/api", userSettingsMiddleware);
 
-app.use("/api", profileRouter);
-app.use("/api", userRouter);
-app.use("/api", categoriesRouter);
+app.use("/api/categories", categoriesRouter);
+app.use("/api/profile", profileRouter);
+app.use("/api/me", userRouter);
 app.use("/api/groups", groupsRouter);
+app.use("/api/spendings", spendingsRouter);
 
 app.use(errorMiddleware);
 
