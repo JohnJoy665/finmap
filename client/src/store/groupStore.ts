@@ -3,7 +3,7 @@ import type { Group } from "../shared/types/group.types";
 
 type GroupStore = {
   groups: Group[];
-  setGroups: (groups) => void;
+  setGroups: (groups: Group[]) => void;
 };
 
 export const useGroupStrore = create<GroupStore>((set) => ({

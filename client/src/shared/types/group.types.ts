@@ -1,9 +1,11 @@
 type UUID = string;
 
+import type { CategoryCode } from "../../types/category.type";
+
 export type Group = {
   id: UUID;
   title: string;
-  category_icon: string;
+  category_icon: CategoryCode;
   category_description: string;
   category_id: string;
   amount: number;

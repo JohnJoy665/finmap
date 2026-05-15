@@ -1,7 +1,9 @@
+import type { CategoryCode } from "../../../../types/category.type";
+
 export type CreateNewGroupWithSpendingRequest = {
   groupName: string;
   amount: string;
-  categoryId: number;
+  categoryId: number | undefined;
 };
 
 export type CreateNewGroupWithSpendingResponseData = {
@@ -13,18 +15,18 @@ export type CreateNewGroupWithSpendingResponseData = {
 
 export type GetCategoriesResponseData = {
   id: number;
-  code: string;
+  code: CategoryCode;
   translation: string;
 };
 
 export type SpendingsFormGroup = {
-  groupName?: string;
-  groupId?: string;
+  groupName: string;
+  groupId: string;
 };
 
 export type SpendingsFormCategory = {
-  categoryName?: string;
-  categoryId?: string;
+  categoryName: string;
+  categoryId: string;
 };
 
 export type SpendingFormValues = {
