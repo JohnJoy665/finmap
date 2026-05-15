@@ -1,8 +1,10 @@
 import { create } from "zustand";
 
+import type { CategoryCode } from "../types/category.type";
+
 type Category = {
   id: number;
-  code: string;
+  code: CategoryCode;
   translation: string;
 };
 

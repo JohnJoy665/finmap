@@ -2,8 +2,8 @@ import { useLocation } from "react-router-dom";
 import SpendingsForm from "../../features/operations/spendings/components/spendingsForm/SpendingsForm";
 import { useEffect } from "react";
 import { usePurchaseStore } from "../../store/purchaseStore";
-import type { Group } from "../../features/operations/groups/types/group.types";
 import { getCategories } from "../../features/operations/spendings/api/getCategories";
+import type { Group } from "../../shared/types/group.types";
 
 function Spendings() {
   const { state } = useLocation();
@@ -13,7 +13,6 @@ function Spendings() {
     async function requestCategories() {
       const categories = await getCategories();
       setCategories(categories.data);
-      // console.log(categoriesResponse);
     }
 
     requestCategories();

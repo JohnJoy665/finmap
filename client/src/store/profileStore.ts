@@ -12,7 +12,7 @@ type ProfileState = {
   user: User | null;
   account: Account | null;
   setProfile: (payload: { user: User; account: Account }) => void;
-  updateAccountAmount: (amount) => void;
+  updateAccountAmount: (amount: number) => void;
 };
 
 export const useProfileStore = create<ProfileState>((set) => ({
@@ -24,12 +24,18 @@ export const useProfileStore = create<ProfileState>((set) => ({
   },
 
   updateAccountAmount: (amount) => {
-    set((state) => ({
-      ...state,
-      account: {
-        ...state.account,
-        amount,
-      },
-    }));
+    set((state) => {
+      if (!state.account) {
+        return state;
+      }
+
+      return {
+        ...state,
+        account: {
+          ...state.account,
+          amount,
+        },
+      };
+    });
   },
 }));

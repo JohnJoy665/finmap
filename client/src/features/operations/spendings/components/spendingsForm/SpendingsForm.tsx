@@ -15,6 +15,7 @@ import type {
   SpendingsFormGroup,
 } from "../../types/spendings.types";
 import { createNewSpending } from "../../api/createNewSpending";
+import type { RuleObject } from "antd/es/form";
 
 type SpendingsFormProps = {
   group?: SpendingsFormGroup;
@@ -36,6 +37,7 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
   const navigate = useNavigate();
 
   function handleEditCategory() {
+    if (!category) return;
     setIsEditingCategory(false);
 
     form.setFieldsValue({
@@ -48,8 +50,18 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
     form.resetFields();
   }
 
-  function handleFinish(values: SpendingFormValues) {
-    async function getNewGroup() {
+  async function handleFinish(values: SpendingFormValues) {
+    if (group) {
+      const newSpending = await createNewSpending({
+        amount: values.amount,
+        groupId: group.groupId,
+        categoryId: values.category,
+      });
+
+      updateAccountAmount(newSpending.data.accountAmount);
+    } else {
+      if (!values.groupName) return;
+
       const newGroup = await createNewGroupWithSpending({
         amount: values.amount,
         groupName: values.groupName,
@@ -59,26 +71,10 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
       updateAccountAmount(newGroup.data.accountAmount);
     }
 
-    async function getNewSpendng() {
-      const newSpending = await createNewSpending({
-        amount: values.amount,
-        groupId: group.groupId,
-        categoryId: values.category,
-      });
-
-      updateAccountAmount(newSpending.data.accountAmount);
-    }
-
-    if (!values.groupName) {
-      getNewSpendng();
-    } else {
-      getNewGroup();
-    }
-
     handleCancel();
   }
 
-  function amountValidate(_, value: string) {
+  function amountValidate(_: RuleObject, value: string) {
     if (!value) {
       return Promise.reject(new Error("Введите сумму покупки"));
     }
