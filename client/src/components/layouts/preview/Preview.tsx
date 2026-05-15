@@ -1,4 +1,4 @@
-import style from "./preview.module.css";
+import style from "./Preview.module.css";
 
 function Preview() {
   return (
