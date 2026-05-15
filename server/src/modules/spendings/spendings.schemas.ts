@@ -1,8 +1,6 @@
 import Joi from "joi";
 
-export const createGroupSchema = Joi.object({
-  groupName: Joi.string().min(2).max(25).required(),
-  categoryId: Joi.number().integer().positive().required(),
+export const createSpendingSchema = Joi.object({
   amount: Joi.string()
     .pattern(/^[1-9]\d*$/)
     .custom((value, helpers) => {
@@ -22,4 +20,6 @@ export const createGroupSchema = Joi.object({
       "amount.max": "Amount is too large",
       "any.required": "Amount is required",
     }),
+  groupId: Joi.string().uuid().required(),
+  categoryId: Joi.number().integer().positive().optional(),
 });

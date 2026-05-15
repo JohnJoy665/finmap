@@ -1,7 +1,9 @@
 import { pool } from "../../db/pool";
 import { AppError } from "../../utils/AppError";
 
-export async function getCategory() {
+import type { UserSettings } from "../../types/middlewares/userSettings.types";
+
+export async function getCategory(userSettings: UserSettings) {
   const result = await pool.query(
     `
       SELECT 
@@ -14,7 +16,7 @@ export async function getCategory() {
       WHERE clg.lang_code = $1
       ORDER BY clg.translation ASC;
     `,
-    ["ru"]
+    [userSettings.languageCode]
   );
 
   if (result.rows.length === 0) {

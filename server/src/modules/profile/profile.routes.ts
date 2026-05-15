@@ -3,4 +3,4 @@ import { getProfile } from "./profile.controller";
 
 export const profileRouter = Router();
 
-profileRouter.get("/profile", getProfile);
+profileRouter.get("/", getProfile);

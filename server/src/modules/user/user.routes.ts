@@ -1,9 +1,6 @@
-import { Router } from "express"
+import { Router } from "express";
 import { meController } from "./user.controller";
-
 
 export const userRouter = Router();
 
-userRouter.get("/me", meController)
-
-
+userRouter.get("/", meController);

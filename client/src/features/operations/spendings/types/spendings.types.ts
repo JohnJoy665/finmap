@@ -1,10 +1,7 @@
 export type CreateNewGroupWithSpendingRequest = {
   groupName: string;
-  categoryId: number;
   amount: string;
-  conversionFactor: number;
-  currencyCode: string;
-  accountId: string;
+  categoryId: number;
 };
 
 export type CreateNewGroupWithSpendingResponseData = {
@@ -32,6 +29,17 @@ export type SpendingsFormCategory = {
 
 export type SpendingFormValues = {
   amount: string;
-  category: number;
-  groupName: string;
+  category?: number;
+  groupName?: string;
+};
+
+export type CreateNewSpendingRequest = {
+  amount: string;
+  groupId: string;
+  categoryId: number | undefined;
+};
+
+export type CreateNewSpendingResponseData = {
+  spendingId: string;
+  accountAmount: number;
 };
