@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
+const envFile = process.env.NODE_ENV === "production" ? ".env" : ".env.local";
+
+dotenv.config({ path: envFile });
 
 function getEnv(name: string): string {
   const value = process.env[name];
@@ -13,6 +15,8 @@ function getEnv(name: string): string {
 }
 
 export const env = {
+  NODE_ENV: process.env.NODE_ENV || "development",
+
   PORT: Number(process.env.PORT) || 5000,
 
   DB_HOST: getEnv("DB_HOST"),
