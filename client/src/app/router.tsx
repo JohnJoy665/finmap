@@ -1,18 +1,18 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-import Login from "../components/login/Login";
-import Main from "../pages/main/Main";
-import Operations from "../components/operations/Operations";
-import ProtectedRoute from "../components/protectedRoute/ProtectedRoute";
-import AppLayout from "../layouts/appLayout/AppLayout";
-import Registration from "../components/registration/Registration";
-import FreeRoute from "../components/freeRoute/FreeRoute";
-import Purchase from "../components/purchasePanel/purchase/Purchase";
+import ProtectedRoute from "./routers/ProtectedRoute";
+import WorkspaceLayout from "../layouts/workspaceLayout/WorkspaceLayout";
+import FreeRoute from "./routers/FreeRoute";
+import MainLayout from "../layouts/mainLayout/MainLayout";
+import LoginPage from "../pages/login/LoginPage";
+import RegistrationPage from "../pages/registration/RegistrationPage";
+import OperationsPage from "../pages/operations/OperationsPage";
+import SpendingsPage from "../pages/spendings/SpendingsPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Main />,
+    element: <MainLayout />,
     children: [
       {
         index: true,
@@ -23,11 +23,11 @@ export const router = createBrowserRouter([
         children: [
           {
             path: "login",
-            element: <Login />,
+            element: <LoginPage />,
           },
           {
             path: "registration",
-            element: <Registration />,
+            element: <RegistrationPage />,
           },
         ],
       },
@@ -40,15 +40,15 @@ export const router = createBrowserRouter([
             element: <Navigate to="/app/operations" replace />,
           },
           {
-            element: <AppLayout />,
+            element: <WorkspaceLayout />,
             children: [
               {
                 path: "operations",
-                element: <Operations />,
+                element: <OperationsPage />,
               },
               {
-                path: "operations/purchase",
-                element: <Purchase />,
+                path: "operations/spendings",
+                element: <SpendingsPage />,
               },
             ],
           },

@@ -1,0 +1,18 @@
+import styles from "./GroupCard.module.css";
+import type React from "react";
+
+type GroupCardProps = {
+  id: string;
+  children: React.ReactNode;
+  onClick: (id?: string) => void;
+};
+
+function GroupCard({ id, children, onClick }: GroupCardProps) {
+  return (
+    <button className={styles.button} type="button" onClick={() => onClick(id)}>
+      {children}
+    </button>
+  );
+}
+
+export default GroupCard;

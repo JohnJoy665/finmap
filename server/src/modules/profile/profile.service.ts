@@ -5,20 +5,21 @@ export async function getUserProfile(userId: string) {
   const result = await pool.query(
     `
     SELECT
-      u.id AS user_id,
-      u.name,
-      u.email,
+    	uss.user_id, 
+    	u."name", 
+    	u.email,
 
-      a.id AS account_id,
+    	uss.account_id,
       a.currency_code,
       a.amount,
 
-      c.conversion_factor,
-      c.currency_symbol
-    FROM users u
-    INNER JOIN accounts a ON a.user_id = u.id
-    INNER JOIN currencies c ON c.code = a.currency_code
-    WHERE u.id = $1
+      uss.conversion_factor,
+      uss.currency_symbol
+
+    FROM user_settings uss
+      INNER JOIN users u ON u.id = uss.user_id
+      INNER JOIN accounts a ON a.id = uss.account_id
+      WHERE uss.user_id = $1
     LIMIT 1;
     `,
     [userId]

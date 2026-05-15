@@ -107,3 +107,55 @@ export async function createGroup({
     client.release();
   }
 }
+
+export async function getGroups(userId) {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        sg.id,
+        sg.name AS title,
+        cat.code AS category_icon,
+        clg.translation AS category_description,
+        sg.category_id,
+        COALESCE(SUM(s.amount), 0) AS amount
+      FROM spendings_group sg
+      JOIN user_settings us
+        ON us.user_id = sg.user_id
+      JOIN category cat
+        ON cat.id = sg.category_id
+      JOIN category_lang clg
+        ON clg.word_code = cat.code
+      AND clg.lang_code = us.language_code
+      LEFT JOIN spendings s
+        ON s.group_id = sg.id
+      AND s.account_id = us.account_id
+      WHERE sg.user_id = $1
+      GROUP BY
+        sg.id,
+        sg.name,
+        sg.category_id,
+        cat.code,
+        clg.translation
+      ORDER BY sg.name ASC;
+      `,
+      [userId]
+    );
+
+    return result.rows;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}
