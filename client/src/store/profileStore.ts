@@ -4,15 +4,16 @@ import type { User } from "../types/user.type";
 type Account = {
   id: string;
   currencyCode: string;
-  amount: number;
+  amount: string;
   currencySymbol: string;
+  conversionFactor: number;
 };
 
 type ProfileState = {
   user: User | null;
   account: Account | null;
   setProfile: (payload: { user: User; account: Account }) => void;
-  updateAccountAmount: (amount: number) => void;
+  updateAccountAmount: (amount: string) => void;
 };
 
 export const useProfileStore = create<ProfileState>((set) => ({

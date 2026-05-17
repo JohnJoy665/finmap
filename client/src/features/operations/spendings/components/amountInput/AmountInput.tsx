@@ -12,14 +12,50 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
   const { status, errors } = Form.Item.useStatus();
 
   const message = status === "error" ? errors[0] : label;
+  const initialValue = "0,00";
+  console.log(value);
+
+  const displayValue =
+    value === ""
+      ? initialValue
+      : new Intl.NumberFormat(navigator.language, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(Number(value));
 
   function handlePress(key: string) {
+    const lengthAmount = value.length;
+    const indexDot = value.indexOf(".");
+    // console.log(indexDot);
+    // console.log(lengthAmount);
+
+    if (key === "<" && lengthAmount === 0) return;
+
     if (key === "<") {
+      if (indexDot > 0 && lengthAmount - indexDot === 2) {
+        onChange?.(value.slice(0, -2));
+        return;
+      }
+
       onChange?.(value.slice(0, -1));
       return;
     }
 
-    if (key === "." && value.includes(".")) return;
+    if (key === "." && lengthAmount === 0) return;
+
+    if (key === "." && indexDot > 0) return;
+
+    if (key === "0" && value[0] === "0") return;
+
+    if (
+      key === "0" &&
+      indexDot > 0 &&
+      value.includes("0") &&
+      value[lengthAmount - 1] === "0"
+    )
+      return;
+
+    if (indexDot > 0 && lengthAmount === indexDot + 3) return;
 
     onChange?.(value + key);
   }
@@ -34,7 +70,7 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
               : styles["amount-input__display--full"]
           }`}
         >
-          {value || "00.00"}
+          {displayValue}
         </div>
 
         <span

@@ -3,7 +3,7 @@ import styles from "./GroupCardContent.module.css";
 
 type GroupCardContentProps = {
   title: string;
-  amount: number;
+  amount: string;
   Icon: React.ComponentType;
 };
 

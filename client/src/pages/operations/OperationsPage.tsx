@@ -14,7 +14,7 @@ function Operations() {
     }
 
     getGroups();
-  }, []);
+  }, [setGroups]);
 
   return (
     <>

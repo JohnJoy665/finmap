@@ -48,9 +48,6 @@ export async function createSpending({
   const statistical = true;
   const name = "ПОКА БЕЗ НАЗВАНИЯ";
 
-  const factoredAmount =
-    BigInt(reqValues.amount) * BigInt(userSettings.conversionFactor);
-
   const categoryId = await getCategoryIdForSpending(
     reqValues.groupId,
     reqValues.categoryId
@@ -86,7 +83,7 @@ export async function createSpending({
       RETURNING id;
       `,
       [
-        factoredAmount.toString(),
+        reqValues.amount.toString(),
         userSettings.currencyCode,
         userId,
         reqValues.groupId,
@@ -100,15 +97,14 @@ export async function createSpending({
     const updatedAccount = await changeAccountAmount(client, {
       accountId: userSettings.accountId,
       userId,
-      deltaAmount: -factoredAmount,
+      deltaAmount: -BigInt(reqValues.amount),
     });
 
     await client.query("COMMIT");
 
     return {
       spendingId: newSpending.rows[0].id,
-      accountAmount:
-        Number(updatedAccount.amount) / Number(userSettings.conversionFactor),
+      accountAmount: updatedAccount.amount,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");

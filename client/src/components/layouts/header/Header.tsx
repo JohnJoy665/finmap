@@ -19,6 +19,7 @@ function Header() {
       <AccountButton
         amount={account.amount}
         currency={account.currencySymbol}
+        conversionFactor={account.conversionFactor}
         onClick={handleBalanceClick}
       />
       <Flex
