@@ -16,8 +16,9 @@ type ProfileResponse = {
   account: {
     id: string;
     currencyCode: string;
-    amount: number;
+    amount: string;
     currencySymbol: string;
+    conversionFactor: number;
   };
 };
 

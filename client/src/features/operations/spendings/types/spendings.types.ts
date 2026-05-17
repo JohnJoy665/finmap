@@ -10,7 +10,7 @@ export type CreateNewGroupWithSpendingResponseData = {
   groupId: string;
   groupName: string;
   spendingId: string;
-  accountAmount: number;
+  accountAmount: string;
 };
 
 export type GetCategoriesResponseData = {
@@ -43,5 +43,5 @@ export type CreateNewSpendingRequest = {
 
 export type CreateNewSpendingResponseData = {
   spendingId: string;
-  accountAmount: number;
+  accountAmount: string;
 };

@@ -40,8 +40,9 @@ export async function getUserProfile(userId: string) {
     account: {
       id: row.account_id,
       currencyCode: row.currency_code,
-      amount: Number(row.amount) / Number(row.conversion_factor),
+      amount: row.amount.toString(),
       currencySymbol: row.currency_symbol,
+      conversionFactor: row.conversion_factor,
     },
   };
 }

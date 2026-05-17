@@ -3,7 +3,7 @@ import { AppError } from "../../utils/AppError";
 
 type changedAccountRow = {
   id: string;
-  amount: bigint;
+  amount: string;
 };
 
 export async function changeAccountAmount(

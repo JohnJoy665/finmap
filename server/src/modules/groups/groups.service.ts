@@ -24,6 +24,15 @@ type SpendingRow = {
   id: string;
 };
 
+type GetGroupResponse = {
+  id: string;
+  title: string;
+  category_icon: string;
+  category_description: string;
+  category_id: number;
+  amount: number;
+};
+
 export async function createGroup({
   userId,
   userSettings,
@@ -33,8 +42,6 @@ export async function createGroup({
   try {
     await client.query("BEGIN");
 
-    const factoredAmount =
-      BigInt(reqValues.amount) * BigInt(userSettings.conversionFactor);
     const normalisedGroupName = reqValues.groupName.trim().toLowerCase();
     const oldGroup = await client.query<SpendingGroupRow>(
       "select sg.id, sg.name from spendings_group sg where trim(lower(sg.name)) = $1 and sg.user_id = $2;",
@@ -64,7 +71,7 @@ export async function createGroup({
       "insert into spendings (amount, user_id, currency_code, group_id, name, account_id, category_id)\
         values ( $1, $2, $3, $4, $5, $6, $7 ) RETURNING id;",
       [
-        factoredAmount.toString(),
+        reqValues.amount,
         userId,
         userSettings.currencyCode,
         groupForSpending.id,
@@ -77,7 +84,7 @@ export async function createGroup({
     const changedAccount = await changeAccountAmount(client, {
       accountId: userSettings.accountId,
       userId,
-      deltaAmount: -factoredAmount,
+      deltaAmount: -BigInt(reqValues.amount),
     });
 
     await client.query("COMMIT");
@@ -86,8 +93,7 @@ export async function createGroup({
       groupId: groupForSpending.id,
       groupName: groupForSpending.name,
       spendingId: spendingResult.rows[0].id,
-      accountAmount:
-        Number(changedAccount.amount) / Number(userSettings.conversionFactor),
+      accountAmount: changedAccount.amount,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");
@@ -110,9 +116,14 @@ export async function createGroup({
   }
 }
 
-export async function getGroups(userId: string) {
+type GetGroupsreq = {
+  userId: string;
+  userSettings: UserSettings;
+};
+
+export async function getGroups({ userId, userSettings }: GetGroupsreq) {
   try {
-    const result = await pool.query(
+    const result = await pool.query<GetGroupResponse>(
       `
       SELECT
         sg.id,
@@ -159,5 +170,90 @@ export async function getGroups(userId: string) {
     }
 
     throw error;
+  }
+}
+
+type DeleteGroupWithSpendingsReq = {
+  userId: string;
+  deleteGroupId: string;
+  userSettings: UserSettings;
+};
+
+type DeleteGroupWithSpendingsRes = {
+  id: string;
+  name: string;
+};
+
+export async function deleteGroupWithSpendings({
+  userId,
+  deleteGroupId,
+  userSettings,
+}: DeleteGroupWithSpendingsReq) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const deletedSpendings = await client.query(
+      `
+        WITH deleted_spendings AS (
+          DELETE FROM spendings
+          WHERE user_id = $1
+            AND group_id = $2
+          RETURNING amount
+        )
+        SELECT COALESCE(SUM(amount), 0) AS total_amount
+        FROM deleted_spendings;
+      `,
+      [userId, deleteGroupId]
+    );
+
+    const totalAmount = BigInt(deletedSpendings.rows[0].total_amount);
+
+    const changedAccount = await changeAccountAmount(client, {
+      accountId: userSettings.accountId,
+      userId,
+      deltaAmount: totalAmount,
+    });
+
+    const deletedGroup = await client.query<DeleteGroupWithSpendingsRes>(
+      `
+        DELETE FROM spendings_group
+        WHERE id = $1
+          AND user_id = $2
+        RETURNING id, name;
+      `,
+      [deleteGroupId, userId]
+    );
+
+    if (deletedGroup.rowCount === 0) {
+      throw new AppError(404, "GROUP_NOT_FOUND", "Group not found");
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      accountAmount: changedAccount.amount,
+      groupId: deletedGroup.rows[0].id,
+      groupName: deletedGroup.rows[0].name,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
   }
 }

@@ -7,6 +7,7 @@
   padding: 10px;
 
   border: 1px solid var(--app-accent);
+  /* border: none; */
   border-radius: var(--ant-border-radius);
   background: var(--ant-color-bg-layout);
 

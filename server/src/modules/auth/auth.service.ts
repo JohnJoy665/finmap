@@ -16,6 +16,7 @@ type LoginDto = {
 };
 
 export async function registerUser({ name, email, password }: RegisterDto) {
+  throw new Error("Tihs operation is not alowed yet");
   const existingUser = await pool.query(
     "SELECT id FROM users WHERE email = $1",
     [email]

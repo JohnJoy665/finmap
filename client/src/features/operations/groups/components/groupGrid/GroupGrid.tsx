@@ -9,10 +9,18 @@ import styles from "./GroupGrid.module.css";
 import GroupCard from "../groupCard/GroupCard";
 import type { Group } from "../../../../../shared/types/group.types";
 import { useGroupStrore } from "../../../../../store/groupStore";
+import { useProfileStore } from "../../../../../store/profileStore";
+import { formatMoney } from "../../../../../utils/toMinorAmount";
 
 function GroupGrid() {
   const groups = useGroupStrore((store) => store.groups);
+  const conversionFactor = useProfileStore(
+    (store) => store.account?.conversionFactor
+  );
   const navigate = useNavigate();
+
+  if (!conversionFactor) return;
+
   const renderGroups = groups.map((group) => {
     return (
       <GroupCard
@@ -22,7 +30,7 @@ function GroupGrid() {
       >
         <GroupCardContent
           title={group.title}
-          amount={group.amount}
+          amount={formatMoney(group.amount, conversionFactor)}
           Icon={categoryIcons[group.category_icon]}
         />
       </GroupCard>
@@ -32,18 +40,13 @@ function GroupGrid() {
   function handleAddPurchase(group: Group) {
     navigate("/app/operations/spendings", {
       state: {
-        mode: "existingGroup",
         group,
       },
     });
   }
 
   function handleCreateGroup() {
-    navigate("/app/operations/spendings", {
-      state: {
-        mode: "newGroup",
-      },
-    });
+    navigate("/app/operations/spendings");
   }
 
   return (

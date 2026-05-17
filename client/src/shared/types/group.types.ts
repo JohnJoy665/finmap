@@ -8,5 +8,5 @@ export type Group = {
   category_icon: CategoryCode;
   category_description: string;
   category_id: string;
-  amount: number;
+  amount: string;
 };

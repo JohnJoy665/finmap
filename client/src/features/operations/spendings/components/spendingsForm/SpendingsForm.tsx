@@ -1,5 +1,4 @@
 import { Button, Form, Flex } from "antd";
-import { useNavigate } from "react-router-dom";
 import AmountInput from "../amountInput/AmountInput";
 import InputText from "../inputText/InputText";
 import styles from "./SpendingsForm.module.css";
@@ -7,34 +6,32 @@ import CategorySelect from "../categorySelect/CategorySelect";
 import { useState } from "react";
 import FieldTemplate from "../fieldTemplate/FieldTemplate";
 
-import { useProfileStore } from "../../../../../store/profileStore";
-import { createNewGroupWithSpending } from "../../api/createNewGroupWithSpending";
 import type {
   SpendingFormValues,
   SpendingsFormCategory,
   SpendingsFormGroup,
 } from "../../types/spendings.types";
-import { createNewSpending } from "../../api/createNewSpending";
+
 import type { RuleObject } from "antd/es/form";
 
 type SpendingsFormProps = {
+  handleSubmit: (values: SpendingFormValues) => void;
+  handleCancel: () => void;
   group?: SpendingsFormGroup;
   category?: SpendingsFormCategory;
 };
 
-function SpendingsForm({ group, category }: SpendingsFormProps) {
+function SpendingsForm({
+  handleSubmit,
+  handleCancel,
+  group,
+  category,
+}: SpendingsFormProps) {
   const [isEditingCategory, setIsEditingCategory] = useState(
     category !== undefined
   );
-
-  const updateAccountAmount = useProfileStore(
-    (state) => state.updateAccountAmount
-  );
-
   const [form] = Form.useForm();
   const selectedCategory = Form.useWatch("category", form);
-
-  const navigate = useNavigate();
 
   function handleEditCategory() {
     if (!category) return;
@@ -45,32 +42,8 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
     });
   }
 
-  function handleCancel() {
-    navigate("/app/operations");
+  function handleClouse() {
     form.resetFields();
-  }
-
-  async function handleFinish(values: SpendingFormValues) {
-    if (group) {
-      const newSpending = await createNewSpending({
-        amount: values.amount,
-        groupId: group.groupId,
-        categoryId: values.category,
-      });
-
-      updateAccountAmount(newSpending.data.accountAmount);
-    } else {
-      if (!values.groupName) return;
-
-      const newGroup = await createNewGroupWithSpending({
-        amount: values.amount,
-        groupName: values.groupName,
-        categoryId: values.category,
-      });
-
-      updateAccountAmount(newGroup.data.accountAmount);
-    }
-
     handleCancel();
   }
 
@@ -79,9 +52,9 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
       return Promise.reject(new Error("Введите сумму покупки"));
     }
 
-    if (!/^\d+(\.\d{1,2})?$/.test(value)) {
-      return Promise.reject(new Error("Некорректный формат суммы"));
-    }
+    // if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+    //   return Promise.reject(new Error("Некорректный формат суммы"));
+    // }
 
     if (Number(value) <= 0) {
       return Promise.reject(new Error("Сумма должна быть больше 0"));
@@ -95,7 +68,7 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
       className={styles.form}
       form={form}
       layout="vertical"
-      onFinish={handleFinish}
+      onFinish={handleSubmit}
     >
       {group ? (
         <FieldTemplate label={"Название группы"} fieldName={group.groupName} />
@@ -145,7 +118,7 @@ function SpendingsForm({ group, category }: SpendingsFormProps) {
       </Form.Item>
 
       <Flex gap="middle">
-        <Button block danger onClick={handleCancel}>
+        <Button block danger onClick={handleClouse}>
           Назад
         </Button>
 
