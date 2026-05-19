@@ -48,7 +48,7 @@ function SpendingsPage() {
     const minorAmount = toMinorUnits(values.amount, conversionFactor);
 
     if (group) {
-      withRequestLock(async () => {
+      const result = await withRequestLock(async () => {
         const newSpending = await createNewSpending({
           amount: minorAmount,
           groupId: group.id,
@@ -56,21 +56,34 @@ function SpendingsPage() {
         });
 
         updateAccountAmount(newSpending.data.accountAmount);
+
+        return newSpending;
       });
+
+      if (result === undefined) return;
+
+      handleCancel();
     } else {
-      if (!values.groupName) return;
-      withRequestLock(async () => {
+      const groupName = values.groupName;
+
+      if (!groupName) return;
+
+      const result = await withRequestLock(async () => {
         const newGroup = await createNewGroupWithSpending({
           amount: minorAmount,
-          groupName: values.groupName,
-          categoryId: values!.category,
+          groupName,
+          categoryId: values.category,
         });
 
         updateAccountAmount(newGroup.data.accountAmount);
-      });
-    }
 
-    handleCancel();
+        return newGroup;
+      });
+
+      if (result === undefined) return;
+
+      handleCancel();
+    }
   }
 
   return (
