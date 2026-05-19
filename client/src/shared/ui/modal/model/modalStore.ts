@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { AppModalItem } from "./modal.types";
+import { nanoid } from "nanoid";
 
 type OpenModalPayload = Omit<AppModalItem, "id">;
 
@@ -14,7 +15,7 @@ type ModalStore = {
 };
 
 function createModalId() {
-  return crypto.randomUUID();
+  return nanoid();
 }
 
 export const useModalStore = create<ModalStore>((set) => ({
