@@ -63,7 +63,7 @@ function SpendingsPage() {
         const newGroup = await createNewGroupWithSpending({
           amount: minorAmount,
           groupName: values.groupName,
-          categoryId: values.category,
+          categoryId: values!.category,
         });
 
         updateAccountAmount(newGroup.data.accountAmount);

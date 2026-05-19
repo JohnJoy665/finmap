@@ -1,19 +1,28 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export function useRequestLock() {
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isLockedRef = useRef(false);
 
-  async function withRequestLock<T>(
-    callback: () => Promise<T>
-  ): Promise<T | undefined> {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      return await callback();
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const withRequestLock = useCallback(
+    async <T>(callback: () => Promise<T>): Promise<T | undefined> => {
+      if (isLockedRef.current) return;
 
-  return { isSubmitting, withRequestLock };
+      isLockedRef.current = true;
+      setIsSubmitting(true);
+
+      try {
+        return await callback();
+      } finally {
+        isLockedRef.current = false;
+        setIsSubmitting(false);
+      }
+    },
+    []
+  );
+
+  return {
+    isSubmitting,
+    withRequestLock,
+  };
 }
