@@ -8,17 +8,18 @@ import { useProfileStore } from "../../store/profileStore";
 import { createNewSpending } from "../../features/operations/spendings/api/createNewSpending";
 import type { SpendingFormValues } from "../../features/operations/spendings/types/spendings.types";
 import { createNewGroupWithSpending } from "../../features/operations/spendings/api/createNewGroupWithSpending";
-import DeleteGroupButton from "../../features/operations/spendings/components/deleteGroupButton/DeleteGroupButton";
-import { deleteGroupWithSpending } from "../../features/operations/groups/api/deleteGroupWithSpendings";
+import DeleteGroupAction from "../../features/operations/spendings/components/deleteGroupAction/DeleteGroupAction";
 import { toMinorUnits } from "../../utils/toMinorAmount";
+import { useRequestLock } from "../../hooks/useRequestLock";
 
 function SpendingsPage() {
   const { state } = useLocation();
-  const setCategories = usePurchaseStore((store) => store.setCategories);
-
   const group: Group | undefined = state?.group;
-
+  const setCategories = usePurchaseStore((store) => store.setCategories);
+  const categories = usePurchaseStore((store) => store.categories);
   const navigate = useNavigate();
+
+  const { isSubmitting, withRequestLock } = useRequestLock();
 
   const updateAccountAmount = useProfileStore(
     (state) => state.updateAccountAmount
@@ -30,12 +31,13 @@ function SpendingsPage() {
 
   useEffect(() => {
     async function requestCategories() {
-      const categories = await getCategories();
-      setCategories(categories.data);
+      if (categories.length !== 0) return;
+      const categoriesResult = await getCategories();
+      setCategories(categoriesResult.data);
     }
 
     requestCategories();
-  }, [setCategories]);
+  }, [setCategories, categories]);
 
   function handleCancel() {
     navigate("/app/operations");
@@ -46,37 +48,35 @@ function SpendingsPage() {
     const minorAmount = toMinorUnits(values.amount, conversionFactor);
 
     if (group) {
-      const newSpending = await createNewSpending({
-        amount: minorAmount,
-        groupId: group.id,
-        categoryId: values.category,
-      });
+      withRequestLock(async () => {
+        const newSpending = await createNewSpending({
+          amount: minorAmount,
+          groupId: group.id,
+          categoryId: values.category,
+        });
 
-      updateAccountAmount(newSpending.data.accountAmount);
+        updateAccountAmount(newSpending.data.accountAmount);
+      });
     } else {
       if (!values.groupName) return;
+      withRequestLock(async () => {
+        const newGroup = await createNewGroupWithSpending({
+          amount: minorAmount,
+          groupName: values.groupName,
+          categoryId: values.category,
+        });
 
-      const newGroup = await createNewGroupWithSpending({
-        amount: minorAmount,
-        groupName: values.groupName,
-        categoryId: values.category,
+        updateAccountAmount(newGroup.data.accountAmount);
       });
-
-      updateAccountAmount(newGroup.data.accountAmount);
     }
 
-    handleCancel();
-  }
-
-  async function handleGroupDelete(groupId: string) {
-    const deletedGoup = await deleteGroupWithSpending(groupId);
-    updateAccountAmount(deletedGoup.data.accountAmount);
     handleCancel();
   }
 
   return (
     <>
       <SpendingsForm
+        isSubmitting={isSubmitting}
         handleSubmit={handleSubmit}
         handleCancel={handleCancel}
         group={
@@ -96,12 +96,7 @@ function SpendingsPage() {
             : undefined
         }
       />
-      {group?.id && (
-        <DeleteGroupButton
-          groupId={group?.id}
-          handleGroupDelete={handleGroupDelete}
-        />
-      )}
+      {group?.id && <DeleteGroupAction groupId={group.id} />}
     </>
   );
 }

@@ -19,6 +19,7 @@ type SpendingsFormProps = {
   handleCancel: () => void;
   group?: SpendingsFormGroup;
   category?: SpendingsFormCategory;
+  isSubmitting: boolean;
 };
 
 function SpendingsForm({
@@ -26,7 +27,10 @@ function SpendingsForm({
   handleCancel,
   group,
   category,
+  isSubmitting,
 }: SpendingsFormProps) {
+  console.log("Новая перезагрузка");
+
   const [isEditingCategory, setIsEditingCategory] = useState(
     category !== undefined
   );
@@ -122,7 +126,13 @@ function SpendingsForm({
           Назад
         </Button>
 
-        <Button block type="primary" htmlType="submit">
+        <Button
+          disabled={isSubmitting}
+          loading={isSubmitting}
+          block
+          type="primary"
+          htmlType="submit"
+        >
           Сохранить
         </Button>
       </Flex>
