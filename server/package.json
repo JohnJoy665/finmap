@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "start:prod": "NODE_ENV=production tsx src/server.ts"
+    "start:prod": "NODE_ENV=production tsx src/server.ts",
+    "update:exchange-rates": "tsx src/jobs/updateExchangeRates.ts",
+    "update:exchange-rates:prod": "NODE_ENV=production tsx src/jobs/updateExchangeRates.ts"
   },
   "keywords": [],
   "author": "",
