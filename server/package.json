@@ -9,7 +9,9 @@
     "start": "tsx src/server.ts",
     "start:prod": "NODE_ENV=production tsx src/server.ts",
     "update:exchange-rates": "tsx src/jobs/updateExchangeRates.ts",
-    "update:exchange-rates:prod": "NODE_ENV=production tsx src/jobs/updateExchangeRates.ts"
+    "update:exchange-rates:prod": "NODE_ENV=production tsx src/jobs/updateExchangeRates.ts",
+    "fill:base-amounts": "tsx src/jobs/fillMissingBaseAmounts.ts",
+    "fill:base-amounts:prod": "NODE_ENV=production tsx src/jobs/fillMissingBaseAmounts.ts"
   },
   "keywords": [],
   "author": "",
