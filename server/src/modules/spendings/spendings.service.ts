@@ -2,6 +2,7 @@ import { pool } from "../../db/pool";
 import type { CreateSpendingRequest } from "../../types/spendings/spendings.type";
 import { AppError } from "../../utils/AppError";
 import { changeAccountAmount } from "../accounts/accounts.service";
+import { getBaseAmountMicro } from "../rates/rates.service";
 
 type SpendingGroupResult = {
   category_id: number;
@@ -58,6 +59,12 @@ export async function createSpending({
   try {
     await client.query("BEGIN");
 
+    const baseAmountMicro = await getBaseAmountMicro(
+      client,
+      reqValues.amount,
+      userSettings
+    );
+
     const newSpending = await client.query<NewSpendingResult>(
       `
       INSERT INTO spendings (
@@ -68,7 +75,8 @@ export async function createSpending({
         statistical,
         account_id,
         name,
-        category_id
+        category_id,
+        base_amount_micro
       )
       VALUES (
         $1,
@@ -78,7 +86,8 @@ export async function createSpending({
         $5,
         $6,
         $7,
-        $8
+        $8,
+        $9
       )
       RETURNING id;
       `,
@@ -91,6 +100,7 @@ export async function createSpending({
         userSettings.accountId,
         name,
         categoryId,
+        baseAmountMicro,
       ]
     );
 
