@@ -1,7 +1,9 @@
+import { PoolClient } from "pg";
 import { pool } from "../../db/pool";
 import { UserSettings } from "../../types/middlewares/userSettings.types";
 import { AppError } from "../../utils/AppError";
 import { changeAccountAmount } from "../accounts/accounts.service";
+import { getBaseAmountMicro } from "../rates/rates.service";
 
 type CreateGroupValues = {
   groupName: string;
@@ -41,7 +43,6 @@ export async function createGroup({
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-
     const normalisedGroupName = reqValues.groupName.trim().toLowerCase();
     const oldGroup = await client.query<SpendingGroupRow>(
       "select sg.id, sg.name from spendings_group sg where trim(lower(sg.name)) = $1 and sg.user_id = $2;",
@@ -67,9 +68,15 @@ export async function createGroup({
 
     const product_name = "ВРЕМЕННО БЕЗ НАЗВАНИЯ";
 
+    const baseAmountMicro = await getBaseAmountMicro(
+      client,
+      reqValues.amount,
+      userSettings
+    );
+
     const spendingResult = await client.query<SpendingRow>(
-      "insert into spendings (amount, user_id, currency_code, group_id, name, account_id, category_id)\
-        values ( $1, $2, $3, $4, $5, $6, $7 ) RETURNING id;",
+      "insert into spendings (amount, user_id, currency_code, group_id, name, account_id, category_id, base_amount_micro)\
+        values ( $1, $2, $3, $4, $5, $6, $7, $8 ) RETURNING id;",
       [
         reqValues.amount,
         userId,
@@ -78,6 +85,7 @@ export async function createGroup({
         product_name,
         userSettings.accountId,
         reqValues.categoryId,
+        baseAmountMicro,
       ]
     );
 
