@@ -133,34 +133,80 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
   try {
     const result = await pool.query<GetGroupResponse>(
       `
+      ;WITH all_spendings AS (
+        SELECT
+          s.id AS spending_id,
+          sg.id AS group_id,
+          sg.name AS title,
+          COALESCE(s.amount, 0) AS origin_amount,
+          TRIM(s.currency_code) AS origin_code,
+          s.base_amount_micro,
+          s.spending_date,
+          sg.category_id,
+          sg.last_change_date
+        FROM spendings_group sg
+        JOIN spendings s ON s.group_id = sg.id
+        WHERE sg.user_id = $1
+      ),
+
+      converted_spendings AS (
+        SELECT
+          a.spending_id,
+          a.group_id,
+          a.title,
+          a.category_id,
+          a.last_change_date,
+          CASE
+            WHEN a.origin_code = $2 THEN a.origin_amount
+            WHEN $2 = 'USD' THEN ROUND(a.base_amount_micro::numeric / 1000000 * $3) 
+            WHEN rate.exchange_rate IS NOT NULL THEN ROUND((a.base_amount_micro::numeric / 1000000) * rate.exchange_rate * $3)
+            ELSE NULL
+          END AS view_amount
+        FROM all_spendings a
+        LEFT JOIN LATERAL (
+          SELECT er.exchange_rate
+          FROM exchange_rates er
+          WHERE er.base_currency = 'USD'
+            AND er.target_currency = $2
+            AND er.date_rate <= a.spending_date
+          ORDER BY er.date_rate DESC
+          LIMIT 1
+        ) rate ON
+          a.origin_code <> $2
+          AND $2 <> 'USD'
+          AND a.base_amount_micro IS NOT NULL
+      ), grouped_spendings AS (
+        SELECT
+          cnv.group_id,
+          cnv.title,
+          cnv.category_id,
+          cnv.last_change_date,	
+          CASE
+            WHEN COUNT(*) FILTER (WHERE cnv.view_amount IS NULL) > 0 THEN NULL
+            ELSE SUM(cnv.view_amount)
+          END AS amount
+
+        FROM converted_spendings cnv
+        GROUP BY
+          cnv.group_id,
+          cnv.title,
+          cnv.category_id,
+          cnv.last_change_date
+      )
+
       SELECT
-        sg.id,
-        sg.name AS title,
+        gs.group_id AS id,
+        gs.title,
+        gs.amount,
         cat.code AS category_icon,
         clg.translation AS category_description,
-        sg.category_id,
-        COALESCE(SUM(s.amount), 0) AS amount
-      FROM spendings_group sg
-      JOIN user_settings us
-        ON us.user_id = sg.user_id
-      JOIN category cat
-        ON cat.id = sg.category_id
-      JOIN category_lang clg
-        ON clg.word_code = cat.code
-      AND clg.lang_code = us.language_code
-      LEFT JOIN spendings s
-        ON s.group_id = sg.id
-      AND s.account_id = us.account_id
-      WHERE sg.user_id = $1
-      GROUP BY
-        sg.id,
-        sg.name,
-        sg.category_id,
-        cat.code,
-        clg.translation
-      ORDER BY sg.last_change_date DESC;
+        gs.category_id
+      FROM grouped_spendings gs
+      JOIN category cat ON cat.id = gs.category_id
+      JOIN category_lang clg ON clg.word_code = cat.code AND clg.lang_code = 'ru'
+      ORDER BY gs DESC;
       `,
-      [userId]
+      [userId, userSettings.currencyCode, userSettings.conversionFactor]
     );
 
     return result.rows;

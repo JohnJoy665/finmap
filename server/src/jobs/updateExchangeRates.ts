@@ -45,7 +45,7 @@ async function fetchExchangeRates(): Promise<ExchangeRateApiResponse> {
 }
 
 function getDateFromUnixTimestamp(unixTimestamp: number): string {
-  return new Date(unixTimestamp * 1000).toISOString().slice(0, 10);
+  return new Date(unixTimestamp * 1000).toISOString();
 }
 
 async function saveExchangeRates(params: {

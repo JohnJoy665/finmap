@@ -30,7 +30,11 @@ function GroupGrid() {
       >
         <GroupCardContent
           title={group.title}
-          amount={formatMoney(group.amount, conversionFactor)}
+          amount={
+            group.amount !== null
+              ? formatMoney(group.amount, conversionFactor)
+              : "Нет данных"
+          }
           Icon={categoryIcons[group.category_icon]}
         />
       </GroupCard>
