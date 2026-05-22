@@ -19,10 +19,14 @@ export async function getBaseAmountMicro(
     if (userSettings.currencyCode !== CURRENCY_CODE_BASE) {
       const exchangeRateResult = await client.query<ExchangeRateRow>(
         `
-          SELECT er.exchange_rate FROM exchange_rates er 
-          WHERE er.date_rate = CURRENT_DATE
-            AND er.base_currency = $1
-            AND er.target_currency = $2
+        SELECT er.exchange_rate
+        FROM exchange_rates er
+        WHERE er.base_currency = $1
+          AND er.target_currency = $2
+          AND er.date_rate <= NOW() 
+          --AND er.date_rate >= NOW() - INTERVAL '24 hours'
+        ORDER BY er.date_rate DESC
+        LIMIT 1;
         `,
         [CURRENCY_CODE_BASE, userSettings.currencyCode]
       );
