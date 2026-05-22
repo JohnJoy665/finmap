@@ -75,8 +75,18 @@ export async function createGroup({
     );
 
     const spendingResult = await client.query<SpendingRow>(
-      "insert into spendings (amount, user_id, currency_code, group_id, name, account_id, category_id, base_amount_micro)\
-        values ( $1, $2, $3, $4, $5, $6, $7, $8 ) RETURNING id;",
+      `insert into spendings (
+          amount, 
+          user_id, 
+          currency_code, 
+          group_id, 
+          name,
+          account_id,
+          category_id,
+          base_amount_micro,
+          conversion_factor
+        )
+        values ( $1, $2, $3, $4, $5, $6, $7, $8, $9 ) RETURNING id;`,
       [
         reqValues.amount,
         userId,
@@ -86,6 +96,7 @@ export async function createGroup({
         userSettings.accountId,
         reqValues.categoryId,
         baseAmountMicro,
+        userSettings.conversionFactor,
       ]
     );
 
@@ -143,7 +154,8 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           s.base_amount_micro,
           s.spending_date,
           sg.category_id,
-          sg.last_change_date
+          sg.last_change_date,
+          s.conversion_factor
         FROM spendings_group sg
         JOIN spendings s ON s.group_id = sg.id
         WHERE sg.user_id = $1
@@ -158,8 +170,8 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           a.last_change_date,
           CASE
             WHEN a.origin_code = $2 THEN a.origin_amount
-            WHEN $2 = 'USD' THEN ROUND(a.base_amount_micro::numeric / 1000000 * $3) 
-            WHEN rate.exchange_rate IS NOT NULL THEN ROUND((a.base_amount_micro::numeric / 1000000) * rate.exchange_rate * $3)
+            WHEN $2 = 'USD' THEN ROUND(a.base_amount_micro::numeric / 1000000 * a.conversion_factor) 
+            WHEN rate.exchange_rate IS NOT NULL THEN ROUND((a.base_amount_micro::numeric / 1000000) * rate.exchange_rate * a.conversion_factor)
             ELSE NULL
           END AS view_amount
         FROM all_spendings a
@@ -206,7 +218,7 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
       JOIN category_lang clg ON clg.word_code = cat.code AND clg.lang_code = 'ru'
       ORDER BY gs DESC;
       `,
-      [userId, userSettings.currencyCode, userSettings.conversionFactor]
+      [userId, userSettings.currencyCode]
     );
 
     return result.rows;
