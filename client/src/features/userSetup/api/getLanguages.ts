@@ -1,14 +1,9 @@
 import { request } from "../../../shared/api/request";
 import type { ApiSuccess } from "../../../shared/api/types";
+import type { GetLanguagesResponse } from "../types/responses.type";
 
-export type Languages = {
-  id: number;
-  code: string;
-  nameOriginal: string;
-};
-
-export function getLanguagesRequest(): Promise<ApiSuccess<Languages[]>> {
-  return request<Languages[]>({
+export function getLanguages(): Promise<ApiSuccess<GetLanguagesResponse[]>> {
+  return request<GetLanguagesResponse[]>({
     method: "GET",
     url: "/languages",
   });

@@ -1,29 +1,20 @@
 import { request } from "../../../shared/api/request";
 import type { ApiSuccess } from "../../../shared/api/types";
-
-export type City = {
-  cityId: number;
-  cityName: string;
-};
-
-type GetCitiesParams = {
-  searchString: string;
-  langCode: string;
-  countryCode: string;
-};
+import type { GetCitiesRequest } from "../types/requests.types";
+import type { GetCitiesResponse } from "../types/responses.type";
 
 export function getCities({
   searchString,
   langCode,
   countryCode,
-}: GetCitiesParams): Promise<ApiSuccess<City[]>> {
+}: GetCitiesRequest): Promise<ApiSuccess<GetCitiesResponse[]>> {
   const params = new URLSearchParams({
     searchString,
     langCode,
     countryCode,
   });
 
-  return request<City[]>({
+  return request<GetCitiesResponse[]>({
     method: "GET",
     url: `/cities?${params.toString()}`,
   });

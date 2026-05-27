@@ -1,23 +1,16 @@
 import { request } from "../../../shared/api/request";
 import type { ApiSuccess } from "../../../shared/api/types";
-
-export type UniqNameResponse = {
-  uniqUserName: string;
-  isAvailable: boolean;
-};
-
-type GetUniqNameParams = {
-  uniqUserName: string;
-};
+import type { GetUniqNameRequest } from "../types/requests.types";
+import type { GetUniqNameResponse } from "../types/responses.type";
 
 export function getUniqName({
   uniqUserName,
-}: GetUniqNameParams): Promise<ApiSuccess<UniqNameResponse>> {
+}: GetUniqNameRequest): Promise<ApiSuccess<GetUniqNameResponse>> {
   const params = new URLSearchParams({
     uniqUserName,
   });
 
-  return request<UniqNameResponse>({
+  return request<GetUniqNameResponse>({
     method: "GET",
     url: `/profile/uniqname?${params.toString()}`,
   });

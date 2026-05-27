@@ -1,27 +1,18 @@
 import { request } from "../../../shared/api/request";
 import type { ApiSuccess } from "../../../shared/api/types";
-
-type Country = {
-  countryName: string;
-  countryCode?: string;
-  countryId?: number;
-};
-
-type GetCountriesParams = {
-  searchString: string;
-  langCode: string;
-};
+import type { GetCountriesRequest } from "../types/requests.types";
+import type { GetCountriesResponse } from "../types/responses.type";
 
 export function getCountries({
   searchString,
   langCode,
-}: GetCountriesParams): Promise<ApiSuccess<Country[]>> {
+}: GetCountriesRequest): Promise<ApiSuccess<GetCountriesResponse[]>> {
   const params = new URLSearchParams({
     searchString,
     langCode,
   });
 
-  return request<Country[]>({
+  return request<GetCountriesResponse[]>({
     method: "GET",
     url: `/countries?${params.toString()}`,
   });

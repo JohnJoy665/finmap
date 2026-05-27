@@ -9,7 +9,7 @@ import RegistrationPage from "../pages/registration/RegistrationPage";
 import OperationsPage from "../pages/operations/OperationsPage";
 import SpendingsPage from "../pages/spendings/SpendingsPage";
 import ProfileGate from "./routers/ProfileGate";
-import UserSetupPage from "../pages/UserSetup/UserSetupPage";
+import UserSetupPage from "../pages/userSetup/UserSetupPage";
 
 export const router = createBrowserRouter([
   {

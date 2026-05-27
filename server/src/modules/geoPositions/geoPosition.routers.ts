@@ -3,4 +3,4 @@ import { getGeoPositionController } from "./geoPosition.controller";
 
 export const geoPositionRouter = Router();
 
-geoPositionRouter.post("/", getGeoPositionController);
+geoPositionRouter.get("/", getGeoPositionController);

@@ -1,25 +1,16 @@
 import { request } from "../../../shared/api/request";
 import type { ApiSuccess } from "../../../shared/api/types";
-
-export type Currency = {
-  currencyName: string;
-  currencyCode: string;
-  currencySymbol: string;
-  conversionFactor: number;
-};
-
-type GetCurrenciesParams = {
-  langCode: string;
-};
+import type { GetCurrenciesRequest } from "../types/requests.types";
+import type { GetCurrenciesResponse } from "../types/responses.type";
 
 export function getCurrencies({
   langCode,
-}: GetCurrenciesParams): Promise<ApiSuccess<Currency[]>> {
+}: GetCurrenciesRequest): Promise<ApiSuccess<GetCurrenciesResponse[]>> {
   const params = new URLSearchParams({
     langCode,
   });
 
-  return request<Currency[]>({
+  return request<GetCurrenciesResponse[]>({
     method: "GET",
     url: `/currencies?${params.toString()}`,
   });

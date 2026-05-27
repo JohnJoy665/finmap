@@ -10,7 +10,7 @@ export async function getGeoPositionController(
   next: NextFunction
 ) {
   try {
-    const { error, value } = getGeoPositionQuerySchema.validate(req.body, {
+    const { error, value } = getGeoPositionQuerySchema.validate(req.query, {
       abortEarly: false,
       stripUnknown: true,
       convert: true,
