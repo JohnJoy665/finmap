@@ -20,7 +20,7 @@ function ProfileGate() {
     getProfile();
   }, [setProfile, setupRequired]);
 
-  if (setupRequired === null) return;
+  if (setupRequired === null) return null;
 
   const isUserSetupPage = location.pathname === "/app/user-setup";
 

@@ -38,6 +38,7 @@ type ProfileState = {
   setProfile: (payload: ProfilePayload) => void;
   updateAccountAmount: (amount: string) => void;
   setupRequired: boolean | null;
+  clearProfile: () => void;
 };
 
 export const useProfileStore = create<ProfileState>((set) => ({
@@ -64,5 +65,15 @@ export const useProfileStore = create<ProfileState>((set) => ({
         },
       };
     });
+  },
+
+  clearProfile: () => {
+    set((state) => ({
+      ...state,
+      user: null,
+      account: null,
+      settings: null,
+      setupRequired: null,
+    }));
   },
 }));

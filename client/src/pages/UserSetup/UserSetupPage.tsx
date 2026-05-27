@@ -4,6 +4,7 @@ import type { Languages } from "../../features/userSetup/api/getLanguages";
 import { postGeoposition } from "../../features/userSetup/api/getGeoPosition";
 import ProfileForm from "../../features/userSetup/components/ProfileForm";
 import { getCurrencies } from "../../features/userSetup/api/getCurrencies";
+import { Typography } from "antd";
 
 export type GeoPosition = {
   cityId: number;
@@ -66,31 +67,28 @@ function UserSetupPage() {
   }, []);
 
   useEffect(() => {
-    console.log("selectedLanguageCode = ", selectedLanguageCode);
-
-    if (selectedLanguageCode === null || selectedLanguageCode === undefined)
-      return;
+    if (!selectedLanguageCode) return;
 
     async function getGeoPositions() {
-      try {
-        setSugestedGeo(undefined);
+      setSugestedGeo(undefined);
 
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          try {
-            const geo = await postGeoposition({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              langCode: selectedLanguageCode,
-            });
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const geo = await postGeoposition({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            langCode: selectedLanguageCode,
+          });
 
-            setSugestedGeo(geo.data);
-          } catch (error) {
-            console.log(error);
-          }
-        });
-      } catch (error) {
-        console.log(error);
-      }
+          setSugestedGeo(geo.data);
+        },
+        () => {
+          setSugestedGeo(null);
+        },
+        {
+          timeout: 10000,
+        }
+      );
     }
 
     async function getCurencies() {
@@ -117,19 +115,22 @@ function UserSetupPage() {
     return;
 
   return (
-    <ProfileForm
-      key={selectedLanguageCode}
-      languages={languages}
-      languageCode={selectedLanguageCode ?? null}
-      setSelectedLanguageCode={setSelectedLanguageCode}
-      countryCode={sugestedGeo?.countryCode}
-      countryName={sugestedGeo?.countryName}
-      cityId={sugestedGeo?.cityId}
-      cityName={
-        sugestedGeo?.cityLocalName ?? sugestedGeo?.cityInternationalName
-      }
-      currencies={currencies}
-    />
+    <>
+      <Typography.Title level={2}>Заполните профиль</Typography.Title>
+      <ProfileForm
+        key={selectedLanguageCode}
+        languages={languages}
+        languageCode={selectedLanguageCode ?? null}
+        setSelectedLanguageCode={setSelectedLanguageCode}
+        countryCode={sugestedGeo?.countryCode}
+        countryName={sugestedGeo?.countryName}
+        cityId={sugestedGeo?.cityId}
+        cityName={
+          sugestedGeo?.cityLocalName ?? sugestedGeo?.cityInternationalName
+        }
+        currencies={currencies}
+      />
+    </>
   );
 }
 

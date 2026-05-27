@@ -1,8 +1,13 @@
-import { AutoComplete, Button, Form, Select } from "antd";
-import { useEffect, useState } from "react";
+import { AutoComplete, Button, Form, Input, Select } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { getCountries } from "../api/getCountries";
 import { getCities } from "../api/getCities";
 import type { RuleObject } from "antd/es/form";
+
+import { createProfile } from "../api/createProfile";
+import { useNavigate } from "react-router-dom";
+import { useProfileStore } from "../../../store/profileStore";
+import { getUniqName } from "../api/getUniqName";
 
 type Language = {
   id: number;
@@ -18,6 +23,7 @@ type ProfileFormValues = {
   cityId?: number;
   currencyName?: string;
   currencyCode: string;
+  uniqUserName?: string;
 };
 
 type Country = {
@@ -53,6 +59,15 @@ type ProfileFormProps = {
   setSelectedLanguageCode: (value: string) => void;
 };
 
+export type CreateProfileRequest = {
+  languageCode: string;
+  countryCode: string;
+  countryName: string;
+  cityId: number;
+  cityName: string;
+  currencyCode: string;
+};
+
 function ProfileForm({
   languages,
   languageCode,
@@ -73,6 +88,13 @@ function ProfileForm({
   const isGeoFieldsDisabled = !languageCode;
 
   const selectedCountryCode = Form.useWatch("countryCode", form);
+
+  const navigate = useNavigate();
+
+  const clearProfile = useProfileStore((store) => store.clearProfile);
+
+  const uniqNameTimerRef = useRef<number | null>(null);
+  const uniqNameResolveRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (countrySearchStr.length < 3) return;
@@ -111,7 +133,33 @@ function ProfileForm({
   }, [citySearchStr, languageCode, selectedCountryCode]);
 
   function handleSubmit(values: ProfileFormValues) {
-    console.log("Profile form values:", values);
+    console.log(values);
+
+    async function getNewProfile() {
+      try {
+        const newUserSettingId = await createProfile({
+          languageCode: values.languageCode,
+          countryCode: values.countryCode,
+          countryName: values.countryName,
+          cityId: values.cityId,
+          cityName: values.cityName,
+          currencyCode: values.currencyCode,
+          uniqUserName: values.uniqUserName,
+        });
+
+        if (newUserSettingId) {
+          navigate("/app", {
+            replace: true,
+          });
+
+          clearProfile();
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    getNewProfile();
   }
 
   function handleLanguageChange(values: string) {
@@ -147,6 +195,8 @@ function ProfileForm({
       cityId: 0,
       cityName: "",
     });
+
+    form.validateFields(["countryName"]);
   }
 
   function handleSelectCity(value, option: { value: string; cityId: number }) {
@@ -189,18 +239,69 @@ function ProfileForm({
     });
   }
 
+  async function uniqNameValidate(_: RuleObject, value: string) {
+    const normalizedValue = value?.trim();
+
+    if (!normalizedValue) {
+      throw new Error("Введите имя");
+    }
+
+    if (normalizedValue.length < 3) {
+      throw new Error("Минимум 3 символа");
+    }
+
+    if (normalizedValue.length > 30) {
+      throw new Error("Максимум 30 символов");
+    }
+
+    if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(normalizedValue)) {
+      throw new Error("Допустимы латинские символы, цифры, -, _");
+    }
+
+    if (uniqNameTimerRef.current) {
+      clearTimeout(uniqNameTimerRef.current);
+    }
+
+    if (uniqNameResolveRef.current) {
+      uniqNameResolveRef.current();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      uniqNameResolveRef.current = resolve;
+      uniqNameTimerRef.current = setTimeout(async () => {
+        try {
+          const response = await getUniqName({
+            uniqUserName: normalizedValue,
+          });
+
+          if (!response.data.isAvailable) {
+            reject(new Error("Такой логин уже занят"));
+          }
+
+          resolve();
+        } catch {
+          reject(new Error("Не удалось проверить логин"));
+        } finally {
+          uniqNameResolveRef.current = null;
+          uniqNameTimerRef.current = null;
+        }
+      }, 400);
+    });
+  }
+
   return (
     <Form
       form={form}
       layout="vertical"
       initialValues={{
+        uniqUserName: undefined,
         languageCode,
         countryName: countryName || "",
         countryCode: countryCode || "",
         cityId: cityId || 0,
         cityName: cityName || "",
-        currencyName: currencies[0].currencyName,
-        currencyCode: currencies[0].currencyCode,
+        currencyName: undefined,
+        currencyCode: "",
       }}
       onFinish={handleSubmit}
     >
@@ -217,6 +318,19 @@ function ProfileForm({
             label: language.nameOriginal,
           }))}
         />
+      </Form.Item>
+
+      <Form.Item
+        name="uniqUserName"
+        label="Придумайте уникальное имя"
+        validateTrigger="onChange"
+        rules={[
+          {
+            validator: uniqNameValidate,
+          },
+        ]}
+      >
+        <Input placeholder="Введите уникальное имя" />
       </Form.Item>
 
       <Form.Item

@@ -1,6 +1,12 @@
 import { Router } from "express";
-import { getProfile } from "./profile.controller";
+import {
+  createProfileController,
+  getProfile,
+  getUniqNameController,
+} from "./profile.controller";
 
 export const profileRouter = Router();
 
 profileRouter.get("/", getProfile);
+profileRouter.post("/", createProfileController);
+profileRouter.get("/uniqname", getUniqNameController);
