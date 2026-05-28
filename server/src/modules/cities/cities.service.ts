@@ -9,7 +9,7 @@ type GetCitiesRequest = {
 
 type CityRow = {
   city_id: number;
-  sity_name: string;
+  city_name: string;
 };
 
 export type GetCitiesResponse = {
@@ -34,23 +34,50 @@ export async function getCities({
       `
       SELECT
         c.id AS city_id,
-        CASE
-          WHEN $3 = 'en' THEN c.international_name
-          ELSE c.local_name
-        END AS sity_name
+        COALESCE(cl_name.translation, c.local_name, c.international_name) AS city_name
       FROM cities c
+    
+      LEFT JOIN LATERAL (
+        SELECT cl.translation
+        FROM cities_lang cl
+        WHERE cl.city_id = c.id
+          AND cl.lang_code = $3
+          AND cl.is_historic = false
+        ORDER BY
+          CASE
+            WHEN cl.translation ILIKE $4 THEN 0
+            WHEN cl.translation ILIKE $2 THEN 1
+            ELSE 2
+          END,
+          cl.is_preferred DESC,
+          cl.is_short ASC,
+          cl.translation ASC
+        LIMIT 1
+      ) cl_name ON true
+    
       WHERE TRIM(c.country_code) = $1
         AND (
-          c.local_name ILIKE $2
+          EXISTS (
+            SELECT 1
+            FROM cities_lang cl_search
+            WHERE cl_search.city_id = c.id
+              AND cl_search.lang_code = $3
+              AND cl_search.is_historic = false
+              AND cl_search.translation ILIKE $2
+          )
+          OR c.local_name ILIKE $2
           OR c.international_name ILIKE $2
         )
+    
       ORDER BY
         CASE
+          WHEN cl_name.translation ILIKE $4 THEN 0
           WHEN c.local_name ILIKE $4 THEN 0
           WHEN c.international_name ILIKE $4 THEN 0
           ELSE 1
         END,
-        sity_name ASC
+        city_name ASC
+    
       LIMIT 50;
       `,
       [
@@ -63,7 +90,7 @@ export async function getCities({
 
     return result.rows.map((city) => ({
       cityId: city.city_id,
-      cityName: city.sity_name,
+      cityName: city.city_name,
     }));
   } catch (error: any) {
     if (error instanceof AppError) {

@@ -43,8 +43,6 @@ function ProfileForm({
   const navigate = useNavigate();
 
   function handleSubmit(values: ProfileFormValues) {
-    console.log(values);
-    return;
     async function getNewProfile() {
       try {
         const newUserSettingId = await createProfile({

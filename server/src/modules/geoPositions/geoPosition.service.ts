@@ -39,26 +39,44 @@ export async function getGeoPosition(
       `
       SELECT
         cs.id AS city_id,
-        cs.country_code,
-        cs.local_name AS city_local_name,
+        TRIM(cs.country_code) AS country_code,
+        COALESCE(city_name.translation, cs.local_name, cs.international_name) AS city_local_name,
         cs.international_name AS city_international_name,
         cs.feature_code,
         cs.population,
         clg.translation AS country_name,
         cls.id AS country_id
       FROM cities cs
+    
       INNER JOIN countries cls
-        ON cls.code = cs.country_code
+        ON cls.code = TRIM(cs.country_code)
+    
       INNER JOIN countries_lang clg
         ON clg.lang_code = $1
-        AND clg.word_code = cs.country_code
+        AND clg.word_code = TRIM(cs.country_code)
+    
+      LEFT JOIN LATERAL (
+        SELECT cl.translation
+        FROM cities_lang cl
+        WHERE cl.city_id = cs.id
+          AND cl.lang_code = $1
+          AND cl.is_historic = false
+        ORDER BY
+          cl.is_preferred DESC,
+          cl.is_short ASC,
+          cl.translation ASC
+        LIMIT 1
+      ) city_name ON true
+    
       WHERE cs.location IS NOT NULL
         AND cs.feature_code IN ('PPLC', 'PPLA', 'PPLA2', 'PPLA3', 'PPLA4', 'PPL')
         AND cs.population >= 100000
+    
       ORDER BY cs.location <-> ST_SetSRID(
         ST_MakePoint($2, $3),
         4326
       )::geography
+    
       LIMIT 1;
       `,
       [langCode, longitude, latitude]
