@@ -31,7 +31,7 @@ function CityAutoComplete() {
     };
   }, [citySearchStr, languageCode, countryCode, setCities]);
 
-  function handleCityChange(value) {
+  function handleCityChange(value: string) {
     form.setFieldsValue({
       cityName: value,
       cityId: 0,
@@ -39,7 +39,10 @@ function CityAutoComplete() {
     setCitySearchStr(value);
   }
 
-  function handleSelectCity(value, option: { value: string; cityId: number }) {
+  function handleSelectCity(
+    value: string,
+    option: { value: string; cityId: number }
+  ) {
     form.setFieldsValue({
       cityName: value,
       cityId: option.cityId,

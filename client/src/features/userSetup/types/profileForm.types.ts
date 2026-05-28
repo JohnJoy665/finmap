@@ -1,12 +1,12 @@
 export type ProfileFormValues = {
-  languageCode?: string;
-  countryName?: string;
-  cityName?: string;
-  countryCode?: string;
-  cityId?: number;
-  currencyName?: string;
+  languageCode: string;
+  countryName: string;
+  cityName: string;
+  countryCode: string;
+  cityId: number;
+  currencyName: string;
   currencyCode: string;
-  uniqUserName?: string;
+  uniqUserName: string;
 };
 
 export type City = {

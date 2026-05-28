@@ -52,7 +52,10 @@ function ContainerProfile() {
   }, []);
 
   useEffect(() => {
-    if (!selectedLanguageCode) return;
+    if (selectedLanguageCode === null || selectedLanguageCode === undefined)
+      return;
+
+    const langCode = selectedLanguageCode;
 
     async function getGeoPositions() {
       setSuggestedGeo(undefined);
@@ -62,7 +65,7 @@ function ContainerProfile() {
           const geo = await getGeoposition({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-            langCode: selectedLanguageCode,
+            langCode,
           });
 
           setSuggestedGeo(geo.data);
@@ -79,11 +82,10 @@ function ContainerProfile() {
     async function getCurencies() {
       try {
         const currencies = await getCurrencies({
-          langCode: selectedLanguageCode,
+          langCode,
         });
         setCurrencies(currencies.data);
-      } catch (error) {
-        console.log(error);
+      } catch {
         setCurrencies(undefined);
       }
     }
@@ -102,7 +104,7 @@ function ContainerProfile() {
     <ProfileForm
       key={selectedLanguageCode}
       languages={languages}
-      languageCode={selectedLanguageCode ?? null}
+      languageCode={selectedLanguageCode || ""}
       setSelectedLanguageCode={setSelectedLanguageCode}
       countryCode={suggestedGeo?.countryCode}
       countryName={suggestedGeo?.countryName}

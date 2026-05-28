@@ -16,11 +16,11 @@ import CurrencySelect from "../currencySelect/CurrencySelect";
 
 type ProfileFormProps = {
   languages: Language[];
-  languageCode?: string;
+  languageCode: string;
   countryCode?: string;
   countryName?: string;
   cityId?: number;
-  cityName?: string;
+  cityName?: string | null;
   currencies: Currency[];
   setSelectedLanguageCode: (value: string) => void;
 };

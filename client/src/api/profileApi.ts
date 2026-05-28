@@ -1,12 +1,9 @@
 import { request } from "../shared/api/request";
 import type { ApiSuccess } from "../shared/api/types";
+import type { User } from "../types/user.type";
 
 type ProfileResponse = {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
+  user: User | null;
   account: {
     id: string;
     currencyCode: string;

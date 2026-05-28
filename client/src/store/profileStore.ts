@@ -25,7 +25,7 @@ type Settings = {
 };
 
 type ProfilePayload = {
-  user: User;
+  user: User | null;
   account: Account | null;
   settings: Settings | null;
   setupRequired: boolean | null;

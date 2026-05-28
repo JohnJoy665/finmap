@@ -37,7 +37,7 @@ function CountryAutoComplete() {
     setCountrySearchStr(value);
   }
 
-  function handleSelectCountry(value) {
+  function handleSelectCountry(value: string) {
     const country = countries.find((country) => country.countryName === value);
 
     if (!country) return;
