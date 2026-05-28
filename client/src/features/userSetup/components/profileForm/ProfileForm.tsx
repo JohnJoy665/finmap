@@ -1,49 +1,28 @@
-import { Button, Form, Select } from "antd";
-import { useState } from "react";
+import { Button, Form } from "antd";
 
 import { createProfile } from "../../api/createProfile";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../../../../store/profileStore";
-import type { City, ProfileFormValues } from "../../types/profileForm.types";
+import type {
+  Language,
+  ProfileFormValues,
+} from "../../types/profileForm.types";
 import UniqUserNameInput from "../uniqUserNameInput/UniqUserNameInput";
 import CountryAutoComplete from "../countryAutoComplete/CountryAutoComplete";
 import CityAutoComplete from "../cityAutoComplete/CityAutoComplete";
-
-type Language = {
-  id: number;
-  code: string;
-  nameOriginal: string;
-};
-
-export type Currency = {
-  currencyName: string;
-  currencyCode: string;
-  currencySymbol: string;
-  conversionFactor: number;
-};
+import LanguageSelect from "../languageSelect/LanguageSelect";
+import type { Currency } from "../../types/containerProfile.types";
+import CurrencySelect from "../currencySelect/CurrencySelect";
 
 type ProfileFormProps = {
   languages: Language[];
   languageCode?: string;
-
   countryCode?: string;
   countryName?: string;
-
   cityId?: number;
   cityName?: string;
-
   currencies: Currency[];
-
   setSelectedLanguageCode: (value: string) => void;
-};
-
-export type CreateProfileRequest = {
-  languageCode: string;
-  countryCode: string;
-  countryName: string;
-  cityId: number;
-  cityName: string;
-  currencyCode: string;
 };
 
 function ProfileForm({
@@ -58,7 +37,6 @@ function ProfileForm({
 }: ProfileFormProps) {
   console.log("reload");
 
-  const [cities, setCities] = useState<City[]>([]);
   const [form] = Form.useForm<ProfileFormValues>();
 
   const clearProfile = useProfileStore((store) => store.clearProfile);
@@ -94,23 +72,6 @@ function ProfileForm({
     getNewProfile();
   }
 
-  function handleLanguageChange(values: string) {
-    setSelectedLanguageCode(values);
-  }
-
-  function handleCurrencyChange(value: string) {
-    const currency = currencies.find(
-      (currency) => currency.currencyName === value
-    );
-
-    if (!currency) return;
-
-    form.setFieldsValue({
-      currencyName: value,
-      currencyCode: currency.currencyCode,
-    });
-  }
-
   return (
     <Form
       form={form}
@@ -127,42 +88,14 @@ function ProfileForm({
       }}
       onFinish={handleSubmit}
     >
-      <Form.Item
-        name="languageCode"
-        label="Выберите язык"
-        rules={[{ required: true, message: "Выберите язык" }]}
-      >
-        <Select
-          onChange={handleLanguageChange}
-          placeholder="Выберите язык"
-          options={languages.map((language) => ({
-            value: language.code,
-            label: language.nameOriginal,
-          }))}
-        />
-      </Form.Item>
-
+      <LanguageSelect
+        setSelectedLanguageCode={setSelectedLanguageCode}
+        languages={languages}
+      />
       <UniqUserNameInput />
-      <CountryAutoComplete setCities={setCities} />
-      <CityAutoComplete cities={cities} setCities={setCities} />
-
-      <Form.Item
-        name="currencyName"
-        label="Выберите валюту"
-        rules={[{ required: true, message: "Выберите вылюту" }]}
-      >
-        <Select
-          onChange={handleCurrencyChange}
-          placeholder="Выберите валюту"
-          options={currencies.map((currency) => ({
-            value: currency.currencyName,
-          }))}
-        />
-      </Form.Item>
-
-      <Form.Item name="currencyCode" hidden>
-        <input />
-      </Form.Item>
+      <CountryAutoComplete />
+      <CityAutoComplete />
+      <CurrencySelect currencies={currencies} />
 
       <Button type="primary" htmlType="submit">
         Сохранить

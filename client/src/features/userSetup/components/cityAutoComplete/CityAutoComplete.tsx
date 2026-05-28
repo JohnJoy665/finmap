@@ -4,12 +4,8 @@ import { useEffect, useState } from "react";
 import type { City } from "../../types/profileForm.types";
 import { getCities } from "../../api/getCities";
 
-type CityAutoCompleteProps = {
-  cities: City[];
-  setCities: (cities: City[]) => void;
-};
-
-function CityAutoComplete({ cities, setCities }: CityAutoCompleteProps) {
+function CityAutoComplete() {
+  const [cities, setCities] = useState<City[]>([]);
   const [citySearchStr, setCitySearchStr] = useState("");
 
   const form = Form.useFormInstance();

@@ -2,8 +2,9 @@ import { getCurrencies } from "../../api/getCurrencies";
 import { getGeoposition } from "../../api/getGeoPosition";
 import { getLanguages } from "../../api/getLanguages";
 import { useEffect, useState } from "react";
-import ProfileForm, { type Currency } from "../profileForm/ProfileForm";
+import ProfileForm from "../profileForm/ProfileForm";
 import type {
+  Currency,
   GeoPosition,
   Languages,
 } from "../../types/containerProfile.types";

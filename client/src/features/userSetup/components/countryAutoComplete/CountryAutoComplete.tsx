@@ -2,13 +2,9 @@ import { AutoComplete, Form } from "antd";
 import type { RuleObject } from "antd/es/form";
 import { useEffect, useState } from "react";
 import { getCountries } from "../../api/getCountries";
-import type { City, Country } from "../../types/profileForm.types";
+import type { Country } from "../../types/profileForm.types";
 
-type CountryAutoCompleteProps = {
-  setCities: (sities: City[]) => void;
-};
-
-function CountryAutoComplete({ setCities }: CountryAutoCompleteProps) {
+function CountryAutoComplete() {
   const form = Form.useFormInstance();
   const languageCode = Form.useWatch("languageCode");
   const [countries, setCountries] = useState<Country[]>([]);
@@ -35,6 +31,8 @@ function CountryAutoComplete({ setCities }: CountryAutoCompleteProps) {
     form.setFieldsValue({
       countryName: value,
       countryCode: "",
+      cityId: 0,
+      cityName: "",
     });
     setCountrySearchStr(value);
   }
@@ -43,8 +41,6 @@ function CountryAutoComplete({ setCities }: CountryAutoCompleteProps) {
     const country = countries.find((country) => country.countryName === value);
 
     if (!country) return;
-
-    setCities([]);
 
     form.setFieldsValue({
       countryName: country.countryName,

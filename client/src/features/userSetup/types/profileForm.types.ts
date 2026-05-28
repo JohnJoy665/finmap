@@ -19,3 +19,9 @@ export type Country = {
   countryCode?: string;
   countryId?: number;
 };
+
+export type Language = {
+  id: number;
+  code: string;
+  nameOriginal: string;
+};
