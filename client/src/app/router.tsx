@@ -8,6 +8,8 @@ import LoginPage from "../pages/login/LoginPage";
 import RegistrationPage from "../pages/registration/RegistrationPage";
 import OperationsPage from "../pages/operations/OperationsPage";
 import SpendingsPage from "../pages/spendings/SpendingsPage";
+import ProfileGate from "./routers/ProfileGate";
+import UserSetupPage from "../pages/userSetup/UserSetupPage";
 
 export const router = createBrowserRouter([
   {
@@ -36,19 +38,28 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           {
-            index: true,
-            element: <Navigate to="/app/operations" replace />,
-          },
-          {
-            element: <WorkspaceLayout />,
+            element: <ProfileGate />,
             children: [
               {
-                path: "operations",
-                element: <OperationsPage />,
+                path: "user-setup",
+                element: <UserSetupPage />,
               },
               {
-                path: "operations/spendings",
-                element: <SpendingsPage />,
+                index: true,
+                element: <Navigate to="/app/operations" replace />,
+              },
+              {
+                element: <WorkspaceLayout />,
+                children: [
+                  {
+                    path: "operations",
+                    element: <OperationsPage />,
+                  },
+                  {
+                    path: "operations/spendings",
+                    element: <SpendingsPage />,
+                  },
+                ],
               },
             ],
           },

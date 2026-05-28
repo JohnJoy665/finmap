@@ -1,25 +1,31 @@
 import { request } from "../shared/api/request";
 import type { ApiSuccess } from "../shared/api/types";
-// import { apiClient } from "./apiClient";
-
-// export async function profileRequest() {
-//   const response = await apiClient.get("/profile");
-//   return response.data;
-// }
+import type { User } from "../types/user.type";
 
 type ProfileResponse = {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  user: User | null;
   account: {
     id: string;
     currencyCode: string;
     amount: string;
     currencySymbol: string;
     conversionFactor: number;
-  };
+  } | null;
+  settings: {
+    id: string;
+    accountId: string | null;
+    languageCode: string | null;
+    countryCode: string | null;
+    cityId: number | null;
+    visibleAccount: boolean;
+    visibleUserName: boolean;
+    visibleGroupSpendings: boolean;
+    visibleAverageGroupBill: boolean;
+    currencyCode: string | null;
+    currencySymbol: string | null;
+    conversionFactor: number | null;
+  } | null;
+  setupRequired: boolean;
 };
 
 export function getProfileRequest(): Promise<ApiSuccess<ProfileResponse>> {

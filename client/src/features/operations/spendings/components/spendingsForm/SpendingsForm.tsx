@@ -29,8 +29,6 @@ function SpendingsForm({
   category,
   isSubmitting,
 }: SpendingsFormProps) {
-  console.log("Новая перезагрузка");
-
   const [isEditingCategory, setIsEditingCategory] = useState(
     category !== undefined
   );

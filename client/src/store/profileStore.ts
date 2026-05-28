@@ -9,19 +9,46 @@ type Account = {
   conversionFactor: number;
 };
 
+type Settings = {
+  id: string;
+  accountId: string | null;
+  languageCode: string | null;
+  countryCode: string | null;
+  cityId: number | null;
+  visibleAccount: boolean;
+  visibleUserName: boolean;
+  visibleGroupSpendings: boolean;
+  visibleAverageGroupBill: boolean;
+  currencyCode: string | null;
+  currencySymbol: string | null;
+  conversionFactor: number | null;
+};
+
+type ProfilePayload = {
+  user: User | null;
+  account: Account | null;
+  settings: Settings | null;
+  setupRequired: boolean | null;
+};
+
 type ProfileState = {
   user: User | null;
   account: Account | null;
-  setProfile: (payload: { user: User; account: Account }) => void;
+  settings: Settings | null;
+  setProfile: (payload: ProfilePayload) => void;
   updateAccountAmount: (amount: string) => void;
+  setupRequired: boolean | null;
+  clearProfile: () => void;
 };
 
 export const useProfileStore = create<ProfileState>((set) => ({
   user: null,
   account: null,
+  settings: null,
+  setupRequired: null,
 
-  setProfile: ({ user, account }) => {
-    set({ user, account });
+  setProfile: ({ user, account, settings, setupRequired }) => {
+    set((state) => ({ ...state, user, account, settings, setupRequired }));
   },
 
   updateAccountAmount: (amount) => {
@@ -38,5 +65,15 @@ export const useProfileStore = create<ProfileState>((set) => ({
         },
       };
     });
+  },
+
+  clearProfile: () => {
+    set((state) => ({
+      ...state,
+      user: null,
+      account: null,
+      settings: null,
+      setupRequired: null,
+    }));
   },
 }));
