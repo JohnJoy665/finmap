@@ -84,9 +84,10 @@ export async function createGroup({
           account_id,
           category_id,
           base_amount_micro,
-          conversion_factor
+          conversion_factor,
+          city_id
         )
-        values ( $1, $2, $3, $4, $5, $6, $7, $8, $9 ) RETURNING id;`,
+        values ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 ) RETURNING id;`,
       [
         reqValues.amount,
         userId,
@@ -97,6 +98,7 @@ export async function createGroup({
         reqValues.categoryId,
         baseAmountMicro,
         userSettings.conversionFactor,
+        userSettings.cityId,
       ]
     );
 

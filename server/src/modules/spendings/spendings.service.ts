@@ -77,7 +77,8 @@ export async function createSpending({
         name,
         category_id,
         base_amount_micro,
-        conversion_factor
+        conversion_factor,
+        city_id
       )
       VALUES (
         $1,
@@ -89,7 +90,8 @@ export async function createSpending({
         $7,
         $8,
         $9,
-        $10
+        $10,
+        $11
       )
       RETURNING id;
       `,
@@ -104,6 +106,7 @@ export async function createSpending({
         categoryId,
         baseAmountMicro,
         userSettings.conversionFactor,
+        userSettings.cityId,
       ]
     );
 
