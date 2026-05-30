@@ -13,6 +13,7 @@ import CityAutoComplete from "../cityAutoComplete/CityAutoComplete";
 import LanguageSelect from "../languageSelect/LanguageSelect";
 import type { Currency } from "../../types/containerProfile.types";
 import CurrencySelect from "../currencySelect/CurrencySelect";
+import AmountInput from "../amountInput/AmountInput";
 
 type ProfileFormProps = {
   languages: Language[];
@@ -43,6 +44,7 @@ function ProfileForm({
   const navigate = useNavigate();
 
   function handleSubmit(values: ProfileFormValues) {
+    console.log(values);
     async function getNewProfile() {
       try {
         const newUserSettingId = await createProfile({
@@ -53,6 +55,7 @@ function ProfileForm({
           cityName: values.cityName,
           currencyCode: values.currencyCode,
           uniqUserName: values.uniqUserName,
+          accountAmount: values.accountAmount,
         });
 
         if (newUserSettingId) {
@@ -83,6 +86,8 @@ function ProfileForm({
         cityName: cityName || "",
         currencyName: undefined,
         currencyCode: "",
+        currencySymbol: "",
+        accountAmount: "",
       }}
       onFinish={handleSubmit}
     >
@@ -94,6 +99,8 @@ function ProfileForm({
       <CountryAutoComplete />
       <CityAutoComplete />
       <CurrencySelect currencies={currencies} />
+
+      <AmountInput />
 
       <Button type="primary" htmlType="submit">
         Сохранить

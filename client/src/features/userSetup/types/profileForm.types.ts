@@ -7,6 +7,8 @@ export type ProfileFormValues = {
   currencyName: string;
   currencyCode: string;
   uniqUserName: string;
+  currencySymbol: string;
+  accountAmount: string;
 };
 
 export type City = {

@@ -63,6 +63,7 @@ function UniqUserNameInput() {
       label="Придумайте уникальное имя"
       validateTrigger="onChange"
       rules={[
+        { required: true, message: "" },
         {
           validator: uniqNameValidate,
         },

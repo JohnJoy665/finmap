@@ -64,7 +64,7 @@ function CityAutoComplete() {
       <Form.Item
         name="cityName"
         label="Выберите город"
-        rules={[{ validator: cityValidate }]}
+        rules={[{ required: true, message: "" }, { validator: cityValidate }]}
       >
         <AutoComplete
           placeholder="Начните вводить название"

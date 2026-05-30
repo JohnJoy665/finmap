@@ -2,6 +2,11 @@ import { PoolClient } from "pg";
 import { AppError } from "../../utils/AppError";
 import { UserSettings } from "../../types/middlewares/userSettings.types";
 
+type BaseAmountUserSettings = {
+  currencyCode: string;
+  conversionFactor: number;
+};
+
 type ExchangeRateRow = {
   exchange_rate: string | null;
 };
@@ -9,7 +14,7 @@ type ExchangeRateRow = {
 export async function getBaseAmountMicro(
   client: PoolClient,
   minorAmountOriginal: string,
-  userSettings: UserSettings
+  userSettings: BaseAmountUserSettings
 ): Promise<bigint | null> {
   const CURRENCY_CODE_BASE = "USD";
   let exchangeRate: number;

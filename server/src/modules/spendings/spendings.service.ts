@@ -59,11 +59,18 @@ export async function createSpending({
   try {
     await client.query("BEGIN");
 
-    const baseAmountMicro = await getBaseAmountMicro(
-      client,
-      reqValues.amount,
-      userSettings
-    );
+    if (!userSettings.currencyCode) {
+      throw new AppError(
+        404,
+        "CURRENCY_CODE_NOT_FOUND",
+        "Currency code not found"
+      );
+    }
+
+    const baseAmountMicro = await getBaseAmountMicro(client, reqValues.amount, {
+      currencyCode: userSettings.currencyCode,
+      conversionFactor: userSettings.conversionFactor,
+    });
 
     const newSpending = await client.query<NewSpendingResult>(
       `

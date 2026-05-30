@@ -18,6 +18,7 @@ function CurrencySelect({ currencies }: CurrencySelectProps) {
     form.setFieldsValue({
       currencyName: value,
       currencyCode: currency.currencyCode,
+      currencySymbol: currency.currencySymbol,
     });
   }
 
@@ -26,7 +27,10 @@ function CurrencySelect({ currencies }: CurrencySelectProps) {
       <Form.Item
         name="currencyName"
         label="Выберите валюту"
-        rules={[{ required: true, message: "Выберите вылюту" }]}
+        rules={[
+          { required: true, message: "" },
+          { required: true, message: "Выберите вылюту" },
+        ]}
       >
         <Select
           onChange={handleCurrencyChange}
@@ -38,6 +42,10 @@ function CurrencySelect({ currencies }: CurrencySelectProps) {
       </Form.Item>
 
       <Form.Item name="currencyCode" hidden>
+        <input />
+      </Form.Item>
+
+      <Form.Item name="currencySymbol" hidden>
         <input />
       </Form.Item>
     </>
