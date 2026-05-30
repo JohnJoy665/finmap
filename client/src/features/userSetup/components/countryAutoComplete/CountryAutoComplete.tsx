@@ -67,7 +67,10 @@ function CountryAutoComplete() {
       <Form.Item
         name="countryName"
         label="Выберите страну"
-        rules={[{ validator: countryValidate }]}
+        rules={[
+          { required: true, message: "" },
+          { validator: countryValidate },
+        ]}
       >
         <AutoComplete
           placeholder="Начните вводить название"

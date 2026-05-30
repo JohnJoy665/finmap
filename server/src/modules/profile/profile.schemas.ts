@@ -48,6 +48,17 @@ export const createProfileSchema = Joi.object({
       "string.pattern.base": "currencyCode must contain only uppercase letters",
     }),
 
+  accountAmount: Joi.string()
+    .required()
+    .allow("")
+    .pattern(/^(?:0|[1-9]\d*)(?:\.(?:[1-9]|\d[1-9]))?$/)
+    .messages({
+      "string.base": "accountAmount must be a string",
+      "any.required": "accountAmount is required",
+      "string.pattern.base":
+        "accountAmount must be an empty string or a valid amount, for example 0, 123, 123.2 or 123.23",
+    }),
+
   uniqUserName: Joi.string()
     .trim()
     .min(3)

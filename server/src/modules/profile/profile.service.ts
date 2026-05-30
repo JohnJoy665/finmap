@@ -1,5 +1,6 @@
 import { pool } from "../../db/pool";
 import { AppError } from "../../utils/AppError";
+import { getBaseAmountMicro } from "../rates/rates.service";
 
 type UserProfileRow = {
   id: string;
@@ -157,6 +158,7 @@ type CreateProfileRequest = {
   cityId: number;
   cityName: string;
   currencyCode: string;
+  accountAmount: string;
   uniqUserName: string;
 };
 
@@ -202,6 +204,7 @@ export async function createProfile({
   cityId,
   cityName,
   currencyCode,
+  accountAmount,
   uniqUserName,
 }: CreateProfileRequest): Promise<CreateProfileResponse> {
   const client = await pool.connect();
@@ -307,6 +310,12 @@ export async function createProfile({
 
     const currency = currencyResult.rows[0];
 
+    type IncomeAmountRow = {
+      amount: string;
+    };
+
+    let initialAccountAmount = 0;
+
     const accountResult = await client.query<AccountRow>(
       `
         INSERT INTO accounts (
@@ -321,6 +330,59 @@ export async function createProfile({
     );
 
     const accountId = accountResult.rows[0].id;
+
+    const normalizedAccountAmount = accountAmount.trim();
+
+    if (normalizedAccountAmount !== "" && normalizedAccountAmount !== "0") {
+      const incomeAmount = Math.round(
+        Number(normalizedAccountAmount) * currency.conversion_factor
+      );
+
+      const baseAmountMicro = await getBaseAmountMicro(
+        client,
+        String(incomeAmount),
+        {
+          currencyCode,
+          conversionFactor: currency.conversion_factor,
+        }
+      );
+
+      const incomeResult = await client.query<IncomeAmountRow>(
+        `
+          INSERT INTO incomes (
+            amount,
+            user_id,
+            account_id,
+            currency_code,
+            conversion_factor,
+            city_id,
+            base_amount_micro
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          RETURNING amount
+        `,
+        [
+          incomeAmount,
+          userId,
+          accountId,
+          currencyCode,
+          currency.conversion_factor,
+          cityId,
+          baseAmountMicro,
+        ]
+      );
+
+      initialAccountAmount = Number(incomeResult.rows[0].amount);
+
+      await client.query(
+        `
+          UPDATE accounts
+          SET amount = $1
+          WHERE id = $2
+        `,
+        [initialAccountAmount, accountId]
+      );
+    }
 
     const userSettingsResult = await client.query<UserSettingsRow>(
       `
