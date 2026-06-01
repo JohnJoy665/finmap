@@ -33,6 +33,7 @@ type GetGroupResponse = {
   category_description: string;
   category_id: number;
   amount: number;
+  is_converted: boolean;
 };
 
 export async function createGroup({
@@ -68,11 +69,16 @@ export async function createGroup({
 
     const product_name = "ВРЕМЕННО БЕЗ НАЗВАНИЯ";
 
-    const baseAmountMicro = await getBaseAmountMicro(
-      client,
-      reqValues.amount,
-      userSettings
-    );
+    const currencyCode = userSettings.currencyCode;
+
+    if (!currencyCode) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const baseAmountMicro = await getBaseAmountMicro(client, reqValues.amount, {
+      currencyCode,
+      conversionFactor: userSettings.conversionFactor,
+    });
 
     const spendingResult = await client.query<SpendingRow>(
       `insert into spendings (
@@ -170,6 +176,12 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           a.title,
           a.category_id,
           a.last_change_date,
+            CASE
+            WHEN a.origin_code = $2 THEN false
+            WHEN $2 = 'USD' AND a.base_amount_micro IS NOT NULL THEN true
+            WHEN rate.exchange_rate IS NOT NULL THEN true
+            ELSE false
+          END AS is_converted,
           CASE
             WHEN a.origin_code = $2 THEN a.origin_amount
             WHEN $2 = 'USD' THEN ROUND(a.base_amount_micro::numeric / 1000000 * a.conversion_factor) 
@@ -198,8 +210,8 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           CASE
             WHEN COUNT(*) FILTER (WHERE cnv.view_amount IS NULL) > 0 THEN NULL
             ELSE SUM(cnv.view_amount)
-          END AS amount
-
+          END AS amount,
+          BOOL_OR(cnv.is_converted) AS is_converted
         FROM converted_spendings cnv
         GROUP BY
           cnv.group_id,
@@ -214,11 +226,12 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
         gs.amount,
         cat.code AS category_icon,
         clg.translation AS category_description,
-        gs.category_id
+        gs.category_id,
+        gs.is_converted
       FROM grouped_spendings gs
       JOIN category cat ON cat.id = gs.category_id
       JOIN category_lang clg ON clg.word_code = cat.code AND clg.lang_code = 'ru'
-      ORDER BY gs DESC;
+      ORDER BY gs.last_change_date DESC;
       `,
       [userId, userSettings.currencyCode]
     );
@@ -244,66 +257,95 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
 type DeleteGroupWithSpendingsReq = {
   userId: string;
   deleteGroupId: string;
-  userSettings: UserSettings;
 };
 
-type DeleteGroupWithSpendingsRes = {
-  id: string;
-  name: string;
+type ChangedAccount = {
+  accountId: string;
+  amount: string;
+};
+
+type DeleteGroupWithSpendingsRow = {
+  group_id: string;
+  group_name: string;
+  changed_accounts: ChangedAccount[];
 };
 
 export async function deleteGroupWithSpendings({
   userId,
   deleteGroupId,
-  userSettings,
 }: DeleteGroupWithSpendingsReq) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const deletedSpendings = await client.query(
+    const result = await client.query<DeleteGroupWithSpendingsRow>(
       `
         WITH deleted_spendings AS (
           DELETE FROM spendings
           WHERE user_id = $1
             AND group_id = $2
-          RETURNING amount
+          RETURNING account_id, amount
+        ),
+
+        account_deltas AS (
+          SELECT
+            account_id,
+            SUM(amount)::bigint AS delta_amount
+          FROM deleted_spendings
+          GROUP BY account_id
+        ),
+
+        changed_accounts AS (
+          UPDATE accounts a
+          SET amount = a.amount + ad.delta_amount,
+              last_change_date = CURRENT_TIMESTAMP
+          FROM account_deltas ad
+          WHERE a.id = ad.account_id
+            AND a.user_id = $1
+          RETURNING
+            a.id,
+            a.amount
+        ),
+
+        deleted_group AS (
+          DELETE FROM spendings_group
+          WHERE id = $2
+            AND user_id = $1
+          RETURNING id, name
         )
-        SELECT COALESCE(SUM(amount), 0) AS total_amount
-        FROM deleted_spendings;
+
+        SELECT
+          dg.id AS group_id,
+          dg.name AS group_name,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'accountId', ca.id,
+                'amount', ca.amount::text
+              )
+            ) FILTER (WHERE ca.id IS NOT NULL),
+            '[]'::json
+          ) AS changed_accounts
+        FROM deleted_group dg
+        LEFT JOIN changed_accounts ca ON true
+        GROUP BY dg.id, dg.name;
       `,
       [userId, deleteGroupId]
     );
 
-    const totalAmount = BigInt(deletedSpendings.rows[0].total_amount);
-
-    const changedAccount = await changeAccountAmount(client, {
-      accountId: userSettings.accountId,
-      userId,
-      deltaAmount: totalAmount,
-    });
-
-    const deletedGroup = await client.query<DeleteGroupWithSpendingsRes>(
-      `
-        DELETE FROM spendings_group
-        WHERE id = $1
-          AND user_id = $2
-        RETURNING id, name;
-      `,
-      [deleteGroupId, userId]
-    );
-
-    if (deletedGroup.rowCount === 0) {
+    if (result.rowCount === 0) {
       throw new AppError(404, "GROUP_NOT_FOUND", "Group not found");
     }
 
     await client.query("COMMIT");
 
+    const deletedGroup = result.rows[0];
+
     return {
-      accountAmount: changedAccount.amount,
-      groupId: deletedGroup.rows[0].id,
-      groupName: deletedGroup.rows[0].name,
+      groupId: deletedGroup.group_id,
+      groupName: deletedGroup.group_name,
+      accounts: deletedGroup.changed_accounts,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");

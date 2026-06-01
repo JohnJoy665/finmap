@@ -9,13 +9,6 @@ export type GeoPosition = {
   countryId: number;
 };
 
-export type Currency = {
-  currencyName: string;
-  currencyCode: string;
-  currencySymbol: string;
-  conversionFactor: number;
-};
-
 export type Languages = {
   id: number;
   code: string;

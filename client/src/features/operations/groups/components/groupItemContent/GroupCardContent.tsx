@@ -5,9 +5,17 @@ type GroupCardContentProps = {
   title: string;
   amount: string;
   Icon: React.ComponentType;
+  isConverted: boolean;
+  currencySymbol: string;
 };
 
-function GroupCardContent({ title, amount, Icon }: GroupCardContentProps) {
+function GroupCardContent({
+  title,
+  amount,
+  Icon,
+  isConverted,
+  currencySymbol,
+}: GroupCardContentProps) {
   return (
     <div className={styles.container}>
       <span className={styles.title}>{title}</span>
@@ -15,7 +23,9 @@ function GroupCardContent({ title, amount, Icon }: GroupCardContentProps) {
         <Icon />
       </Flex>
 
-      <span className={styles.amount}>{amount}</span>
+      <span className={styles.amount}>
+        {isConverted ? "~" : ""} {amount} {currencySymbol}
+      </span>
     </div>
   );
 }

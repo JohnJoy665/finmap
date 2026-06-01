@@ -1,11 +1,6 @@
 import { request } from "../../../../shared/api/request";
 import type { ApiSuccess } from "../../../../shared/api/types";
-
-type deleteGroupWithSpendingResponse = {
-  accountAmount: string;
-  groupId: string;
-  groupName: string;
-};
+import type { deleteGroupWithSpendingResponse } from "../types/responses.type";
 
 export function deleteGroupWithSpending(
   groupId: string

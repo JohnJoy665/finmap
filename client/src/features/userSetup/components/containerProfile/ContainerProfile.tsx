@@ -4,10 +4,10 @@ import { getLanguages } from "../../api/getLanguages";
 import { useEffect, useState } from "react";
 import ProfileForm from "../profileForm/ProfileForm";
 import type {
-  Currency,
   GeoPosition,
   Languages,
 } from "../../types/containerProfile.types";
+import type { Currency } from "../../../../shared/types/currency.types";
 
 function ContainerProfile() {
   const [languages, setLanguages] = useState<Languages[]>([]);

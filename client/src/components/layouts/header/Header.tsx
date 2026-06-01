@@ -1,27 +1,17 @@
 import { Flex } from "antd";
 import style from "./Header.module.css";
-import AccountButton from "../../ui/accountButton/AccountButton";
 import { useProfileStore } from "../../../store/profileStore";
 import MenuButton from "../../ui/menuButton/MenuButton";
+import AccountSelector from "../../../features/selectAccount/components/accountSelector/AccountSelector";
 
 function Header() {
   const user = useProfileStore((state) => state.user);
-  const account = useProfileStore((state) => state.account);
 
-  function handleBalanceClick() {
-    console.log("click");
-  }
-
-  if (!user || !account) return null;
+  if (!user) return null;
 
   return (
     <Flex align="center" justify={"space-between"} vertical={false}>
-      <AccountButton
-        amount={account.amount}
-        currency={account.currencySymbol}
-        conversionFactor={account.conversionFactor}
-        onClick={handleBalanceClick}
-      />
+      <AccountSelector />
       <Flex
         className={style.header__right}
         align="center"

@@ -1,13 +1,6 @@
 import { create } from "zustand";
 import type { User } from "../types/user.type";
-
-type Account = {
-  id: string;
-  currencyCode: string;
-  amount: string;
-  currencySymbol: string;
-  conversionFactor: number;
-};
+import type { Account } from "../shared/types/account.types";
 
 type Settings = {
   id: string;
@@ -36,9 +29,10 @@ type ProfileState = {
   account: Account | null;
   settings: Settings | null;
   setProfile: (payload: ProfilePayload) => void;
-  updateAccountAmount: (amount: string) => void;
+  updateProfileAmount: (amount: string) => void;
   setupRequired: boolean | null;
   clearProfile: () => void;
+  changeProfileAccount: (payload: Account) => void;
 };
 
 export const useProfileStore = create<ProfileState>((set) => ({
@@ -51,7 +45,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
     set((state) => ({ ...state, user, account, settings, setupRequired }));
   },
 
-  updateAccountAmount: (amount) => {
+  updateProfileAmount: (amount) => {
     set((state) => {
       if (!state.account) {
         return state;
@@ -65,6 +59,20 @@ export const useProfileStore = create<ProfileState>((set) => ({
         },
       };
     });
+  },
+
+  changeProfileAccount: (newAccount) => {
+    set((state) => ({
+      ...state,
+      account: state.account?.id !== newAccount.id ? newAccount : state.account,
+
+      settings: state.settings
+        ? {
+            ...state.settings,
+            accountId: newAccount.id,
+          }
+        : state.settings,
+    }));
   },
 
   clearProfile: () => {

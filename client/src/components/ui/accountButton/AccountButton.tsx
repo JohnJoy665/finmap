@@ -1,28 +1,29 @@
 import { Button } from "antd";
+import type { ButtonProps } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 import styles from "./AccountButton.module.css";
 
-type AccountButtonProps = {
+type AccountButtonProps = Omit<ButtonProps, "type"> & {
   amount: string;
   currency: string;
   conversionFactor: number;
-  onClick?: () => void;
 };
 
 function AccountButton({
   amount,
   currency,
   conversionFactor,
-  onClick,
+  ...buttonProps
 }: AccountButtonProps) {
   const displayAmount = Number(amount) / conversionFactor;
+
   const formatted = new Intl.NumberFormat("ru-RU", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(displayAmount);
 
   return (
-    <Button type="text" className={styles.button} onClick={onClick}>
+    <Button {...buttonProps} type="text" className={styles.button}>
       <span className={styles.amount}>
         {formatted} {currency}
       </span>

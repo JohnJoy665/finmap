@@ -6,11 +6,12 @@ import { getCategories } from "../../features/operations/spendings/api/getCatego
 import type { Group } from "../../shared/types/group.types";
 import { useProfileStore } from "../../store/profileStore";
 import { createNewSpending } from "../../features/operations/spendings/api/createNewSpending";
-import type { SpendingFormValues } from "../../features/operations/spendings/types/spendings.types";
+import type { SpendingFormValues } from "../../features/operations/spendings/types/spendingsForm.types";
 import { createNewGroupWithSpending } from "../../features/operations/spendings/api/createNewGroupWithSpending";
 import DeleteGroupAction from "../../features/operations/spendings/components/deleteGroupAction/DeleteGroupAction";
 import { toMinorUnits } from "../../utils/toMinorAmount";
 import { useRequestLock } from "../../hooks/useRequestLock";
+import { useAccountsStore } from "../../store/accountsStore";
 
 function SpendingsPage() {
   const { state } = useLocation();
@@ -21,8 +22,14 @@ function SpendingsPage() {
 
   const { isSubmitting, withRequestLock } = useRequestLock();
 
-  const updateAccountAmount = useProfileStore(
-    (state) => state.updateAccountAmount
+  const updateProfileAmount = useProfileStore(
+    (state) => state.updateProfileAmount
+  );
+
+  const activeAccount = useProfileStore((state) => state.account?.id);
+
+  const updateListAmountAccounts = useAccountsStore(
+    (store) => store.updateListAmountAccounts
   );
 
   const conversionFactor = useProfileStore(
@@ -43,6 +50,16 @@ function SpendingsPage() {
     navigate("/app/operations");
   }
 
+  function changeAccountAmmount(newAmmount: string, activeAccount: string) {
+    updateProfileAmount(newAmmount);
+    updateListAmountAccounts([
+      {
+        accountId: activeAccount,
+        amount: newAmmount,
+      },
+    ]);
+  }
+
   async function handleSubmit(values: SpendingFormValues) {
     if (!conversionFactor) return;
     const minorAmount = toMinorUnits(values.amount, conversionFactor);
@@ -54,8 +71,8 @@ function SpendingsPage() {
           groupId: group.id,
           categoryId: values.category,
         });
-
-        updateAccountAmount(newSpending.data.accountAmount);
+        if (!activeAccount) return;
+        changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
 
         return newSpending;
       });
@@ -74,8 +91,8 @@ function SpendingsPage() {
           groupName,
           categoryId: values.category,
         });
-
-        updateAccountAmount(newGroup.data.accountAmount);
+        if (!activeAccount) return;
+        changeAccountAmmount(newGroup.data.accountAmount, activeAccount);
 
         return newGroup;
       });

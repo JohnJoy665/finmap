@@ -13,7 +13,6 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
 
   const message = status === "error" ? errors[0] : label;
   const initialValue = "0,00";
-  console.log(value);
 
   const displayValue =
     value === ""
@@ -26,8 +25,6 @@ function AmountInput({ value = "", onChange, label }: AmountInputProps) {
   function handlePress(key: string) {
     const lengthAmount = value.length;
     const indexDot = value.indexOf(".");
-    // console.log(indexDot);
-    // console.log(lengthAmount);
 
     if (key === "<" && lengthAmount === 0) return;
 

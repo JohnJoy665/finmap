@@ -26,7 +26,7 @@ function Login() {
 
       navigate("/app/operations");
     } catch (error) {
-      console.log(error);
+      console.log(error); //TODO подумать, что тут будет
     }
   }
 

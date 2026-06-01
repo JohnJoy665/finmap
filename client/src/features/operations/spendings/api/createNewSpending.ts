@@ -1,9 +1,7 @@
 import { request } from "../../../../shared/api/request";
 import type { ApiSuccess } from "../../../../shared/api/types";
-import type {
-  CreateNewSpendingRequest,
-  CreateNewSpendingResponseData,
-} from "../types/spendings.types";
+import type { CreateNewSpendingRequest } from "../types/requests.type";
+import type { CreateNewSpendingResponseData } from "../types/responses.type";
 
 export function createNewSpending(
   data: CreateNewSpendingRequest

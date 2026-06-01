@@ -9,4 +9,5 @@ export type Group = {
   category_description: string;
   category_id: string;
   amount: string | null;
+  is_converted: boolean;
 };
