@@ -11,9 +11,9 @@ import UniqUserNameInput from "../uniqUserNameInput/UniqUserNameInput";
 import CountryAutoComplete from "../countryAutoComplete/CountryAutoComplete";
 import CityAutoComplete from "../cityAutoComplete/CityAutoComplete";
 import LanguageSelect from "../languageSelect/LanguageSelect";
-import type { Currency } from "../../types/containerProfile.types";
-import CurrencySelect from "../currencySelect/CurrencySelect";
-import AmountInput from "../amountInput/AmountInput";
+import CurrencySelect from "../../../../shared/components/currencySelect/CurrencySelect";
+import AmountInput from "../../../../shared/components/amountInput/AmountInput";
+import type { Currency } from "../../../../shared/types/currency.types";
 
 type ProfileFormProps = {
   languages: Language[];
@@ -42,7 +42,6 @@ function ProfileForm({
   const navigate = useNavigate();
 
   function handleSubmit(values: ProfileFormValues) {
-    console.log(values);
     async function getNewProfile() {
       try {
         const newUserSettingId = await createProfile({
@@ -64,7 +63,7 @@ function ProfileForm({
           clearProfile();
         }
       } catch (error) {
-        console.log(error);
+        console.log(error); // TODO ПОДУМАТЬ, что тут будет
       }
     }
 

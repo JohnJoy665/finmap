@@ -1,17 +1,7 @@
 import { request } from "../../../shared/api/request";
 import type { ApiSuccess } from "../../../shared/api/types";
-
-type ChangeCurrentAccountRequest = {
-  accountId: string;
-};
-
-export type ChangeCurrentAccountResponseData = {
-  id: string;
-  currencyCode: string;
-  amount: string;
-  currencySymbol: string;
-  conversionFactor: number;
-};
+import type { ChangeCurrentAccountRequest } from "../types/requests.type";
+import type { ChangeCurrentAccountResponseData } from "../types/responses.type";
 
 export function changeCurrentAccount(
   data: ChangeCurrentAccountRequest

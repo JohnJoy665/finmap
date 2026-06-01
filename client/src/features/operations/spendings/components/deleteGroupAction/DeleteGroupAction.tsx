@@ -20,7 +20,7 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
   const updateListAmountAccounts = useAccountsStore(
     (store) => store.updateListAmountAccounts
   );
-  const activeAccount = useProfileStore((state) => state.account.id);
+  const activeAccount = useProfileStore((state) => state.account?.id);
 
   function handleCancel() {
     navigate("/app/operations");

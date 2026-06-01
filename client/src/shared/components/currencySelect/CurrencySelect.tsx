@@ -1,5 +1,5 @@
 import { Form, Select } from "antd";
-import type { Currency } from "../../types/containerProfile.types";
+import type { Currency } from "../../types/currency.types";
 
 type CurrencySelectProps = {
   currencies: Currency[];

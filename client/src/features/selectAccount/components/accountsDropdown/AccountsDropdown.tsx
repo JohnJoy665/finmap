@@ -8,7 +8,7 @@ import { useProfileStore } from "../../../../store/profileStore";
 
 type AccountsDropdownProps = {
   accounts: Account[];
-  activeAccount: Account;
+  activeAccount: Account | null;
   onClose: () => void;
   pathname: string;
 };

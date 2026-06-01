@@ -1,20 +1,13 @@
 import { Button, Form } from "antd";
-import type { Currency } from "../../../userSetup/types/containerProfile.types";
-import CurrencySelect from "../../../userSetup/components/currencySelect/CurrencySelect";
-import AmountInput from "../../../userSetup/components/amountInput/AmountInput";
-// import { useAccountsStore } from "../../../../store/accountsStore";
+import CurrencySelect from "../../../../shared/components/currencySelect/CurrencySelect";
+import AmountInput from "../../../../shared/components/amountInput/AmountInput";
 import { createAccount } from "../../api/createAccount";
 import { changeCurrentAccount } from "../../api/changeCurrentAccount";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../../../../store/profileStore";
 import { useAccountsStore } from "../../../../store/accountsStore";
-
-type CreateAccountFormValues = {
-  currencyName: string;
-  currencyCode: string;
-  currencySymbol: string;
-  accountAmount: string;
-};
+import type { CreateAccountFormValues } from "../../types/createAccountForm.types";
+import type { Currency } from "../../../../shared/types/currency.types";
 
 type CreateAccountFormProps = {
   currencies: Currency[];
@@ -40,10 +33,12 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
           accountAmount: values.accountAmount,
         });
 
-        updateListAmountAccounts(
-          newAccountResponse.data.id,
-          newAccountResponse.data.amount
-        );
+        updateListAmountAccounts([
+          {
+            accountId: newAccountResponse.data.id,
+            amount: newAccountResponse.data.amount,
+          },
+        ]);
 
         const currentAccount = await changeCurrentAccount({
           accountId: newAccountResponse.data.id,
@@ -53,7 +48,7 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
 
         navigate("/app");
       } catch (error) {
-        console.log(error);
+        console.log(error); // TODO что-то надо здесь поменять будет ПОДУМАТЬ
       }
     }
 

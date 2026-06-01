@@ -25,8 +25,6 @@ function GroupGrid() {
 
   if (!conversionFactor || !currencySymbol) return;
 
-  console.log(groups);
-
   const renderGroups = groups.map((group) => {
     return (
       <GroupCard

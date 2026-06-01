@@ -6,7 +6,7 @@ import { getCategories } from "../../features/operations/spendings/api/getCatego
 import type { Group } from "../../shared/types/group.types";
 import { useProfileStore } from "../../store/profileStore";
 import { createNewSpending } from "../../features/operations/spendings/api/createNewSpending";
-import type { SpendingFormValues } from "../../features/operations/spendings/types/spendings.types";
+import type { SpendingFormValues } from "../../features/operations/spendings/types/spendingsForm.types";
 import { createNewGroupWithSpending } from "../../features/operations/spendings/api/createNewGroupWithSpending";
 import DeleteGroupAction from "../../features/operations/spendings/components/deleteGroupAction/DeleteGroupAction";
 import { toMinorUnits } from "../../utils/toMinorAmount";
@@ -26,7 +26,7 @@ function SpendingsPage() {
     (state) => state.updateProfileAmount
   );
 
-  const activeAccount = useProfileStore((state) => state.account.id);
+  const activeAccount = useProfileStore((state) => state.account?.id);
 
   const updateListAmountAccounts = useAccountsStore(
     (store) => store.updateListAmountAccounts
@@ -71,7 +71,7 @@ function SpendingsPage() {
           groupId: group.id,
           categoryId: values.category,
         });
-
+        if (!activeAccount) return;
         changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
 
         return newSpending;
@@ -91,7 +91,7 @@ function SpendingsPage() {
           groupName,
           categoryId: values.category,
         });
-
+        if (!activeAccount) return;
         changeAccountAmmount(newGroup.data.accountAmount, activeAccount);
 
         return newGroup;

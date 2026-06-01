@@ -10,7 +10,7 @@ import type {
   SpendingFormValues,
   SpendingsFormCategory,
   SpendingsFormGroup,
-} from "../../types/spendings.types";
+} from "../../types/spendingsForm.types";
 
 import type { RuleObject } from "antd/es/form";
 

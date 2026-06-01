@@ -1,6 +1,6 @@
 import { request } from "../../../../shared/api/request";
 import type { ApiSuccess } from "../../../../shared/api/types";
-import type { GetCategoriesResponseData } from "../types/spendings.types";
+import type { GetCategoriesResponseData } from "../types/responses.type";
 
 export function getCategories(): Promise<
   ApiSuccess<GetCategoriesResponseData[]>
