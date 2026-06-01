@@ -4,6 +4,7 @@ import { useRequestLock } from "../../../../../hooks/useRequestLock";
 import { useModalStore } from "../../../../../shared/ui/modal";
 import { deleteGroupWithSpending } from "../../../groups/api/deleteGroupWithSpendings";
 import { useNavigate } from "react-router-dom";
+import { useAccountsStore } from "../../../../../store/accountsStore";
 
 type DeleteGroupButtonProps = {
   groupId: string;
@@ -13,9 +14,13 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
   const navigate = useNavigate();
   const openModal = useModalStore((state) => state.openModal);
   const { isSubmitting, withRequestLock } = useRequestLock();
-  const updateAccountAmount = useProfileStore(
-    (state) => state.updateAccountAmount
+  const updateProfileAmount = useProfileStore(
+    (state) => state.updateProfileAmount
   );
+  const updateListAmountAccounts = useAccountsStore(
+    (store) => store.updateListAmountAccounts
+  );
+  const activeAccount = useProfileStore((state) => state.account.id);
 
   function handleCancel() {
     navigate("/app/operations");
@@ -23,8 +28,9 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
 
   async function handleGroupDelete(groupId: string) {
     const result = await withRequestLock(async () => {
-      const deletedGoup = await deleteGroupWithSpending(groupId);
-      updateAccountAmount(deletedGoup.data.accountAmount);
+      const deletedGoup = await deleteGroupWithSpending(groupId); // TODO поменять на [{acountId, amount}]
+      updateProfileAmount(deletedGoup.data.accountAmount); // передавать только тот, который активный
+      updateListAmountAccounts(activeAccount, deletedGoup.data.accountAmount);
       return deletedGoup;
     });
 

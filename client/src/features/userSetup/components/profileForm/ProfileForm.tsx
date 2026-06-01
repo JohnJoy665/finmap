@@ -36,8 +36,6 @@ function ProfileForm({
   currencies,
   setSelectedLanguageCode,
 }: ProfileFormProps) {
-  console.log("reload");
-
   const [form] = Form.useForm<ProfileFormValues>();
 
   const clearProfile = useProfileStore((store) => store.clearProfile);

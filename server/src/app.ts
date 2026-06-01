@@ -14,6 +14,7 @@ import { geoPositionRouter } from "./modules/geoPositions/geoPosition.routers";
 import { countriesRouter } from "./modules/countries/countries.routers";
 import { citiesRouter } from "./modules/cities/cities.routers";
 import { currenciesRouter } from "./modules/currencies/currencies.routers";
+import { accountsRouter } from "./modules/accounts/accounts.routers";
 
 const app = express();
 
@@ -33,6 +34,8 @@ app.use("/api/cities", citiesRouter);
 app.use("/api/currencies", currenciesRouter);
 
 app.use("/api", userSettingsMiddleware);
+
+app.use("/api/accounts", accountsRouter);
 
 app.use("/api/categories", categoriesRouter);
 app.use("/api/groups", groupsRouter);

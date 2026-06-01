@@ -17,9 +17,15 @@ function GroupGrid() {
   const conversionFactor = useProfileStore(
     (store) => store.account?.conversionFactor
   );
+
+  const currencySymbol = useProfileStore(
+    (store) => store.account?.currencySymbol
+  );
   const navigate = useNavigate();
 
-  if (!conversionFactor) return;
+  if (!conversionFactor || !currencySymbol) return;
+
+  console.log(groups);
 
   const renderGroups = groups.map((group) => {
     return (
@@ -36,6 +42,8 @@ function GroupGrid() {
               : "Нет данных"
           }
           Icon={categoryIcons[group.category_icon]}
+          isConverted={group.is_converted}
+          currencySymbol={currencySymbol}
         />
       </GroupCard>
     );

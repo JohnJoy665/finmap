@@ -1,0 +1,73 @@
+.dropdown {
+  width: 280px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--ant-color-bg-elevated);
+  box-shadow: var(--ant-box-shadow-secondary);
+}
+
+.accountItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+  color: var(--ant-color-text);
+  cursor: pointer;
+
+  font: inherit;
+  text-align: left;
+}
+
+.accountItem:hover {
+  background: var(--ant-color-fill-tertiary);
+}
+
+.accountItem:active {
+  background: var(--ant-color-fill-secondary);
+}
+
+.accountMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.currency {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ant-color-text);
+}
+
+.amount {
+  font-size: 13px;
+  color: var(--ant-color-text-secondary);
+  white-space: nowrap;
+}
+
+.active {
+  grid-column: 1 / -1;
+
+  width: fit-content;
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ant-color-primary);
+  background: var(--ant-color-primary-bg);
+}
+
+.footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ant-color-border-secondary);
+}

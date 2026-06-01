@@ -33,6 +33,7 @@ type GetGroupResponse = {
   category_description: string;
   category_id: number;
   amount: number;
+  is_converted: boolean;
 };
 
 export async function createGroup({
@@ -68,11 +69,16 @@ export async function createGroup({
 
     const product_name = "ВРЕМЕННО БЕЗ НАЗВАНИЯ";
 
-    const baseAmountMicro = await getBaseAmountMicro(
-      client,
-      reqValues.amount,
-      userSettings
-    );
+    const currencyCode = userSettings.currencyCode;
+
+    if (!currencyCode) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const baseAmountMicro = await getBaseAmountMicro(client, reqValues.amount, {
+      currencyCode,
+      conversionFactor: userSettings.conversionFactor,
+    });
 
     const spendingResult = await client.query<SpendingRow>(
       `insert into spendings (
@@ -170,6 +176,12 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           a.title,
           a.category_id,
           a.last_change_date,
+            CASE
+            WHEN a.origin_code = $2 THEN false
+            WHEN $2 = 'USD' AND a.base_amount_micro IS NOT NULL THEN true
+            WHEN rate.exchange_rate IS NOT NULL THEN true
+            ELSE false
+          END AS is_converted,
           CASE
             WHEN a.origin_code = $2 THEN a.origin_amount
             WHEN $2 = 'USD' THEN ROUND(a.base_amount_micro::numeric / 1000000 * a.conversion_factor) 
@@ -198,8 +210,8 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           CASE
             WHEN COUNT(*) FILTER (WHERE cnv.view_amount IS NULL) > 0 THEN NULL
             ELSE SUM(cnv.view_amount)
-          END AS amount
-
+          END AS amount,
+          BOOL_OR(cnv.is_converted) AS is_converted
         FROM converted_spendings cnv
         GROUP BY
           cnv.group_id,
@@ -214,11 +226,12 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
         gs.amount,
         cat.code AS category_icon,
         clg.translation AS category_description,
-        gs.category_id
+        gs.category_id,
+        gs.is_converted
       FROM grouped_spendings gs
       JOIN category cat ON cat.id = gs.category_id
       JOIN category_lang clg ON clg.word_code = cat.code AND clg.lang_code = 'ru'
-      ORDER BY gs DESC;
+      ORDER BY gs.last_change_date DESC;
       `,
       [userId, userSettings.currencyCode]
     );

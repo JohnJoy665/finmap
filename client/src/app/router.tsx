@@ -10,6 +10,7 @@ import OperationsPage from "../pages/operations/OperationsPage";
 import SpendingsPage from "../pages/spendings/SpendingsPage";
 import ProfileGate from "./routers/ProfileGate";
 import UserSetupPage from "../pages/userSetup/UserSetupPage";
+import CreateAccountPage from "../pages/accounts/CreateAccountPage";
 
 export const router = createBrowserRouter([
   {
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
                   {
                     path: "operations/spendings",
                     element: <SpendingsPage />,
+                  },
+                  {
+                    path: "accounts/create",
+                    element: <CreateAccountPage />,
                   },
                 ],
               },

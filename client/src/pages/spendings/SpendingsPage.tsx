@@ -11,6 +11,7 @@ import { createNewGroupWithSpending } from "../../features/operations/spendings/
 import DeleteGroupAction from "../../features/operations/spendings/components/deleteGroupAction/DeleteGroupAction";
 import { toMinorUnits } from "../../utils/toMinorAmount";
 import { useRequestLock } from "../../hooks/useRequestLock";
+import { useAccountsStore } from "../../store/accountsStore";
 
 function SpendingsPage() {
   const { state } = useLocation();
@@ -21,8 +22,14 @@ function SpendingsPage() {
 
   const { isSubmitting, withRequestLock } = useRequestLock();
 
-  const updateAccountAmount = useProfileStore(
-    (state) => state.updateAccountAmount
+  const updateProfileAmount = useProfileStore(
+    (state) => state.updateProfileAmount
+  );
+
+  const activeAccount = useProfileStore((state) => state.account.id);
+
+  const updateListAmountAccounts = useAccountsStore(
+    (store) => store.updateListAmountAccounts
   );
 
   const conversionFactor = useProfileStore(
@@ -55,7 +62,8 @@ function SpendingsPage() {
           categoryId: values.category,
         });
 
-        updateAccountAmount(newSpending.data.accountAmount);
+        updateProfileAmount(newSpending.data.accountAmount);
+        updateListAmountAccounts(activeAccount, newSpending.data.accountAmount); // TODO поменять обработку на [{accountId: string; amount:string}]
 
         return newSpending;
       });
@@ -75,7 +83,7 @@ function SpendingsPage() {
           categoryId: values.category,
         });
 
-        updateAccountAmount(newGroup.data.accountAmount);
+        updateProfileAmount(newGroup.data.accountAmount);
 
         return newGroup;
       });

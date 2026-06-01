@@ -41,7 +41,7 @@
 .amount {
   justify-self: end;
 
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1;
   color: var(--ant-color-error);
 
