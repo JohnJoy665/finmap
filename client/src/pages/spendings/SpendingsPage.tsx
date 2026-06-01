@@ -50,6 +50,16 @@ function SpendingsPage() {
     navigate("/app/operations");
   }
 
+  function changeAccountAmmount(newAmmount: string, activeAccount: string) {
+    updateProfileAmount(newAmmount);
+    updateListAmountAccounts([
+      {
+        accountId: activeAccount,
+        amount: newAmmount,
+      },
+    ]);
+  }
+
   async function handleSubmit(values: SpendingFormValues) {
     if (!conversionFactor) return;
     const minorAmount = toMinorUnits(values.amount, conversionFactor);
@@ -62,8 +72,7 @@ function SpendingsPage() {
           categoryId: values.category,
         });
 
-        updateProfileAmount(newSpending.data.accountAmount);
-        updateListAmountAccounts(activeAccount, newSpending.data.accountAmount); // TODO поменять обработку на [{accountId: string; amount:string}]
+        changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
 
         return newSpending;
       });
@@ -83,7 +92,7 @@ function SpendingsPage() {
           categoryId: values.category,
         });
 
-        updateProfileAmount(newGroup.data.accountAmount);
+        changeAccountAmmount(newGroup.data.accountAmount, activeAccount);
 
         return newGroup;
       });

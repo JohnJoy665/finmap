@@ -28,9 +28,15 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
 
   async function handleGroupDelete(groupId: string) {
     const result = await withRequestLock(async () => {
-      const deletedGoup = await deleteGroupWithSpending(groupId); // TODO поменять на [{acountId, amount}]
-      updateProfileAmount(deletedGoup.data.accountAmount); // передавать только тот, который активный
-      updateListAmountAccounts(activeAccount, deletedGoup.data.accountAmount);
+      const deletedGoup = await deleteGroupWithSpending(groupId);
+      const activeAccountAmount = deletedGoup.data.accounts.find(
+        (item) => item.accountId === activeAccount
+      )?.amount;
+
+      if (activeAccountAmount) {
+        updateProfileAmount(activeAccountAmount);
+      }
+      updateListAmountAccounts(deletedGoup.data.accounts);
       return deletedGoup;
     });
 

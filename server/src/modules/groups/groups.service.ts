@@ -257,66 +257,95 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
 type DeleteGroupWithSpendingsReq = {
   userId: string;
   deleteGroupId: string;
-  userSettings: UserSettings;
 };
 
-type DeleteGroupWithSpendingsRes = {
-  id: string;
-  name: string;
+type ChangedAccount = {
+  accountId: string;
+  amount: string;
+};
+
+type DeleteGroupWithSpendingsRow = {
+  group_id: string;
+  group_name: string;
+  changed_accounts: ChangedAccount[];
 };
 
 export async function deleteGroupWithSpendings({
   userId,
   deleteGroupId,
-  userSettings,
 }: DeleteGroupWithSpendingsReq) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const deletedSpendings = await client.query(
+    const result = await client.query<DeleteGroupWithSpendingsRow>(
       `
         WITH deleted_spendings AS (
           DELETE FROM spendings
           WHERE user_id = $1
             AND group_id = $2
-          RETURNING amount
+          RETURNING account_id, amount
+        ),
+
+        account_deltas AS (
+          SELECT
+            account_id,
+            SUM(amount)::bigint AS delta_amount
+          FROM deleted_spendings
+          GROUP BY account_id
+        ),
+
+        changed_accounts AS (
+          UPDATE accounts a
+          SET amount = a.amount + ad.delta_amount,
+              last_change_date = CURRENT_TIMESTAMP
+          FROM account_deltas ad
+          WHERE a.id = ad.account_id
+            AND a.user_id = $1
+          RETURNING
+            a.id,
+            a.amount
+        ),
+
+        deleted_group AS (
+          DELETE FROM spendings_group
+          WHERE id = $2
+            AND user_id = $1
+          RETURNING id, name
         )
-        SELECT COALESCE(SUM(amount), 0) AS total_amount
-        FROM deleted_spendings;
+
+        SELECT
+          dg.id AS group_id,
+          dg.name AS group_name,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'accountId', ca.id,
+                'amount', ca.amount::text
+              )
+            ) FILTER (WHERE ca.id IS NOT NULL),
+            '[]'::json
+          ) AS changed_accounts
+        FROM deleted_group dg
+        LEFT JOIN changed_accounts ca ON true
+        GROUP BY dg.id, dg.name;
       `,
       [userId, deleteGroupId]
     );
 
-    const totalAmount = BigInt(deletedSpendings.rows[0].total_amount);
-
-    const changedAccount = await changeAccountAmount(client, {
-      accountId: userSettings.accountId,
-      userId,
-      deltaAmount: totalAmount,
-    });
-
-    const deletedGroup = await client.query<DeleteGroupWithSpendingsRes>(
-      `
-        DELETE FROM spendings_group
-        WHERE id = $1
-          AND user_id = $2
-        RETURNING id, name;
-      `,
-      [deleteGroupId, userId]
-    );
-
-    if (deletedGroup.rowCount === 0) {
+    if (result.rowCount === 0) {
       throw new AppError(404, "GROUP_NOT_FOUND", "Group not found");
     }
 
     await client.query("COMMIT");
 
+    const deletedGroup = result.rows[0];
+
     return {
-      accountAmount: changedAccount.amount,
-      groupId: deletedGroup.rows[0].id,
-      groupName: deletedGroup.rows[0].name,
+      groupId: deletedGroup.group_id,
+      groupName: deletedGroup.group_name,
+      accounts: deletedGroup.changed_accounts,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");
