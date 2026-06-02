@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { createSpendingController } from "./spendings.controller";
+import {
+  createSpendingController,
+  getSpendingsByGroupController,
+} from "./spendings.controller";
 
 export const spendingsRouter = Router();
 
 spendingsRouter.post("/", createSpendingController);
+spendingsRouter.get("/group", getSpendingsByGroupController);

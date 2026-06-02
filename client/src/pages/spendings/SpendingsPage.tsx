@@ -12,6 +12,8 @@ import DeleteGroupAction from "../../features/operations/spendings/components/de
 import { toMinorUnits } from "../../utils/toMinorAmount";
 import { useRequestLock } from "../../hooks/useRequestLock";
 import { useAccountsStore } from "../../store/accountsStore";
+import SpendingsListContainer from "../../features/operations/spendings/components/spendingsList/components/spendingsListContainer/SpendingsListContainer";
+// import SpendingsList from "../../features/operations/spendings/components/spendingsList/SpendingsList";
 
 function SpendingsPage() {
   const { state } = useLocation();
@@ -126,6 +128,7 @@ function SpendingsPage() {
             : undefined
         }
       />
+      {group?.id && <SpendingsListContainer groupId={group.id} />}
       {group?.id && <DeleteGroupAction groupId={group.id} />}
     </>
   );

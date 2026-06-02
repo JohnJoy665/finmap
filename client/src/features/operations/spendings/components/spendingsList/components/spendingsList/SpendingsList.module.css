@@ -1,0 +1,31 @@
+.collapse {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.item :global(.ant-collapse-header) {
+  align-items: center !important;
+  padding: 12px 14px !important;
+}
+
+.item :global(.ant-collapse-content-box) {
+  padding: 0 14px 12px !important;
+}
+
+.arrow {
+  font-size: 12px;
+  color: #999;
+  transition: transform 0.2s ease;
+}
+
+.arrowActive {
+  transform: rotate(180deg);
+}

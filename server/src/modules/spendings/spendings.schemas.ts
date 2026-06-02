@@ -23,3 +23,25 @@ export const createSpendingSchema = Joi.object({
   groupId: Joi.string().uuid().required(),
   categoryId: Joi.number().integer().positive().optional(),
 });
+
+export const getSpendingsByGroupQuerySchema = Joi.object({
+  groupId: Joi.string().uuid().required().messages({
+    "string.empty": "groupId is required",
+    "string.guid": "groupId must be a valid uuid",
+    "any.required": "groupId is required",
+  }),
+
+  limitCount: Joi.number().integer().positive().required().messages({
+    "number.base": "limitCount must be a number",
+    "number.integer": "limitCount must be an integer",
+    "number.positive": "limitCount must be positive",
+    "any.required": "limitCount is required",
+  }),
+
+  offsetCount: Joi.number().integer().min(0).required().messages({
+    "number.base": "offsetCount must be a number",
+    "number.integer": "offsetCount must be an integer",
+    "number.min": "offsetCount must be greater than or equal to 0",
+    "any.required": "offsetCount is required",
+  }),
+});
