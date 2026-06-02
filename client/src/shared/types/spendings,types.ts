@@ -3,8 +3,8 @@ export type SpendingByGroupItem = {
   date: string;
   time: string;
   amount: string;
-  conversion_factor: number;
+  conversionFactor: number;
   currencySymbol: string;
   title?: string | null;
-  category_code: string | null;
+  categoryCode: string | null;
 };

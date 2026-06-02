@@ -232,15 +232,11 @@ export async function getSpendingsByGroup({
                 'id', i.id::text,
                 'date', TO_CHAR(i.spending_date, 'DD.MM'),
                 'time', TO_CHAR(i.spending_date, 'HH24:MI'),
-                'amount', REGEXP_REPLACE(
-                  (i.amount::numeric / i.conversion_factor)::text,
-                  '\\.?0+$',
-                  ''
-                ),
-                'conversion_factor', i.conversion_factor,
+                'amount', i.amount::text,
+                'conversionFactor', i.conversion_factor,
                 'currencySymbol', i.currency_symbol,
                 'title', i.name,
-                'category_code', i.category_code
+                'categoryCode', i.category_code
               )
               ORDER BY i.spending_date DESC, i.id DESC
             )

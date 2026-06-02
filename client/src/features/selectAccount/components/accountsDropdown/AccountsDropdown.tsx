@@ -48,10 +48,10 @@ function AccountsDropdown({
     <div className={styles.dropdown}>
       {accounts.map((account) => {
         const displayAmount = Number(account.amount) / account.conversionFactor;
-
+        const fraction = String(account.conversionFactor).length - 1;
         const formattedAmount = new Intl.NumberFormat("ru-RU", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumFractionDigits: fraction,
+          maximumFractionDigits: fraction,
         }).format(displayAmount);
 
         const isActive = account.id === activeAccount?.id;

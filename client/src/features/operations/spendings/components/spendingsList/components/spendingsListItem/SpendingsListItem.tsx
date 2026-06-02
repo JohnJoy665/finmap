@@ -10,6 +10,15 @@ type SpendingsListItemProps = {
 };
 
 function SpendingsListItem({ spending }: SpendingsListItemProps) {
+  function convertAmount(spending) {
+    const displayAmount = Number(spending.amount) / spending.conversionFactor;
+    const fraction = String(spending.conversionFactor).length - 1;
+    return new Intl.NumberFormat("ru-RU", {
+      minimumFractionDigits: fraction,
+      maximumFractionDigits: fraction,
+    }).format(displayAmount);
+  }
+
   return (
     <div className={styles.header}>
       <div className={styles.info}>
@@ -20,7 +29,9 @@ function SpendingsListItem({ spending }: SpendingsListItemProps) {
         <Text className={styles.name}>{spending.title || "Без названия"}</Text>
       </div>
 
-      <Text className={styles.amount}>{spending.amount}</Text>
+      <Text className={styles.amount}>
+        {convertAmount(spending)} {spending.currencySymbol}
+      </Text>
     </div>
   );
 }
