@@ -7,4 +7,5 @@ export type SpendingByGroupItem = {
   currencySymbol: string;
   title?: string | null;
   categoryCode: string | null;
+  currencyCode: string;
 };

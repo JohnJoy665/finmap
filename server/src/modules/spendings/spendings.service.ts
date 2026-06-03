@@ -167,6 +167,7 @@ export type SpendingByGroupItem = {
   amount: string;
   conversion_factor: number;
   currencySymbol: string;
+  currencyCode: string;
   title?: string | null;
   category_code: string | null;
 };
@@ -238,6 +239,7 @@ export async function getSpendingsByGroup({
                 'amount', i.amount::text,
                 'conversionFactor', i.conversion_factor,
                 'currencySymbol', i.currency_symbol,
+                'currencyCode', i.currency_code,
                 'title', i.name,
                 'categoryCode', i.category_code
               )

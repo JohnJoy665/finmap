@@ -11,9 +11,13 @@ const { Text } = Typography;
 
 type SpendingsListContainerProps = {
   groupId: string;
+  onLastSpendingCurrencyChange: (currencyCode: string | null) => void;
 };
 
-function SpendingsListContainer({ groupId }: SpendingsListContainerProps) {
+function SpendingsListContainer({
+  groupId,
+  onLastSpendingCurrencyChange,
+}: SpendingsListContainerProps) {
   const [offsetCount, setOffsetCount] = useState<number>(0);
   const [spendings, setSpendings] = useState<SpendingByGroupItem[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -38,6 +42,14 @@ function SpendingsListContainer({ groupId }: SpendingsListContainerProps) {
         setSpendings((prev) => {
           return [...prev, ...spendings.data.items];
         });
+
+        if (offsetCount === 0) {
+          // console.log(spendings.data.items[0]?.currencyCode);
+          onLastSpendingCurrencyChange?.(
+            spendings.data.items[0]?.currencyCode ?? null
+          );
+        }
+
         setHasMore(spendings.data.hasMore);
       } catch (error) {
         console.log(error);
