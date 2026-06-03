@@ -1,5 +1,4 @@
-import { Button, Typography } from "antd";
-import { EditOutlined, DeleteOutlined, SwapOutlined } from "@ant-design/icons";
+import { Typography } from "antd";
 import styles from "./SpendingsListItem.module.css";
 import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
 
@@ -32,49 +31,6 @@ function SpendingsListItem({ spending }: SpendingsListItemProps) {
       <Text className={styles.amount}>
         {convertAmount(spending)} {spending.currencySymbol}
       </Text>
-    </div>
-  );
-}
-
-export function SpendingsListItemActions() {
-  return (
-    <div className={styles.actions}>
-      <Button
-        block
-        type="text"
-        icon={<EditOutlined />}
-        className={styles.actionButton}
-      >
-        Изменить название
-      </Button>
-
-      <Button
-        block
-        type="text"
-        icon={<EditOutlined />}
-        className={styles.actionButton}
-      >
-        Изменить сумму покупки
-      </Button>
-
-      <Button
-        block
-        type="text"
-        icon={<SwapOutlined />}
-        className={styles.actionButton}
-      >
-        Переместить в группу
-      </Button>
-
-      <Button
-        block
-        type="text"
-        danger
-        icon={<DeleteOutlined />}
-        className={styles.actionButton}
-      >
-        Удалить
-      </Button>
     </div>
   );
 }

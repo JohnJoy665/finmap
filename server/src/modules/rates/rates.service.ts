@@ -74,3 +74,69 @@ export async function getBaseAmountMicro(
     );
   }
 }
+
+export async function getBaseAmountMicroBySpendingDate(
+  client: PoolClient,
+  params: {
+    minorAmountOriginal: string;
+    currencyCode: string;
+    conversionFactor: number;
+    spendingDate: Date;
+  }
+): Promise<bigint | null> {
+  const CURRENCY_CODE_BASE = "USD";
+
+  try {
+    const result = await client.query<{ base_amount_micro: string | null }>(
+      `
+      SELECT
+        CASE
+          WHEN $2::varchar = $5::varchar THEN
+            ROUND(($1::numeric / $3::numeric) * 1000000)::bigint
+
+          WHEN er.exchange_rate IS NOT NULL THEN
+            ROUND((($1::numeric / $3::numeric) / er.exchange_rate) * 1000000)::bigint
+
+          ELSE NULL
+        END AS base_amount_micro
+      FROM (SELECT 1) x
+      LEFT JOIN LATERAL (
+        SELECT er.exchange_rate
+        FROM exchange_rates er
+        WHERE er.base_currency = $5
+          AND er.target_currency = $2
+          AND er.date_rate <= $4
+        ORDER BY er.date_rate DESC
+        LIMIT 1
+      ) er ON $2::varchar <> $5::varchar;
+      `,
+      [
+        params.minorAmountOriginal,
+        params.currencyCode,
+        params.conversionFactor,
+        params.spendingDate,
+        CURRENCY_CODE_BASE,
+      ]
+    );
+
+    const baseAmountMicro = result.rows[0]?.base_amount_micro;
+
+    if (baseAmountMicro == null) {
+      return null;
+    }
+
+    return BigInt(baseAmountMicro);
+  } catch (error) {
+    console.error("[getBaseAmountMicroBySpendingDate]", error);
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError(
+      400,
+      "FAILED_GETTING_BASE_AMOUNT",
+      "Failed getting base amount"
+    );
+  }
+}

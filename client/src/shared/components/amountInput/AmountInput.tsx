@@ -3,7 +3,11 @@ import type { InputNumberProps } from "antd";
 import type { RuleObject } from "antd/es/form";
 import type { KeyboardEvent, ClipboardEvent } from "react";
 
-function AccountAmountInput() {
+type AmountInputProps = {
+  lable?: string;
+};
+
+function AmountInput({ lable }: AmountInputProps) {
   const form = Form.useFormInstance();
   const currencySymbol = Form.useWatch("currencySymbol", form) || "";
 
@@ -102,7 +106,7 @@ function AccountAmountInput() {
   return (
     <Form.Item
       name="accountAmount"
-      label="Какая сейчас сумма на счете?"
+      label={lable || null}
       validateTrigger="onChange"
       getValueFromEvent={(value: string | null) => value ?? ""}
       rules={[
@@ -119,11 +123,11 @@ function AccountAmountInput() {
         parser={parser}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        placeholder="Введите сумму на счете"
+        placeholder="Введите сумму"
         style={{ width: "100%" }}
       />
     </Form.Item>
   );
 }
 
-export default AccountAmountInput;
+export default AmountInput;

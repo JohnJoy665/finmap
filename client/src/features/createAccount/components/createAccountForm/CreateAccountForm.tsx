@@ -69,7 +69,7 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
     >
       <CurrencySelect currencies={currencies} />
 
-      <AmountInput />
+      <AmountInput lable="Какая сумма на счете?" />
 
       <Button type="primary" htmlType="submit">
         Сохранить

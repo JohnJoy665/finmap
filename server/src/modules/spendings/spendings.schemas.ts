@@ -45,3 +45,46 @@ export const getSpendingsByGroupQuerySchema = Joi.object({
     "any.required": "offsetCount is required",
   }),
 });
+
+export const renameSpendingSchema = Joi.object({
+  spendingId: Joi.string().uuid().required().messages({
+    "string.empty": "spendingId is required",
+    "string.guid": "spendingId must be a valid UUID",
+    "any.required": "spendingId is required",
+  }),
+
+  currentName: Joi.string().trim().min(1).max(255).required().messages({
+    "string.empty": "currentName is required",
+    "string.min": "currentName must not be empty",
+    "string.max": "currentName must be less than or equal to 255 characters",
+    "any.required": "currentName is required",
+  }),
+});
+
+export const changeSpendingAmountSchema = Joi.object({
+  spendingId: Joi.string().uuid().required().messages({
+    "string.empty": "Spending id is required",
+    "string.guid": "Spending id must be UUID",
+    "any.required": "Spending id is required",
+  }),
+
+  spendingAmount: Joi.string()
+    .pattern(/^[1-9]\d*$/)
+    .custom((value, helpers) => {
+      const amount = BigInt(value);
+
+      const maxAmount = 1_000_000_000n; // 1 миллиард копеек
+
+      if (amount > maxAmount) {
+        return helpers.error("amount.max");
+      }
+
+      return value;
+    })
+    .required()
+    .messages({
+      "string.pattern.base": "Amount must be a positive integer string",
+      "amount.max": "Amount is too large",
+      "any.required": "Amount is required",
+    }),
+});

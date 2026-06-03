@@ -2,7 +2,10 @@ import { pool } from "../../db/pool";
 import type { CreateSpendingRequest } from "../../types/spendings/spendings.type";
 import { AppError } from "../../utils/AppError";
 import { changeAccountAmount } from "../accounts/accounts.service";
-import { getBaseAmountMicro } from "../rates/rates.service";
+import {
+  getBaseAmountMicro,
+  getBaseAmountMicroBySpendingDate,
+} from "../rates/rates.service";
 
 type SpendingGroupResult = {
   category_id: number;
@@ -47,7 +50,7 @@ export async function createSpending({
   reqValues,
 }: CreateSpendingRequest) {
   const statistical = true;
-  const name = "ПОКА БЕЗ НАЗВАНИЯ";
+  const name = null;
 
   const categoryId = await getCategoryIdForSpending(
     reqValues.groupId,
@@ -274,5 +277,210 @@ export async function getSpendingsByGroup({
     }
 
     throw error;
+  }
+}
+
+type RenameSpendingPayload = {
+  userId: string;
+  spendingId: string;
+  currentName: string;
+};
+
+type RenameSpendingRow = {
+  id: string;
+  name: string;
+};
+
+export async function renameSpending({
+  userId,
+  spendingId,
+  currentName,
+}: RenameSpendingPayload) {
+  try {
+    const result = await pool.query<RenameSpendingRow>(
+      `
+      UPDATE spendings
+      SET name = $1
+      WHERE id = $2
+        AND user_id = $3
+      RETURNING
+        id,
+        name;
+      `,
+      [currentName, spendingId, userId]
+    );
+
+    const updatedSpending = result.rows[0];
+
+    if (!updatedSpending) {
+      throw new AppError(404, "SPENDING_NOT_FOUND", "Spending not found");
+    }
+
+    return {
+      spendingId: updatedSpending.id,
+      currentName: updatedSpending.name,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}
+
+type ChangeSpendingAmountRequest = {
+  userId: string;
+  spendingId: string;
+  spendingAmount: string;
+};
+
+type SpendingForChangeAmountRow = {
+  id: string;
+  amount: string;
+  currency_code: string;
+  account_id: string;
+  spending_date: Date;
+  conversion_factor: number | null;
+};
+
+type UpdatedAccountRow = {
+  id: string;
+  amount: string;
+};
+
+type UpdatedSpendingRow = {
+  id: string;
+  amount: string;
+  base_amount_micro: string | null;
+};
+
+export async function changeSpendingAmount({
+  userId,
+  spendingId,
+  spendingAmount,
+}: ChangeSpendingAmountRequest) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const spendingResult = await client.query<SpendingForChangeAmountRow>(
+      `
+      SELECT
+        id,
+        amount::text,
+        currency_code::text,
+        account_id,
+        spending_date,
+        conversion_factor
+      FROM spendings
+      WHERE id = $1
+        AND user_id = $2
+      FOR UPDATE;
+      `,
+      [spendingId, userId]
+    );
+
+    const spending = spendingResult.rows[0];
+
+    if (!spending) {
+      throw new AppError(404, "SPENDING_NOT_FOUND", "Spending not found");
+    }
+
+    if (!spending.conversion_factor) {
+      throw new AppError(
+        400,
+        "CONVERSION_FACTOR_NOT_FOUND",
+        "Conversion factor not found"
+      );
+    }
+
+    const oldAmount = BigInt(spending.amount);
+    const newAmount = BigInt(spendingAmount);
+
+    const deltaAmount = oldAmount - newAmount;
+
+    const baseAmountMicro = await getBaseAmountMicroBySpendingDate(client, {
+      minorAmountOriginal: spendingAmount,
+      currencyCode: spending.currency_code.trim(),
+      conversionFactor: spending.conversion_factor,
+      spendingDate: spending.spending_date,
+    });
+
+    const updatedSpendingResult = await client.query<UpdatedSpendingRow>(
+      `
+      UPDATE spendings
+      SET
+        amount = $1,
+        base_amount_micro = $2
+      WHERE id = $3
+        AND user_id = $4
+      RETURNING
+        id,
+        amount::text,
+        base_amount_micro::text;
+      `,
+      [spendingAmount, baseAmountMicro?.toString() ?? null, spendingId, userId]
+    );
+
+    const updatedAccountResult = await client.query<UpdatedAccountRow>(
+      `
+      UPDATE accounts
+      SET
+        amount = amount + $1,
+        last_change_date = CURRENT_TIMESTAMP
+      WHERE id = $2
+        AND user_id = $3
+      RETURNING
+        id,
+        amount::text;
+      `,
+      [deltaAmount.toString(), spending.account_id, userId]
+    );
+
+    const updatedAccount = updatedAccountResult.rows[0];
+
+    if (!updatedAccount) {
+      throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
+    }
+
+    await client.query("COMMIT");
+
+    const updatedSpending = updatedSpendingResult.rows[0];
+
+    return {
+      spendingId: updatedSpending.id,
+      spendingAmount: updatedSpending.amount,
+      baseAmountMicro: updatedSpending.base_amount_micro,
+      accountId: updatedAccount.id,
+      accountAmount: updatedAccount.amount,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
   }
 }

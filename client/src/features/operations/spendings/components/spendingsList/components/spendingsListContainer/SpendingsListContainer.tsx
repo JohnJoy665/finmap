@@ -4,42 +4,10 @@ import styles from "./SpendingsListContainer.module.css";
 import { useEffect, useState } from "react";
 import { getSpendingsByGroup } from "../../../../api/getSpendingsByGroup";
 import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
+import { useProfileStore } from "../../../../../../../store/profileStore";
+import { useAccountsStore } from "../../../../../../../store/accountsStore";
 
 const { Text } = Typography;
-
-// type Spending = {
-//   id: string;
-//   date: string;
-//   amount: string;
-//   title?: string | null;
-// };
-
-// const mockSpendings: Spending[] = [
-//   {
-//     id: "1",
-//     date: "01.06/12:40",
-//     amount: "1 250 ₽",
-//     title: "Продукты",
-//   },
-//   {
-//     id: "2",
-//     date: "01.06/10:15",
-//     amount: "320 ₽",
-//     title: "Кофе",
-//   },
-//   {
-//     id: "3",
-//     date: "31.05/19:30",
-//     amount: "2 800 ₽",
-//     title: "Аптека",
-//   },
-//   {
-//     id: "4",
-//     date: "31.05/14:05",
-//     amount: "750 ₽",
-//     title: null,
-//   },
-// ];
 
 type SpendingsListContainerProps = {
   groupId: string;
@@ -50,6 +18,14 @@ function SpendingsListContainer({ groupId }: SpendingsListContainerProps) {
   const [spendings, setSpendings] = useState<SpendingByGroupItem[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const OFFSET = 5;
+
+  const activeAccount = useProfileStore((state) => state.account?.id);
+  const updateProfileAmount = useProfileStore(
+    (state) => state.updateProfileAmount
+  );
+  const updateListAmountAccounts = useAccountsStore(
+    (store) => store.updateListAmountAccounts
+  );
 
   useEffect(() => {
     async function getNewSpendings() {
@@ -80,11 +56,48 @@ function SpendingsListContainer({ groupId }: SpendingsListContainerProps) {
     setOffsetCount(0);
   }
 
+  function renameSpending(spendingId: string, newName: string) {
+    setSpendings((prev) =>
+      prev.map((spending) =>
+        spending.id === spendingId ? { ...spending, title: newName } : spending
+      )
+    );
+  }
+
+  function changeSpendingAmount(
+    spendingId: string,
+    newSpendingAmount: string,
+    accountId: string,
+    newAccountSpending: string
+  ) {
+    setSpendings((prev) =>
+      prev.map((spending) =>
+        spending.id === spendingId
+          ? { ...spending, amount: newSpendingAmount }
+          : spending
+      )
+    );
+
+    if (activeAccount === accountId) {
+      updateProfileAmount(newAccountSpending);
+    }
+    updateListAmountAccounts([
+      {
+        accountId,
+        amount: newAccountSpending,
+      },
+    ]);
+  }
+
   return (
     <div className={styles.spendingsListContainer}>
       <Text className={styles.title}>Последние покупки</Text>
 
-      <SpendingsList spendings={spendings} />
+      <SpendingsList
+        handleRenameSpending={renameSpending}
+        handleChangeSpendingAmount={changeSpendingAmount}
+        spendings={spendings}
+      />
 
       {spendings.length >= OFFSET && (
         <Button

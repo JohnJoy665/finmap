@@ -1,16 +1,26 @@
 import { Collapse } from "antd";
 import { DownOutlined } from "@ant-design/icons";
-import SpendingsListItem, {
-  SpendingsListItemActions,
-} from "../spendingsListItem/SpendingsListItem";
+import SpendingsListItem from "../spendingsListItem/SpendingsListItem";
 import styles from "./SpendingsList.module.css";
 import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
+import SpendingsListItemActions from "../spendingsListItemActions/SpendingsListItemActions";
 
 type SpendingsListProps = {
   spendings: SpendingByGroupItem[];
+  handleRenameSpending: (spendingId: string, newName: string) => void;
+  handleChangeSpendingAmount: (
+    spendingId: string,
+    newAmountSpending: string,
+    accountId: string,
+    newAccountSpending: string
+  ) => void;
 };
 
-function SpendingsList({ spendings }: SpendingsListProps) {
+function SpendingsList({
+  spendings,
+  handleRenameSpending,
+  handleChangeSpendingAmount,
+}: SpendingsListProps) {
   return (
     <Collapse
       accordion
@@ -27,7 +37,14 @@ function SpendingsList({ spendings }: SpendingsListProps) {
         key: spending.id,
         className: styles.item,
         label: <SpendingsListItem spending={spending} />,
-        children: <SpendingsListItemActions />,
+        children: (
+          <SpendingsListItemActions
+            key={spending.id}
+            spending={spending}
+            handleRenameSpending={handleRenameSpending}
+            handleChangeSpendingAmount={handleChangeSpendingAmount}
+          />
+        ),
       }))}
     />
   );
