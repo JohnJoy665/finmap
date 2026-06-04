@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 *,
 *::before,
 *::after {
@@ -11,10 +13,12 @@
 
 :root {
   --app-accent: #56ccf2;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 body {
   margin: 0;
   font-family: var(--ant-font-family);
   background: var(--ant-color-bg-layout);
+  font-family: "Inter", system-ui, sans-serif;
 }
