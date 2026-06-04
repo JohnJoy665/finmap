@@ -1,10 +1,11 @@
 import { Flex } from "antd";
 import styles from "./GroupCardContent.module.css";
+import type { LucideIcon } from "lucide-react";
 
 type GroupCardContentProps = {
   title: string;
   amount: string;
-  Icon: React.ComponentType;
+  Icon: LucideIcon;
   isConverted: boolean;
   currencySymbol: string;
 };
@@ -20,7 +21,7 @@ function GroupCardContent({
     <div className={styles.container}>
       <span className={styles.title}>{title}</span>
       <Flex align="center" justify="center">
-        <Icon />
+        <Icon size={24} color={"var(--app-accent)"} />
       </Flex>
 
       <span className={styles.amount}>

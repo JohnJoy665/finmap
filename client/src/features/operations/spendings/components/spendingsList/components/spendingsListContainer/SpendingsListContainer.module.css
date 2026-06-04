@@ -1,0 +1,14 @@
+.spendingsListContainer {
+  margin-top: 24px;
+}
+
+.title {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.showMore {
+  margin-top: 8px;
+}

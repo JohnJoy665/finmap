@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import SpendingsForm from "../../features/operations/spendings/components/spendingsForm/SpendingsForm";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePurchaseStore } from "../../store/purchaseStore";
 import { getCategories } from "../../features/operations/spendings/api/getCategories";
 import type { Group } from "../../shared/types/group.types";
@@ -12,15 +12,23 @@ import DeleteGroupAction from "../../features/operations/spendings/components/de
 import { toMinorUnits } from "../../utils/toMinorAmount";
 import { useRequestLock } from "../../hooks/useRequestLock";
 import { useAccountsStore } from "../../store/accountsStore";
+import SpendingsListContainer from "../../features/operations/spendings/components/spendingsList/components/spendingsListContainer/SpendingsListContainer";
+import { useModalStore } from "../../shared/ui/modal";
 
 function SpendingsPage() {
+  console.log("load");
+  const openModal = useModalStore((state) => state.openModal);
   const { state } = useLocation();
   const group: Group | undefined = state?.group;
-  const setCategories = usePurchaseStore((store) => store.setCategories);
-  const categories = usePurchaseStore((store) => store.categories);
   const navigate = useNavigate();
 
   const { isSubmitting, withRequestLock } = useRequestLock();
+  const lastSpendingCurrencyCodeRef = useRef<string | null>(null);
+
+  function handleLastSpendingCurrencyChange(currencyCode: string | null) {
+    console.log(currencyCode);
+    lastSpendingCurrencyCodeRef.current = currencyCode;
+  }
 
   const updateProfileAmount = useProfileStore(
     (state) => state.updateProfileAmount
@@ -36,15 +44,20 @@ function SpendingsPage() {
     (store) => store.account?.conversionFactor
   );
 
+  const currencyCode = useProfileStore((store) => store.account?.currencyCode);
+
   useEffect(() => {
     async function requestCategories() {
+      const { categories, setCategories } = usePurchaseStore.getState();
+
       if (categories.length !== 0) return;
+
       const categoriesResult = await getCategories();
       setCategories(categoriesResult.data);
     }
 
     requestCategories();
-  }, [setCategories, categories]);
+  }, []);
 
   function handleCancel() {
     navigate("/app/operations");
@@ -65,21 +78,43 @@ function SpendingsPage() {
     const minorAmount = toMinorUnits(values.amount, conversionFactor);
 
     if (group) {
-      const result = await withRequestLock(async () => {
-        const newSpending = await createNewSpending({
-          amount: minorAmount,
-          groupId: group.id,
-          categoryId: values.category,
+      async function confirmedCreateSpending(values: SpendingFormValues) {
+        const result = await withRequestLock(async () => {
+          if (!group) return;
+
+          const newSpending = await createNewSpending({
+            amount: minorAmount,
+            groupId: group?.id,
+            categoryId: values.category,
+          });
+          if (!activeAccount) return;
+          changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
+
+          return newSpending;
         });
-        if (!activeAccount) return;
-        changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
 
-        return newSpending;
-      });
+        if (result === undefined) return;
 
-      if (result === undefined) return;
+        handleCancel();
+      }
 
-      handleCancel();
+      if (currencyCode !== lastSpendingCurrencyCodeRef.current) {
+        openModal({
+          type: "confirmAction",
+          strategy: "destroy",
+          props: {
+            danger: false,
+            title: "Добавить покупку",
+            content:
+              "Валюта этой покупки отличается от валюты последней покупки в группе. Убедитесь, что всё указано верно.",
+            confirmText: "Все врено - продолжить",
+            cancelText: "Отмена",
+            onConfirm: () => confirmedCreateSpending(values),
+          },
+        });
+      } else {
+        confirmedCreateSpending(values);
+      }
     } else {
       const groupName = values.groupName;
 
@@ -126,6 +161,12 @@ function SpendingsPage() {
             : undefined
         }
       />
+      {group?.id && (
+        <SpendingsListContainer
+          onLastSpendingCurrencyChange={handleLastSpendingCurrencyChange}
+          groupId={group.id}
+        />
+      )}
       {group?.id && <DeleteGroupAction groupId={group.id} />}
     </>
   );

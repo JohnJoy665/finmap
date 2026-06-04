@@ -1,0 +1,8 @@
+.option {
+  width: 100%;
+}
+
+.option__text {
+  font-size: 18px;
+  line-height: 30px;
+}

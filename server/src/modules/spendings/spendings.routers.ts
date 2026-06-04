@@ -1,6 +1,16 @@
 import { Router } from "express";
-import { createSpendingController } from "./spendings.controller";
+import {
+  changeSpendingAmountController,
+  createSpendingController,
+  deleteSpendingController,
+  getSpendingsByGroupController,
+  renameSpendingController,
+} from "./spendings.controller";
 
 export const spendingsRouter = Router();
 
 spendingsRouter.post("/", createSpendingController);
+spendingsRouter.get("/group", getSpendingsByGroupController);
+spendingsRouter.patch("/rename", renameSpendingController);
+spendingsRouter.patch("/amount", changeSpendingAmountController);
+spendingsRouter.delete("/:spendingId", deleteSpendingController);

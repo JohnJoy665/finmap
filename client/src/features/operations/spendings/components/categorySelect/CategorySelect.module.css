@@ -4,26 +4,35 @@
   box-shadow: none;
   border-bottom: 1px solid var(--app-accent);
   border-radius: 0;
-
-  font-size: 28px;
+  min-height: 45px;
   color: var(--ant-color-text-secondary);
 }
 
-.field::placeholder {
-  color: var(--ant-color-text-secondary);
+.field :global(.ant-select-selector) {
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-height: 45px;
+  align-items: center;
 }
 
-:global(.ant-form-item-has-error) .field {
-  border-bottom: 1px solid var(--ant-color-error);
-  color: var(--ant-color-text-secondary);
+.field :global(.ant-select-selection-item) {
+  display: flex;
+  align-items: center;
 }
 
 .field:hover,
-.field:focus {
+.field:focus,
+.field:global(.ant-select-focused) {
   border: none;
   box-shadow: none;
   border-bottom: 1px solid var(--app-accent);
   border-radius: 0;
+}
+
+:global(.ant-form-item-has-error) .field {
+  border-bottom: 1px solid var(--ant-color-error);
 }
 
 .field__message {

@@ -9,7 +9,7 @@ type Category = {
 };
 
 type PurchaseStore = {
-  categories: Category[] | [];
+  categories: Category[];
   setCategories: (categories: Category[]) => void;
 };
 
