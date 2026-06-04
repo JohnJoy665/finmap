@@ -33,7 +33,7 @@ function CategoryOption({
         style={{
           fontSize: textSize,
           lineHeight: `${textSize + 6}px`,
-          color: "var(--ant-color-text-secondary);",
+          color: "var(--ant-color-text-secondary)",
         }}
       >
         {categoryName}

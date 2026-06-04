@@ -2,7 +2,11 @@ import { create } from "zustand";
 import type { AppModalItem } from "./modal.types";
 import { nanoid } from "nanoid";
 
-type OpenModalPayload = Omit<AppModalItem, "id">;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+type OpenModalPayload = DistributiveOmit<AppModalItem, "id">;
 
 type ModalStore = {
   stack: AppModalItem[];
@@ -24,14 +28,14 @@ export const useModalStore = create<ModalStore>((set) => ({
   openModal: (modal) => {
     const id = createModalId();
 
+    const newModal: AppModalItem = {
+      ...modal,
+      id,
+    };
+
     set((state) => ({
-      stack: [
-        ...state.stack,
-        {
-          ...modal,
-          id,
-        },
-      ],
+      ...state,
+      stack: [...state.stack, newModal],
     }));
 
     return id;
@@ -39,16 +43,21 @@ export const useModalStore = create<ModalStore>((set) => ({
 
   closeTopModal: () => {
     set((state) => ({
+      ...state,
       stack: state.stack.slice(0, -1),
     }));
   },
 
   closeAllModals: () => {
-    set({ stack: [] });
+    set((state) => ({
+      ...state,
+      stack: [],
+    }));
   },
 
   closeModalById: (id) => {
     set((state) => ({
+      ...state,
       stack: state.stack.filter((modal) => modal.id !== id),
     }));
   },
@@ -56,14 +65,14 @@ export const useModalStore = create<ModalStore>((set) => ({
   replaceModal: (modal) => {
     const id = createModalId();
 
+    const newModal: AppModalItem = {
+      ...modal,
+      id,
+    };
+
     set((state) => ({
-      stack: [
-        ...state.stack.slice(0, -1),
-        {
-          ...modal,
-          id,
-        },
-      ],
+      ...state,
+      stack: [...state.stack.slice(0, -1), newModal],
     }));
 
     return id;

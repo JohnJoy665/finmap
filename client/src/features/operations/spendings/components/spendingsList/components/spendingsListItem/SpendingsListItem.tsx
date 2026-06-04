@@ -9,7 +9,7 @@ type SpendingsListItemProps = {
 };
 
 function SpendingsListItem({ spending }: SpendingsListItemProps) {
-  function convertAmount(spending) {
+  function convertAmount(spending: SpendingByGroupItem) {
     const displayAmount = Number(spending.amount) / spending.conversionFactor;
     const fraction = String(spending.conversionFactor).length - 1;
     return new Intl.NumberFormat("ru-RU", {

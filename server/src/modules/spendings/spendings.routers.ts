@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changeSpendingAmountController,
   createSpendingController,
+  deleteSpendingController,
   getSpendingsByGroupController,
   renameSpendingController,
 } from "./spendings.controller";
@@ -12,3 +13,4 @@ spendingsRouter.post("/", createSpendingController);
 spendingsRouter.get("/group", getSpendingsByGroupController);
 spendingsRouter.patch("/rename", renameSpendingController);
 spendingsRouter.patch("/amount", changeSpendingAmountController);
+spendingsRouter.delete("/:spendingId", deleteSpendingController);

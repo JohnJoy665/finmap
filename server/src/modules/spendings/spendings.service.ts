@@ -486,3 +486,99 @@ export async function changeSpendingAmount({
     client.release();
   }
 }
+
+type DeleteSpendingRequest = {
+  userId: string;
+  spendingId: string;
+};
+
+type SpendingForDeleteRow = {
+  id: string;
+  amount: string;
+  account_id: string;
+};
+
+type DeleteSpendingResponse = {
+  accountId: string;
+  accountAmount: string;
+  spendingId: string;
+};
+
+export async function deleteSpending({
+  userId,
+  spendingId,
+}: DeleteSpendingRequest): Promise<DeleteSpendingResponse> {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const spendingResult = await client.query<SpendingForDeleteRow>(
+      `
+      SELECT
+        id,
+        amount,
+        account_id
+      FROM spendings
+      WHERE id = $1
+        AND user_id = $2
+      FOR UPDATE;
+      `,
+      [spendingId, userId]
+    );
+
+    if (spendingResult.rows.length === 0) {
+      throw new AppError(404, "SPENDING_NOT_FOUND", "Spending not found");
+    }
+
+    const spending = spendingResult.rows[0];
+
+    const updatedAccount = await changeAccountAmount(client, {
+      accountId: spending.account_id,
+      userId,
+      deltaAmount: BigInt(spending.amount),
+    });
+
+    const deletedSpending = await client.query<{ id: string }>(
+      `
+      DELETE FROM spendings
+      WHERE id = $1
+        AND user_id = $2
+      RETURNING id;
+      `,
+      [spendingId, userId]
+    );
+
+    if (deletedSpending.rows.length === 0) {
+      throw new AppError(404, "SPENDING_NOT_FOUND", "Spending not found");
+    }
+
+    const deletedSpendingId = deletedSpending.rows[0].id;
+
+    await client.query("COMMIT");
+
+    return {
+      accountId: updatedAccount.id,
+      accountAmount: updatedAccount.amount,
+      spendingId: deletedSpendingId,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}

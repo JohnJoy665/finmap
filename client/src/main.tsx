@@ -5,13 +5,15 @@ import App from "./app/App";
 import { ConfigProvider } from "antd";
 
 createRoot(document.getElementById("root")!).render(
-  <ConfigProvider
-    theme={{
-      cssVar: {
-        prefix: "ant",
-      },
-    }}
-  >
-    <App />
-  </ConfigProvider>
+  <StrictMode>
+    <ConfigProvider
+      theme={{
+        cssVar: {
+          prefix: "ant",
+        },
+      }}
+    >
+      <App />
+    </ConfigProvider>
+  </StrictMode>
 );

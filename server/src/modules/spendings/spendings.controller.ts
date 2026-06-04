@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import {
   changeSpendingAmountSchema,
   createSpendingSchema,
+  deleteSpendingParamsSchema,
   getSpendingsByGroupQuerySchema,
   renameSpendingSchema,
 } from "./spendings.schemas";
@@ -9,6 +10,7 @@ import { AppError } from "../../utils/AppError";
 import {
   changeSpendingAmount,
   createSpending,
+  deleteSpending,
   getSpendingsByGroup,
   renameSpending,
 } from "./spendings.service";
@@ -128,6 +130,35 @@ export async function changeSpendingAmountController(
       userId,
       spendingId: value.spendingId,
       spendingAmount: value.spendingAmount,
+    });
+
+    sendSuccess(res, result, "Spending amount changed successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteSpendingController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = deleteSpendingParamsSchema.validate(req.params);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await deleteSpending({
+      userId,
+      spendingId: value.spendingId,
     });
 
     sendSuccess(res, result, "Spending amount changed successfully");

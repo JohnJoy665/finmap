@@ -26,6 +26,7 @@ function SpendingsPage() {
   const lastSpendingCurrencyCodeRef = useRef<string | null>(null);
 
   function handleLastSpendingCurrencyChange(currencyCode: string | null) {
+    console.log(currencyCode);
     lastSpendingCurrencyCodeRef.current = currencyCode;
   }
 
@@ -77,11 +78,13 @@ function SpendingsPage() {
     const minorAmount = toMinorUnits(values.amount, conversionFactor);
 
     if (group) {
-      async function confirmedCreateSpending(values) {
+      async function confirmedCreateSpending(values: SpendingFormValues) {
         const result = await withRequestLock(async () => {
+          if (!group) return;
+
           const newSpending = await createNewSpending({
             amount: minorAmount,
-            groupId: group.id,
+            groupId: group?.id,
             categoryId: values.category,
           });
           if (!activeAccount) return;

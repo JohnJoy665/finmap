@@ -88,3 +88,10 @@ export const changeSpendingAmountSchema = Joi.object({
       "any.required": "Amount is required",
     }),
 });
+
+export const deleteSpendingParamsSchema = Joi.object({
+  spendingId: Joi.string().uuid().required().messages({
+    "string.guid": "spendingId must be a valid UUID",
+    "any.required": "spendingId is required",
+  }),
+});

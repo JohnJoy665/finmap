@@ -14,12 +14,20 @@ type SpendingsListProps = {
     accountId: string,
     newAccountSpending: string
   ) => void;
+  handleDeleteSpending: (
+    spendingId: string,
+    accountId: string,
+    accountAmount: string
+  ) => void;
+  isLastSpending: boolean;
 };
 
 function SpendingsList({
   spendings,
   handleRenameSpending,
   handleChangeSpendingAmount,
+  handleDeleteSpending,
+  isLastSpending,
 }: SpendingsListProps) {
   return (
     <Collapse
@@ -43,6 +51,8 @@ function SpendingsList({
             spending={spending}
             handleRenameSpending={handleRenameSpending}
             handleChangeSpendingAmount={handleChangeSpendingAmount}
+            handleDeleteSpending={handleDeleteSpending}
+            isLastSpending={isLastSpending}
           />
         ),
       }))}

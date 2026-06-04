@@ -31,32 +31,34 @@ function SpendingsListContainer({
     (store) => store.updateListAmountAccounts
   );
 
+  const isLastSpending = spendings.length === 1;
+
   useEffect(() => {
-    async function getNewSpendings() {
+    async function loadSpendings() {
       try {
-        const spendings = await getSpendingsByGroup({
+        const response = await getSpendingsByGroup({
           groupId,
           limitCount: OFFSET,
-          offsetCount: offsetCount,
+          offsetCount,
         });
-        setSpendings((prev) => {
-          return [...prev, ...spendings.data.items];
-        });
+
+        const items = response.data.items;
 
         if (offsetCount === 0) {
-          // console.log(spendings.data.items[0]?.currencyCode);
-          onLastSpendingCurrencyChange?.(
-            spendings.data.items[0]?.currencyCode ?? null
-          );
+          setSpendings(items);
+
+          onLastSpendingCurrencyChange?.(items[0]?.currencyCode ?? null);
+        } else {
+          setSpendings((prev) => [...prev, ...items]);
         }
 
-        setHasMore(spendings.data.hasMore);
+        setHasMore(response.data.hasMore);
       } catch (error) {
         console.log(error);
       }
     }
 
-    getNewSpendings();
+    loadSpendings();
   }, [offsetCount, groupId]);
 
   function addNewSpendings() {
@@ -101,6 +103,30 @@ function SpendingsListContainer({
     ]);
   }
 
+  function deleteSpending(
+    spendingId: string,
+    accountId: string,
+    accountAmount: string
+  ) {
+    const nextSpendings = spendings.filter(
+      (spending) => spending.id !== spendingId
+    );
+
+    setSpendings(nextSpendings);
+
+    onLastSpendingCurrencyChange?.(nextSpendings[0]?.currencyCode || null);
+
+    if (activeAccount === accountId) {
+      updateProfileAmount(accountAmount);
+    }
+    updateListAmountAccounts([
+      {
+        accountId,
+        amount: accountAmount,
+      },
+    ]);
+  }
+
   return (
     <div className={styles.spendingsListContainer}>
       <Text className={styles.title}>Последние покупки</Text>
@@ -108,10 +134,12 @@ function SpendingsListContainer({
       <SpendingsList
         handleRenameSpending={renameSpending}
         handleChangeSpendingAmount={changeSpendingAmount}
+        handleDeleteSpending={deleteSpending}
         spendings={spendings}
+        isLastSpending={isLastSpending}
       />
 
-      {spendings.length >= OFFSET && (
+      {spendings.length >= OFFSET && hasMore && (
         <Button
           block
           type="link"

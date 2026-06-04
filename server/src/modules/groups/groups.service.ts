@@ -67,7 +67,7 @@ export async function createGroup({
       throw new AppError(500, "GROUP_CREATE_FAILED", "Group was not created");
     }
 
-    const product_name = "ВРЕМЕННО БЕЗ НАЗВАНИЯ";
+    const product_name = null;
 
     const currencyCode = userSettings.currencyCode;
 
