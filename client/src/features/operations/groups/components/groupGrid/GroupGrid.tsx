@@ -10,10 +10,20 @@ import GroupCard from "../groupCard/GroupCard";
 import type { Group } from "../../../../../shared/types/group.types";
 import { useGroupStrore } from "../../../../../store/groupStore";
 import { useProfileStore } from "../../../../../store/profileStore";
-import { formatMoney } from "../../../../../utils/toMinorAmount";
+import {
+  fromMinorToMajorFormated,
+  fromMinorToMajorNormalize,
+} from "../../../../../utils/toMinorAmount";
+import { useState } from "react";
+import { Button } from "antd";
 
 function GroupGrid() {
+  const [showAll, setShowAll] = useState(false);
+  const VISIBLE_CARDS_COUNT = 12;
+  const VISIBLE_GROUPS_COUNT = VISIBLE_CARDS_COUNT - 1;
+
   const groups = useGroupStrore((store) => store.groups);
+
   const conversionFactor = useProfileStore(
     (store) => store.account?.conversionFactor
   );
@@ -25,23 +35,30 @@ function GroupGrid() {
 
   if (!conversionFactor || !currencySymbol) return;
 
-  const renderGroups = groups.map((group) => {
+  const visibleGroups = showAll
+    ? groups
+    : groups.slice(0, VISIBLE_GROUPS_COUNT);
+
+  const renderGroups = visibleGroups.map((group) => {
     return (
       <GroupCard
         key={group.id}
         id={group.id}
         onClick={() => handleAddPurchase(group)}
+        amount={group.amount}
       >
         <GroupCardContent
           title={group.title}
           amount={
             group.amount !== null
-              ? formatMoney(group.amount, conversionFactor)
+              ? Number(group.amount) < 100_000_00
+                ? fromMinorToMajorNormalize(group.amount, conversionFactor)
+                : fromMinorToMajorFormated(group.amount, conversionFactor)
               : "Нет данных"
           }
           Icon={categoryIcons[group.category_icon]}
           isConverted={group.is_converted}
-          currencySymbol={currencySymbol}
+          categoryCode={group.category_icon}
         />
       </GroupCard>
     );
@@ -67,6 +84,16 @@ function GroupGrid() {
         </GroupCard>
         {renderGroups}
       </div>
+      {groups.length > VISIBLE_GROUPS_COUNT && (
+        <Button
+          block
+          type="link"
+          className={styles.showMore}
+          onClick={() => setShowAll((prev) => !prev)}
+        >
+          {showAll ? "Скрыть" : "Показать все"}
+        </Button>
+      )}
     </>
   );
 }

@@ -8,6 +8,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ConfigProvider
       theme={{
+        token: {
+          fontFamily: '"Inter", system-ui, sans-serif',
+        },
         cssVar: {
           prefix: "ant",
         },

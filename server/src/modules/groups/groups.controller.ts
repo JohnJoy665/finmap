@@ -3,9 +3,10 @@ import {
   createGroup,
   deleteGroupWithSpendings,
   getGroups,
+  getGroupsFilters,
 } from "./groups.service";
 import { sendSuccess } from "../../utils/apiResponse";
-import { createGroupSchema } from "./groups.schemas";
+import { createGroupSchema, getGroupSchema } from "./groups.schemas";
 import { AppError } from "../../utils/AppError";
 
 export async function createGroupController(
@@ -47,11 +48,21 @@ export async function getGroupsController(
     const userId = req.user!.userId;
     const userSettings = req.userSettings;
 
+    const { error, value } = getGroupSchema.validate(req.query);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
     if (!userId || !userSettings) {
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
     }
 
-    const groups = await getGroups({ userId, userSettings });
+    const groups = await getGroups({
+      userId,
+      userSettings,
+      periodType: value.periodType,
+    });
     return sendSuccess(res, groups);
   } catch (error) {
     next(error);
@@ -79,7 +90,6 @@ export async function deleteGroupController(
     const deletedGroup = await deleteGroupWithSpendings({
       userId,
       deleteGroupId,
-      userSettings,
     });
 
     return sendSuccess(
@@ -87,6 +97,30 @@ export async function deleteGroupController(
       deletedGroup,
       `Граппа ${deletedGroup.groupName} удалена`
     );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getGroupsFiltersController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const userId = req.user?.userId;
+    const userSettings = req.userSettings;
+
+    if (!userId || !userSettings) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const filters = await getGroupsFilters({
+      userId,
+      userSettings,
+    });
+
+    return sendSuccess(res, filters);
   } catch (error) {
     next(error);
   }
