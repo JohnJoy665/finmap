@@ -4,6 +4,7 @@ import { UserSettings } from "../../types/middlewares/userSettings.types";
 import { AppError } from "../../utils/AppError";
 import { changeAccountAmount } from "../accounts/accounts.service";
 import { getBaseAmountMicro } from "../rates/rates.service";
+import { getPeriodRange } from "../../utils/getPeriodRange";
 
 type CreateGroupValues = {
   groupName: string;
@@ -146,10 +147,17 @@ export async function createGroup({
 type GetGroupsreq = {
   userId: string;
   userSettings: UserSettings;
+  periodType: "today" | "week" | "month" | "year";
 };
 
-export async function getGroups({ userId, userSettings }: GetGroupsreq) {
+export async function getGroups({
+  userId,
+  userSettings,
+  periodType,
+}: GetGroupsreq) {
   try {
+    const { dateFrom, dateTo } = getPeriodRange(periodType);
+
     const result = await pool.query<GetGroupResponse>(
       `
       ;WITH all_spendings AS (
@@ -165,7 +173,16 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           sg.last_change_date,
           s.conversion_factor
         FROM spendings_group sg
-        JOIN spendings s ON s.group_id = sg.id
+        LEFT JOIN spendings s 
+          ON s.group_id = sg.id
+          AND (
+            $3::timestamptz IS NULL 
+            OR s.spending_date >= $3::timestamptz
+          )
+          AND (
+            $4::timestamptz IS NULL 
+            OR s.spending_date < $4::timestamptz
+          )
         WHERE sg.user_id = $1
       ),
 
@@ -208,7 +225,8 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
           cnv.category_id,
           cnv.last_change_date,	
           CASE
-            WHEN COUNT(*) FILTER (WHERE cnv.view_amount IS NULL) > 0 THEN NULL
+            WHEN COUNT(cnv.spending_id) = 0 THEN 0
+            WHEN COUNT(*) FILTER (WHERE cnv.spending_id IS NOT NULL AND cnv.view_amount IS NULL) > 0 THEN NULL
             ELSE SUM(cnv.view_amount)
           END AS amount,
           BOOL_OR(cnv.is_converted) AS is_converted
@@ -233,7 +251,7 @@ export async function getGroups({ userId, userSettings }: GetGroupsreq) {
       JOIN category_lang clg ON clg.word_code = cat.code AND clg.lang_code = 'ru'
       ORDER BY gs.last_change_date DESC;
       `,
-      [userId, userSettings.currencyCode]
+      [userId, userSettings.currencyCode, dateFrom, dateTo]
     );
 
     return result.rows;
@@ -365,5 +383,177 @@ export async function deleteGroupWithSpendings({
     throw error;
   } finally {
     client.release();
+  }
+}
+
+export type GroupFilterValue = "today" | "week" | "month" | "year";
+
+type FilterItem = {
+  value: GroupFilterValue;
+  label: string;
+  amount?: string;
+  isActive: boolean;
+};
+
+type GetGroupsFiltersRequest = {
+  userId: string;
+  userSettings: UserSettings;
+};
+
+type GroupFilterRow = {
+  value: GroupFilterValue;
+  label: string;
+  amount: string | null;
+};
+
+export async function getGroupsFilters({
+  userId,
+  userSettings,
+}: GetGroupsFiltersRequest): Promise<FilterItem[]> {
+  try {
+    const currencyCode = userSettings.currencyCode;
+
+    if (!currencyCode) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await pool.query<GroupFilterRow>(
+      `
+      WITH selected_rate AS (
+        SELECT
+          CASE
+            WHEN $2::varchar = 'USD' THEN 1::numeric
+            ELSE (
+              SELECT er.exchange_rate
+              FROM exchange_rates er
+              WHERE er.base_currency = 'USD'
+                AND er.target_currency = $2
+                AND er.date_rate <= NOW()
+              ORDER BY er.date_rate DESC
+              LIMIT 1
+            )
+          END AS exchange_rate
+      ),
+      periods AS (
+        SELECT
+          1 AS sort_order,
+          'today'::text AS value,
+          'Сегодня'::text AS label,
+          date_trunc('day', NOW()) AS amount_from,
+          date_trunc('day', NOW()) AS show_from,
+          NOW() AS show_to
+    
+        UNION ALL
+    
+        SELECT
+          2 AS sort_order,
+          'week'::text AS value,
+          'Неделя'::text AS label,
+          NOW() - INTERVAL '7 days' AS amount_from,
+          NOW() - INTERVAL '7 days' AS show_from,
+          date_trunc('day', NOW()) AS show_to
+    
+        UNION ALL
+    
+        SELECT
+          3 AS sort_order,
+          'month'::text AS value,
+          'Месяц'::text AS label,
+          NOW() - INTERVAL '30 days' AS amount_from,
+          NOW() - INTERVAL '30 days' AS show_from,
+          NOW() - INTERVAL '7 days' AS show_to
+    
+        UNION ALL
+    
+        SELECT
+          4 AS sort_order,
+          'year'::text AS value,
+          'Год'::text AS label,
+          date_trunc('year', NOW()) AS amount_from,
+          date_trunc('year', NOW()) AS show_from,
+          NOW() - INTERVAL '30 days' AS show_to
+      ),
+      visible_periods AS (
+        SELECT p.*
+        FROM periods p
+        WHERE EXISTS (
+          SELECT 1
+          FROM spendings s
+          WHERE s.user_id = $1
+            AND s.spending_date >= p.show_from
+            AND s.spending_date < p.show_to
+        )
+      ),
+      aggregated AS (
+        SELECT
+          p.sort_order,
+          p.value,
+          p.label,
+          COALESCE(SUM(s.base_amount_micro), 0)::numeric AS total_base_micro,
+          COUNT(s.id) FILTER (
+            WHERE s.id IS NOT NULL
+              AND s.base_amount_micro IS NULL
+          ) AS missed_base_amount_count
+        FROM visible_periods p
+        LEFT JOIN spendings s
+          ON s.user_id = $1
+          AND s.spending_date >= p.amount_from
+        GROUP BY p.sort_order, p.value, p.label
+      )
+      SELECT
+        a.value,
+        a.label,
+        CASE
+          WHEN a.missed_base_amount_count > 0 THEN NULL
+          WHEN sr.exchange_rate IS NULL THEN NULL
+          ELSE ROUND(
+            (a.total_base_micro / 1000000::numeric)
+            * sr.exchange_rate
+            * $3::numeric
+          )::bigint::text
+        END AS amount
+      FROM aggregated a
+      CROSS JOIN selected_rate sr
+      ORDER BY a.sort_order;
+      `,
+      [userId, currencyCode, userSettings.conversionFactor]
+    );
+
+    const filters = result.rows.map((row) => {
+      const filter: FilterItem = {
+        value: row.value,
+        label: row.label,
+        isActive: false,
+      };
+
+      if (row.amount !== null) {
+        filter.amount = row.amount;
+      }
+
+      return filter;
+    });
+
+    const activeFilter =
+      filters.find((filter) => filter.value === "week") ?? filters[0];
+
+    if (activeFilter) {
+      activeFilter.isActive = true;
+    }
+
+    return filters;
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
   }
 }

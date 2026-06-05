@@ -1,0 +1,49 @@
+.item {
+  height: 30px;
+  min-width: fit-content;
+  padding: 0 12px;
+  border-radius: 999px;
+
+  border: 1px solid var(--ant-color-border);
+  background: var(--ant-color-fill-quaternary);
+
+  box-shadow: none;
+}
+
+.active {
+  border: 1px solid var(--app-accent);
+  background: var(--ant-color-bg-container);
+}
+
+.item:hover {
+  border-color: var(--app-accent) !important;
+  color: var(--ant-color-text) !important;
+}
+
+.active:hover {
+  border-color: var(--app-accent) !important;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.label {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ant-color-text-secondary);
+}
+
+.amount {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--ant-color-text);
+}
+
+.active .label,
+.active .amount {
+  color: var(--app-accent);
+}

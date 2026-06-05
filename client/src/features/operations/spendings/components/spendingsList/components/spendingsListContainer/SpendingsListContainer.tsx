@@ -139,7 +139,8 @@ function SpendingsListContainer({
         isLastSpending={isLastSpending}
       />
 
-      {spendings.length >= OFFSET && hasMore && (
+      {((spendings.length >= OFFSET && hasMore) ||
+        (spendings.length > OFFSET && !hasMore)) && (
         <Button
           block
           type="link"

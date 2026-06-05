@@ -8,7 +8,7 @@ export const createGroupSchema = Joi.object({
     .custom((value, helpers) => {
       const amount = BigInt(value);
 
-      const maxAmount = 1_000_000_000n; // 1 миллиард копеек
+      const maxAmount = 1_000_000_000_000n; // 1 миллиард копеек
 
       if (amount > maxAmount) {
         return helpers.error("amount.max");
@@ -22,4 +22,10 @@ export const createGroupSchema = Joi.object({
       "amount.max": "Amount is too large",
       "any.required": "Amount is required",
     }),
+});
+
+export const getGroupSchema = Joi.object({
+  periodType: Joi.string()
+    .valid("today", "week", "month", "year")
+    .default("week"),
 });

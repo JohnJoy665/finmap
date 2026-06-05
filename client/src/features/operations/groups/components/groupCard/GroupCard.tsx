@@ -5,11 +5,16 @@ type GroupCardProps = {
   id: string;
   children: React.ReactNode;
   onClick: (id?: string) => void;
+  amount?: string;
 };
 
-function GroupCard({ id, children, onClick }: GroupCardProps) {
+function GroupCard({ id, children, onClick, amount }: GroupCardProps) {
   return (
-    <button className={styles.button} type="button" onClick={() => onClick(id)}>
+    <button
+      className={`${styles.button} ${Number(amount) === 0 ? styles.empty : ""}`}
+      type="button"
+      onClick={() => onClick(id)}
+    >
       {children}
     </button>
   );

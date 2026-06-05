@@ -16,7 +16,6 @@ import SpendingsListContainer from "../../features/operations/spendings/componen
 import { useModalStore } from "../../shared/ui/modal";
 
 function SpendingsPage() {
-  console.log("load");
   const openModal = useModalStore((state) => state.openModal);
   const { state } = useLocation();
   const group: Group | undefined = state?.group;
@@ -26,7 +25,6 @@ function SpendingsPage() {
   const lastSpendingCurrencyCodeRef = useRef<string | null>(null);
 
   function handleLastSpendingCurrencyChange(currencyCode: string | null) {
-    console.log(currencyCode);
     lastSpendingCurrencyCodeRef.current = currencyCode;
   }
 
