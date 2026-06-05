@@ -1,14 +1,17 @@
 import { Flex } from "antd";
 import styles from "./GroupCardContent.module.css";
 import type { LucideIcon } from "lucide-react";
-import { categoryTheme } from "../../../../../shared/ui/colors/iconColors";
+import {
+  categoryTheme,
+  type CategoryCode,
+} from "../../../../../shared/ui/colors/iconColors";
 
 type GroupCardContentProps = {
   title: string;
   amount: string;
   Icon: LucideIcon;
   isConverted: boolean;
-  categoryCode: string;
+  categoryCode: CategoryCode;
 };
 
 function GroupCardContent({
@@ -18,7 +21,8 @@ function GroupCardContent({
   isConverted,
   categoryCode,
 }: GroupCardContentProps) {
-  const theme = categoryTheme[categoryCode] ?? categoryTheme.GRO;
+  const theme: { color: string; bg: string } =
+    categoryTheme[categoryCode] ?? categoryTheme.GRO;
   return (
     <div className={styles.container}>
       <Flex

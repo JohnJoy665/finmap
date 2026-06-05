@@ -32,9 +32,11 @@ function FilterGroupContainer({
           key={filter.value}
           label={filter.label}
           amount={
-            Number(filter.amount) < 10000
-              ? fromMinorToMajorNormalize(filter.amount, conversionFactor)
-              : fromMinorToMajorFormated(filter.amount, conversionFactor)
+            filter.amount
+              ? Number(filter.amount) < 10000
+                ? fromMinorToMajorNormalize(filter.amount, conversionFactor)
+                : fromMinorToMajorFormated(filter.amount, conversionFactor)
+              : "No data"
           }
           active={filter.isActive}
           onClick={() => onChange(filter.value)}

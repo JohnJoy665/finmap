@@ -23,7 +23,7 @@ function Operations() {
   const activeAccountId = useProfileStore((store) => store.account?.id);
 
   const conversionFactor = useProfileStore(
-    (store) => store.account.conversionFactor
+    (store) => store.account?.conversionFactor
   );
 
   const selectedPeriodType = useGroupStrore(
@@ -34,7 +34,7 @@ function Operations() {
     (store) => store.setSelectedPeriodType
   );
 
-  const currencyCode = useProfileStore((store) => store.account.currencyCode);
+  const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
   useEffect(() => {
     async function getFilters() {
@@ -68,17 +68,19 @@ function Operations() {
   function changeFilter(targetValue: GroupFilterValue) {
     setSelectedPeriodType(targetValue);
     setFilters((prev) =>
-      prev.map((filter) => ({
-        ...filter,
-        isActive: filter.value === targetValue ? true : false,
-      }))
+      prev
+        ? prev.map((filter) => ({
+            ...filter,
+            isActive: filter.value === targetValue,
+          }))
+        : prev
     );
   }
 
   return (
     <>
       <SearchGroup />
-      {filters && filters.length > 0 && (
+      {filters && conversionFactor && filters.length > 0 && (
         <FilterGroupContainer
           filters={filters}
           onChange={changeFilter}
