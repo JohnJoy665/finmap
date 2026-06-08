@@ -2,12 +2,16 @@ import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useProfileStore } from "../../store/profileStore";
 import { getProfileRequest } from "../../api/profileApi";
+import ProfileEnvironmentWatcher from "./ProfileEnvironmentWatcher";
 
 function ProfileGate() {
   const location = useLocation();
 
   const setProfile = useProfileStore((state) => state.setProfile);
   const setupRequired = useProfileStore((state) => state.setupRequired);
+  const lastCheckPosition = useProfileStore(
+    (state) => state.settings?.lastCheckPosition
+  );
 
   useEffect(() => {
     if (setupRequired !== null) return;
@@ -32,7 +36,14 @@ function ProfileGate() {
     return <Navigate to="/app/operations" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      {!setupRequired && lastCheckPosition && (
+        <ProfileEnvironmentWatcher lastCheckPosition={lastCheckPosition} />
+      )}
+      <Outlet />
+    </>
+  );
 }
 
 export default ProfileGate;

@@ -60,8 +60,9 @@ export async function getSpendingsByGroupController(
     }
 
     const userId = req.user?.userId;
+    const timezone = req.userSettings?.timezone;
 
-    if (!userId) {
+    if (!userId || !timezone) {
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
     }
 
@@ -70,6 +71,7 @@ export async function getSpendingsByGroupController(
       groupId: value.groupId,
       limitCount: value.limitCount,
       offsetCount: value.offsetCount,
+      timezone,
     });
 
     sendSuccess(res, result);

@@ -24,6 +24,7 @@ type ProfileResponse = {
     currencyCode: string | null;
     currencySymbol: string | null;
     conversionFactor: number | null;
+    lastCheckPosition: string | null;
   } | null;
   setupRequired: boolean;
 };

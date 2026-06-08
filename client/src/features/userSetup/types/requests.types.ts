@@ -7,6 +7,7 @@ export type CreateProfileRequest = {
   currencyCode: string;
   uniqUserName: string;
   accountAmount: string;
+  timezone: string;
 };
 
 export type GetCitiesRequest = {

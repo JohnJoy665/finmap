@@ -5,6 +5,10 @@ import {
   categoryTheme,
   type CategoryCode,
 } from "../../../../../shared/ui/colors/iconColors";
+import {
+  fromMinorToMajorFormated,
+  fromMinorToMajorNormalize,
+} from "../../../../../utils/toMinorAmount";
 
 type GroupCardContentProps = {
   title: string;
@@ -12,6 +16,7 @@ type GroupCardContentProps = {
   Icon: LucideIcon;
   isConverted: boolean;
   categoryCode: CategoryCode;
+  conversionFactor: number;
 };
 
 function GroupCardContent({
@@ -20,9 +25,20 @@ function GroupCardContent({
   Icon,
   isConverted,
   categoryCode,
+  conversionFactor,
 }: GroupCardContentProps) {
   const theme: { color: string; bg: string } =
     categoryTheme[categoryCode] ?? categoryTheme.GRO;
+
+  const displayAmount =
+    amount !== null
+      ? Number(amount) > 0
+        ? Number(amount) < 100_000_00
+          ? fromMinorToMajorNormalize(amount, conversionFactor)
+          : fromMinorToMajorFormated(amount, conversionFactor)
+        : "_.__"
+      : "Нет данных";
+
   return (
     <div className={styles.container}>
       <Flex
@@ -36,7 +52,8 @@ function GroupCardContent({
 
       <span className={styles.title}>{title}</span>
       <span className={styles.amount}>
-        {isConverted && Number(amount) !== 0 ? "~" : ""} {amount}
+        {isConverted && Number(amount) !== 0 ? "~" : ""}
+        {displayAmount}
       </span>
     </div>
   );

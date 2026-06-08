@@ -15,6 +15,7 @@ type Settings = {
   currencyCode: string | null;
   currencySymbol: string | null;
   conversionFactor: number | null;
+  lastCheckPosition: string | null;
 };
 
 type ProfilePayload = {

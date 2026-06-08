@@ -15,6 +15,7 @@ function mapUserSettingsRow(row: UserSettingsRow): UserSettings {
     languageCode: row.language_code,
     countryCode: row.country_code,
     cityId: row.city_id,
+    timezone: row.timezone,
 
     visibleAccount: row.visible_account,
     visibleUserName: row.visible_user_name,

@@ -27,6 +27,7 @@ type SettingProfileRow = {
   visible_account: boolean;
   visible_user_name: boolean;
   visible_group_spendings: boolean;
+  last_check_position: string;
 };
 
 export async function getUserProfile(userId: string) {
@@ -60,7 +61,8 @@ export async function getUserProfile(userId: string) {
         uss.city_name,
         uss.visible_account,
         uss.visible_user_name,
-        uss.visible_group_spendings
+        uss.visible_group_spendings,
+        uss.last_check_position
       FROM user_settings uss
       WHERE uss.user_id = $1
       LIMIT 1
@@ -128,6 +130,7 @@ export async function getUserProfile(userId: string) {
             visibleAccount: settings.visible_account,
             visibleUserName: settings.visible_user_name,
             visibleGroupSpendings: settings.visible_group_spendings,
+            lastCheckPosition: settings.last_check_position,
           }
         : null,
 
@@ -160,6 +163,7 @@ type CreateProfileRequest = {
   currencyCode: string;
   accountAmount: string;
   uniqUserName: string;
+  timezone: string;
 };
 
 type ExistingUserSettingsRow = {
@@ -206,6 +210,7 @@ export async function createProfile({
   currencyCode,
   accountAmount,
   uniqUserName,
+  timezone,
 }: CreateProfileRequest): Promise<CreateProfileResponse> {
   const client = await pool.connect();
 
@@ -397,6 +402,7 @@ export async function createProfile({
           city_name,
           conversion_factor,
           currency_symbol,
+          timezone,
           last_check_position
         )
         VALUES (
@@ -410,6 +416,7 @@ export async function createProfile({
           $8,
           $9,
           $10,
+          $11,
           NOW()
         )
         RETURNING id
@@ -425,6 +432,7 @@ export async function createProfile({
         cityName,
         currency.conversion_factor,
         currency.currency_symbol,
+        timezone,
       ]
     );
 

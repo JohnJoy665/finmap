@@ -10,10 +10,6 @@ import GroupCard from "../groupCard/GroupCard";
 import type { Group } from "../../../../../shared/types/group.types";
 import { useGroupStrore } from "../../../../../store/groupStore";
 import { useProfileStore } from "../../../../../store/profileStore";
-import {
-  fromMinorToMajorFormated,
-  fromMinorToMajorNormalize,
-} from "../../../../../utils/toMinorAmount";
 import { useState } from "react";
 import { Button } from "antd";
 
@@ -49,16 +45,11 @@ function GroupGrid() {
       >
         <GroupCardContent
           title={group.title}
-          amount={
-            group.amount !== null
-              ? Number(group.amount) < 100_000_00
-                ? fromMinorToMajorNormalize(group.amount, conversionFactor)
-                : fromMinorToMajorFormated(group.amount, conversionFactor)
-              : "Нет данных"
-          }
+          amount={group.amount}
           Icon={categoryIcons[group.category_icon]}
           isConverted={group.is_converted}
           categoryCode={group.category_icon}
+          conversionFactor={conversionFactor}
         />
       </GroupCard>
     );

@@ -15,6 +15,7 @@ import { countriesRouter } from "./modules/countries/countries.routers";
 import { citiesRouter } from "./modules/cities/cities.routers";
 import { currenciesRouter } from "./modules/currencies/currencies.routers";
 import { accountsRouter } from "./modules/accounts/accounts.routers";
+import { environmentsRouter } from "./modules/environments/environmentsRouter";
 
 const app = express();
 
@@ -36,7 +37,7 @@ app.use("/api/currencies", currenciesRouter);
 app.use("/api", userSettingsMiddleware);
 
 app.use("/api/accounts", accountsRouter);
-
+app.use("/api/environments", environmentsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/groups", groupsRouter);
 app.use("/api/spendings", spendingsRouter);

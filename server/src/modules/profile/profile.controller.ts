@@ -1,16 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import {
-  changeCurrentAccount,
   checkUniqName,
   createProfile,
   getUserProfile,
 } from "./profile.service";
 import { sendSuccess } from "../../utils/apiResponse";
-import {
-  changeCurrentAccountSchema,
-  createProfileSchema,
-  getUniqNameQuerySchema,
-} from "./profile.schemas";
+import { createProfileSchema, getUniqNameQuerySchema } from "./profile.schemas";
 import { AppError } from "../../utils/AppError";
 
 export async function getProfile(
