@@ -12,6 +12,7 @@ function ProfileGate() {
   const lastCheckPosition = useProfileStore(
     (state) => state.settings?.lastCheckPosition
   );
+  const languageCode = useProfileStore((state) => state.settings?.languageCode);
 
   useEffect(() => {
     if (setupRequired !== null) return;
@@ -38,8 +39,11 @@ function ProfileGate() {
 
   return (
     <>
-      {!setupRequired && lastCheckPosition && (
-        <ProfileEnvironmentWatcher lastCheckPosition={lastCheckPosition} />
+      {!setupRequired && lastCheckPosition && languageCode && (
+        <ProfileEnvironmentWatcher
+          lastCheckPosition={lastCheckPosition}
+          languageCode={languageCode}
+        />
       )}
       <Outlet />
     </>

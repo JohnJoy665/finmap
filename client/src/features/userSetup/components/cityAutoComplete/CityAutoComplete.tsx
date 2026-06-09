@@ -47,6 +47,8 @@ function CityAutoComplete() {
       cityName: value,
       cityId: option.cityId,
     });
+
+    form.validateFields(["cityName"]);
   }
 
   function cityValidate(_: RuleObject, value: string) {

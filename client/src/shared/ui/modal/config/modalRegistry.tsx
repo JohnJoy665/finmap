@@ -4,6 +4,7 @@ import type { AppModalItem } from "../model/modal.types";
 import ConfirmActionModal from "../modals/ConfirmActionModal";
 import RenameSpendingModal from "../modals/RenameSpendingModal";
 import ChangeAmountModal from "../modals/ChangeAmountModal";
+import ChangeLocationModal from "../modals/ChangeLocationModal";
 
 type CommonModalProps = {
   modalId: string;
@@ -33,5 +34,9 @@ export const modalRegistry = {
 
   changeSpendingAmount: (modal, commonProps) => (
     <ChangeAmountModal {...commonProps} {...modal.props} />
+  ),
+
+  changeLocation: (modal, commonProps) => (
+    <ChangeLocationModal {...commonProps} {...modal.props} />
   ),
 } satisfies ModalRendererMap;

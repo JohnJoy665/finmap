@@ -1,27 +1,61 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { checkProfileEnvironment } from "../../features/checkEnvironment/api/checkProfileEnvironmet";
 import { useModalStore } from "../../shared/ui/modal";
+import { changeProfileLocation } from "../../features/checkEnvironment/api/changeProfileLocation";
+import { useProfileStore } from "../../store/profileStore";
 
 type ProfileEnvironmentWatcherProps = {
   lastCheckPosition: string;
+  languageCode: string;
+};
+
+type ChangeLocationPayload = {
+  countryCode: string;
+  cityId: number;
 };
 
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function ProfileEnvironmentWatcher({
   lastCheckPosition,
+  languageCode,
 }: ProfileEnvironmentWatcherProps) {
-  const openModal = useModalStore((state) => state.openModal);
+  const alreadyCheckedRef = useRef(false);
 
-  function handleUpdateLocal(location) {
-    console.log(location);
-  }
+  const openModal = useModalStore((state) => state.openModal);
+  const updateLocation = useProfileStore((store) => store.updateLocation);
+
+  const handleChangeLocation = useCallback(
+    async (value: ChangeLocationPayload) => {
+      try {
+        const response = await changeProfileLocation({
+          countryCode: value.countryCode,
+          cityId: value.cityId,
+        });
+
+        const newLocation = response.data;
+
+        updateLocation({
+          countryCode: newLocation.countryCode,
+          cityId: newLocation.cityId,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    [updateLocation]
+  );
 
   useEffect(() => {
+    if (alreadyCheckedRef.current) {
+      return;
+    }
+
+    alreadyCheckedRef.current = true;
+
     async function getEnvironment() {
       try {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
         const diff = Date.now() - new Date(lastCheckPosition).getTime();
         const shouldCheckPosition = diff > CHECK_INTERVAL_MS;
 
@@ -45,17 +79,20 @@ function ProfileEnvironmentWatcher({
           longitude,
         });
 
-        if (environment.data.locationChanged) {
+        const suggestedLocation = environment.data.suggestedLocation;
+
+        if (environment.data.locationChanged && suggestedLocation) {
           openModal({
-            type: "confirmAction",
+            type: "changeLocation",
             strategy: "destroy",
             props: {
-              danger: true,
-              title: "Мы обнаружили новую геолокацию",
-              content: `Подтвердите, что вы тут: ${environment.data.suggestedLocation.countryName}, ${environment.data.suggestedLocation.cityName}`,
-              confirmText: "Ок",
-              cancelText: "Отмена",
-              onConfirm: () => handleUpdateLocal(environment),
+              countryCode: suggestedLocation.countryCode,
+              countryName: suggestedLocation.countryName,
+              cityId: suggestedLocation.cityId,
+              cityName: suggestedLocation.cityName,
+              languageCode,
+              content: "Подтвердите свою локацию или выберите новую",
+              onChangeLocation: handleChangeLocation,
             },
           });
         }
@@ -65,7 +102,7 @@ function ProfileEnvironmentWatcher({
     }
 
     getEnvironment();
-  }, [lastCheckPosition]);
+  }, [lastCheckPosition, openModal, languageCode, handleChangeLocation]);
 
   return null;
 }

@@ -63,7 +63,7 @@ function Operations() {
     }
 
     getGroups();
-  }, [setGroups, activeAccountId, filters]);
+  }, [setGroups, activeAccountId, filters, selectedPeriodType]);
 
   function changeFilter(targetValue: GroupFilterValue) {
     setSelectedPeriodType(targetValue);

@@ -25,6 +25,11 @@ type ProfilePayload = {
   setupRequired: boolean | null;
 };
 
+type Location = {
+  countryCode: string;
+  cityId: number;
+};
+
 type ProfileState = {
   user: User | null;
   account: Account | null;
@@ -34,6 +39,7 @@ type ProfileState = {
   setupRequired: boolean | null;
   clearProfile: () => void;
   changeProfileAccount: (payload: Account) => void;
+  updateLocation: (payload: Location) => void;
 };
 
 export const useProfileStore = create<ProfileState>((set) => ({
@@ -83,6 +89,17 @@ export const useProfileStore = create<ProfileState>((set) => ({
       account: null,
       settings: null,
       setupRequired: null,
+    }));
+  },
+
+  updateLocation: (location) => {
+    set((state) => ({
+      ...state,
+      settings: {
+        ...state.settings,
+        countryCode: location.countryCode,
+        cityId: location.cityId,
+      },
     }));
   },
 }));

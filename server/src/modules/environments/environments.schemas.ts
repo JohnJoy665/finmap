@@ -21,3 +21,22 @@ export const checkProfileEnvironmentSchema = Joi.object({
     "any.required": "longitude is required",
   }),
 });
+
+export const changeProfileLocationSchema = Joi.object({
+  countryCode: Joi.string()
+    .length(2)
+    .pattern(/^[A-Z]{2}$/)
+    .required()
+    .messages({
+      "string.empty": "countryCode is required",
+      "string.length": "countryCode must be 2 characters",
+      "string.pattern.base": "countryCode must contain only uppercase letters",
+    }),
+
+  cityId: Joi.number().integer().positive().required().messages({
+    "number.base": "cityId must be a number",
+    "number.integer": "cityId must be an integer",
+    "number.positive": "cityId must be positive",
+    "any.required": "cityId is required",
+  }),
+});

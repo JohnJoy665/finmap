@@ -173,3 +173,141 @@ export async function checkProfileEnvironment({
     client.release();
   }
 }
+
+type LocationProps = {
+  countryCode: string;
+  cityId: number;
+};
+
+type ChangeProfileLocationParams = {
+  userId: string;
+  languageCode: string;
+  locationValues: LocationProps;
+};
+
+type CountryRow = {
+  country_code: string;
+  country_name: string;
+};
+
+type CityRow = {
+  city_id: number;
+  city_name: string;
+};
+
+type UpdatedLocationRow = {
+  country_name: string;
+  city_name: string;
+  city_id: number;
+  country_code: string;
+};
+
+type ChangeProfileLocationResponse = {
+  countryCode: string;
+  countryName: string;
+  cityId: number;
+  cityName: string;
+};
+
+export async function changeProfileLocation({
+  userId,
+  languageCode,
+  locationValues,
+}: ChangeProfileLocationParams): Promise<ChangeProfileLocationResponse> {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const countryResult = await client.query<CountryRow>(
+      `
+      SELECT 
+        cs.code AS country_code, 
+        COALESCE(cls.translation, cs.name) AS country_name
+      FROM countries cs
+        LEFT JOIN countries_lang cls 
+        ON cls.word_code = cs.code 
+        AND cls.lang_code = $2
+      WHERE cs.code = $1
+      LIMIT 1
+      `,
+      [locationValues.countryCode, languageCode]
+    );
+
+    if (countryResult.rows.length === 0) {
+      throw new AppError(404, "COUNTRY_NOT_FOUND", "Country not found");
+    }
+
+    const cityResult = await client.query<CityRow>(
+      `
+      SELECT 
+        cs.id AS city_id,
+        COALESCE(csl."translation", cs.local_name) AS city_name
+      FROM cities cs
+      LEFT JOIN cities_lang csl ON csl.city_id = cs.id AND csl.lang_code = $3
+      WHERE cs.id = $1 AND cs.country_code = $2
+      LIMIT 1
+      `,
+      [locationValues.cityId, locationValues.countryCode, languageCode]
+    );
+
+    if (cityResult.rows.length === 0) {
+      throw new AppError(
+        404,
+        "CITY_NOT_FOUND",
+        "City not found for selected country"
+      );
+    }
+
+    const userSettingsResult = await client.query<UpdatedLocationRow>(
+      `
+        UPDATE user_settings
+        SET country_code = $2, country_name = $3, city_id = $4, city_name = $5
+        WHERE user_id = $1
+        RETURNING country_name, city_name, city_id, country_code
+      `,
+      [
+        userId,
+        countryResult.rows[0].country_code,
+        countryResult.rows[0].country_name,
+        cityResult.rows[0].city_id,
+        cityResult.rows[0].city_name,
+      ]
+    );
+
+    if (userSettingsResult.rows.length === 0) {
+      throw new AppError(
+        404,
+        "USER_SETTINGS_DOESNT_UPDATE",
+        "User setting doesnt update"
+      );
+    }
+
+    const resultNewLocation = userSettingsResult.rows[0];
+    await client.query("COMMIT");
+
+    return {
+      countryCode: resultNewLocation.country_code,
+      countryName: resultNewLocation.country_name,
+      cityId: resultNewLocation.city_id,
+      cityName: resultNewLocation.city_name,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}
