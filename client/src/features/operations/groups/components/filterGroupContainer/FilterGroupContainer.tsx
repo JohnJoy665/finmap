@@ -1,18 +1,13 @@
+import type {
+  FilterItem,
+  GroupFilterValue,
+} from "../../../../../shared/types/group.types";
 import {
   fromMinorToMajorFormated,
   fromMinorToMajorNormalize,
 } from "../../../../../utils/toMinorAmount";
 import FilterGroupItem from "../filterGroupItem/FilterGroupItem";
 import styles from "./FilterGroupContainer.module.css";
-
-export type GroupFilterValue = "today" | "week" | "month" | "year";
-
-type FilterItem = {
-  value: GroupFilterValue;
-  label: string;
-  amount?: string;
-  isActive: boolean;
-};
 
 type FilterGroupContainerProps = {
   onChange: (value: GroupFilterValue) => void;
@@ -31,6 +26,7 @@ function FilterGroupContainer({
         <FilterGroupItem
           key={filter.value}
           label={filter.label}
+          countDays={filter.daysInPeriod}
           amount={
             filter.amount
               ? Number(filter.amount) < 10000
