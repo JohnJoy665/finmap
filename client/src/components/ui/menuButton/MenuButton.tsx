@@ -1,12 +1,23 @@
 import { Button } from "antd";
 import styles from "./MenuButton.module.css";
 import { useAuthStore } from "../../../store/authStore";
+import { useProfileStore } from "../../../store/profileStore";
+import { useFiltersStore } from "../../../store/filtersStore";
+import { useGroupStrore } from "../../../store/groupStore";
+import { usePurchaseStore } from "../../../store/purchaseStore";
 
 function MenuButton() {
-  const logout = useAuthStore((state) => state.logout);
+  function handleLogout() {
+    useAuthStore.getState().logout();
+
+    useProfileStore.getState().reset();
+    useFiltersStore.getState().reset();
+    useGroupStrore.getState().reset();
+    usePurchaseStore.getState().reset();
+  }
 
   return (
-    <Button onClick={logout} type="text" className={styles.button}>
+    <Button onClick={handleLogout} type="text" className={styles.button}>
       <span className={styles.icon} />
     </Button>
   );
