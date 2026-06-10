@@ -3,7 +3,7 @@ import type { FilterItem, GroupFilterValue } from "../shared/types/group.types";
 
 type filtersStore = {
   groupsFilter: FilterItem[] | null;
-  setGroupsFilter: (payload: FilterItem[]) => void;
+  setGroupsFilter: (payload: FilterItem[] | null) => void;
   setSelectedGroupFilter: (filterType: GroupFilterValue) => void;
   selectedGroupFilter: GroupFilterValue | null;
 };
@@ -20,13 +20,17 @@ export const useFiltersStore = create<filtersStore>((set) => ({
   },
 
   setSelectedGroupFilter: (filterType) => {
-    set((state) => ({
-      ...state,
-      groupsFilter: state.groupsFilter.map((filter) => ({
-        ...filter,
-        isActive: filter.value === filterType,
-      })),
-      selectedGroupFilter: filterType,
-    }));
+    set((state) => {
+      if (!state.groupsFilter) return state;
+
+      return {
+        ...state,
+        groupsFilter: state.groupsFilter.map((filter) => ({
+          ...filter,
+          isActive: filter.value === filterType,
+        })),
+        selectedGroupFilter: filterType,
+      };
+    });
   },
 }));

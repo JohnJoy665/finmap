@@ -93,13 +93,18 @@ export const useProfileStore = create<ProfileState>((set) => ({
   },
 
   updateLocation: (location) => {
-    set((state) => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        countryCode: location.countryCode,
-        cityId: location.cityId,
-      },
-    }));
+    set((state) => {
+      if (!state.settings) {
+        return state;
+      }
+
+      return {
+        settings: {
+          ...state.settings,
+          countryCode: location.countryCode,
+          cityId: location.cityId,
+        },
+      };
+    });
   },
 }));

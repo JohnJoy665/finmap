@@ -4,7 +4,7 @@ import styles from "./FilterGroupItem.module.css";
 const { Text } = Typography;
 
 type FilterGroupItemProps = {
-  label: string;
+  value: string;
   amount?: string;
   active?: boolean;
   onClick: () => void;
@@ -12,13 +12,14 @@ type FilterGroupItemProps = {
 };
 
 function FilterGroupItem({
-  label,
+  value,
   amount,
   active = false,
   onClick,
   countDays,
 }: FilterGroupItemProps) {
   function getFilterLabel(value: string, daysInPeriod: number) {
+    console.log(value);
     if (value === "today") {
       return "Сегодня";
     }
@@ -52,7 +53,7 @@ function FilterGroupItem({
       className={`${styles.item} ${active ? styles.active : ""}`}
     >
       <span className={styles.content}>
-        <Text className={styles.label}>{getFilterLabel(label, countDays)}</Text>
+        <Text className={styles.label}>{getFilterLabel(value, countDays)}</Text>
 
         {amount && <Text className={styles.amount}>{amount}</Text>}
       </span>

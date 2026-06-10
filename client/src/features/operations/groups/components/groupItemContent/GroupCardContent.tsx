@@ -12,7 +12,7 @@ import {
 
 type GroupCardContentProps = {
   title: string;
-  amount: string;
+  amount: string | null;
   Icon: LucideIcon;
   isConverted: boolean;
   categoryCode: CategoryCode;
@@ -52,7 +52,7 @@ function GroupCardContent({
 
       <span className={styles.title}>{title}</span>
       <span className={styles.amount}>
-        {isConverted && Number(amount) !== 0 ? "~" : ""}
+        {isConverted && amount !== null && Number(amount) !== 0 ? "~" : ""}
         {displayAmount}
       </span>
     </div>

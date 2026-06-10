@@ -32,9 +32,13 @@ function Operations() {
           groupFilterPeriod: selectedGroupFilter,
         });
         setGroupsFilter(filters.data);
-        setSelectedGroupFilter(
-          filters.data.find((filter) => filter.isActive)?.value
-        );
+        const selectedFilterFromServer = filters.data.find(
+          (filter) => filter.isActive
+        )?.value;
+
+        if (selectedFilterFromServer) {
+          setSelectedGroupFilter(selectedFilterFromServer);
+        }
       } catch (error) {
         console.log(error);
       }
@@ -49,8 +53,8 @@ function Operations() {
   ]);
 
   useEffect(() => {
-    if (!groupsFilter) return;
     async function getGroups() {
+      if (!groupsFilter || !selectedGroupFilter) return;
       try {
         const groups = await getGroupsRequest({
           periodType: selectedGroupFilter,

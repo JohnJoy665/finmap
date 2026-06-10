@@ -25,7 +25,7 @@ function FilterGroupContainer({
       {filters.map((filter) => (
         <FilterGroupItem
           key={filter.value}
-          label={filter.label}
+          value={filter.value}
           countDays={filter.daysInPeriod}
           amount={
             filter.amount
