@@ -73,7 +73,7 @@ export const changeSpendingAmountSchema = Joi.object({
     .custom((value, helpers) => {
       const amount = BigInt(value);
 
-      const maxAmount = 1_000_000_000n; // 1 миллиард копеек
+      const maxAmount = 100_000_000_000n; // 1 миллиард копеек
 
       if (amount > maxAmount) {
         return helpers.error("amount.max");

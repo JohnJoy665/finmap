@@ -19,6 +19,7 @@ function CurrencySelect({ currencies }: CurrencySelectProps) {
       currencyName: value,
       currencyCode: currency.currencyCode,
       currencySymbol: currency.currencySymbol,
+      conversionFactor: currency.conversionFactor,
     });
   }
 
@@ -46,6 +47,10 @@ function CurrencySelect({ currencies }: CurrencySelectProps) {
       </Form.Item>
 
       <Form.Item name="currencySymbol" hidden>
+        <input />
+      </Form.Item>
+
+      <Form.Item name="conversionFactor" hidden>
         <input />
       </Form.Item>
     </>

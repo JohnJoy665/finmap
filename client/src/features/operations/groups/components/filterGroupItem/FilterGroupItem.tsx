@@ -19,7 +19,6 @@ function FilterGroupItem({
   countDays,
 }: FilterGroupItemProps) {
   function getFilterLabel(value: string, daysInPeriod: number) {
-    console.log(value);
     if (value === "today") {
       return "Сегодня";
     }

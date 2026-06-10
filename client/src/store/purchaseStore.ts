@@ -11,11 +11,21 @@ type Category = {
 type PurchaseStore = {
   categories: Category[];
   setCategories: (categories: Category[]) => void;
+  reset: () => void;
+};
+
+const initialState = {
+  categories: [],
 };
 
 export const usePurchaseStore = create<PurchaseStore>((set) => ({
-  categories: [],
+  ...initialState,
+
   setCategories: (categories) => {
     set({ categories });
+  },
+
+  reset: () => {
+    set(initialState);
   },
 }));

@@ -86,6 +86,7 @@ function ProfileForm({
         currencyCode: "",
         currencySymbol: "",
         accountAmount: "",
+        conversionFactor: 100,
       }}
       onFinish={handleSubmit}
     >

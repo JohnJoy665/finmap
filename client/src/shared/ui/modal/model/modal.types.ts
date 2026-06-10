@@ -50,11 +50,11 @@ export type ChangeSpendingAmountProps = {
   spendingId: string;
   currencySymbol: string;
   accountAmount: string;
+  conversionFactor: number;
   onChangeAmount: (payload: {
     spendingId: string;
     currencySymbol: string;
     spendingAmount: string;
-    accountId: string;
     accountAmount: string;
   }) => void | Promise<void>;
 };

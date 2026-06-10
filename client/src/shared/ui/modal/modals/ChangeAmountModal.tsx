@@ -22,6 +22,7 @@ function ChangeAmountModal({
   currencySymbol,
   accountAmount,
   spendingId,
+  conversionFactor,
   onChangeAmount,
 }: Props) {
   const [form] = Form.useForm<ChangeSpendingAmountFormValues>();
@@ -59,7 +60,6 @@ function ChangeAmountModal({
         spendingId,
         currencySymbol: values.currencySymbol,
         spendingAmount: values.accountAmount,
-        accountId: "123",
         accountAmount: values.accountAmount,
       });
 
@@ -83,6 +83,7 @@ function ChangeAmountModal({
         initialValues={{
           currencySymbol,
           accountAmount,
+          conversionFactor,
         }}
         onFinish={handleSubmit}
         onFieldsChange={handleFieldsChange}
@@ -90,6 +91,10 @@ function ChangeAmountModal({
         <AmountInput lable="Сумма покупки" />
 
         <Form.Item name="currencySymbol" hidden>
+          <input />
+        </Form.Item>
+
+        <Form.Item name="conversionFactor" hidden>
           <input />
         </Form.Item>
       </Form>

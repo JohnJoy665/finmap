@@ -11,26 +11,42 @@ type AuthState = {
   setUser: (user: User) => void;
   setAuthChecked: (value: boolean) => void;
   logout: () => void;
+  reset: () => void;
+};
+
+const initialState = {
+  user: null,
+  token: null,
+  isAuthChecked: false,
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
-      token: null,
-      isAuthChecked: false,
+      ...initialState,
 
       setAuth: ({ user, token }) => {
-        set({ user, token });
+        set({ user, token, isAuthChecked: true });
       },
+
       setUser: (user) => {
         set({ user });
       },
+
       setAuthChecked: (value) => {
         set({ isAuthChecked: value });
       },
+
       logout: () => {
-        set({ user: null, token: null, isAuthChecked: true });
+        set({
+          user: null,
+          token: null,
+          isAuthChecked: true,
+        });
+      },
+
+      reset: () => {
+        set(initialState);
       },
     }),
     {

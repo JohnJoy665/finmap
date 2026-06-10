@@ -10,6 +10,9 @@ type AmountInputProps = {
 function AmountInput({ lable }: AmountInputProps) {
   const form = Form.useFormInstance();
   const currencySymbol = Form.useWatch("currencySymbol", form) || "";
+  const conversionFactor = Form.useWatch("conversionFactor", form);
+
+  const factor = BigInt(conversionFactor ?? 100);
 
   const formatter: InputNumberProps<string>["formatter"] = (value) => {
     if (value === undefined || value === null || value === "") {
@@ -67,7 +70,7 @@ function AmountInput({ lable }: AmountInputProps) {
       return Promise.reject(new Error("Сумма не может быть отрицательной"));
     }
 
-    if (amount > 999999999999) {
+    if (amount > 100_000_000_000n / factor) {
       return Promise.reject(new Error("Сумма слишком большая"));
     }
 

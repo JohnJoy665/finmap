@@ -40,13 +40,18 @@ type ProfileState = {
   clearProfile: () => void;
   changeProfileAccount: (payload: Account) => void;
   updateLocation: (payload: Location) => void;
+  reset: () => void;
 };
 
-export const useProfileStore = create<ProfileState>((set) => ({
+const initialState = {
   user: null,
   account: null,
   settings: null,
   setupRequired: null,
+};
+
+export const useProfileStore = create<ProfileState>((set) => ({
+  ...initialState,
 
   setProfile: ({ user, account, settings, setupRequired }) => {
     set((state) => ({ ...state, user, account, settings, setupRequired }));
@@ -106,5 +111,9 @@ export const useProfileStore = create<ProfileState>((set) => ({
         },
       };
     });
+  },
+
+  reset: () => {
+    set(initialState);
   },
 }));

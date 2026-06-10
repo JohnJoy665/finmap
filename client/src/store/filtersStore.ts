@@ -6,11 +6,16 @@ type filtersStore = {
   setGroupsFilter: (payload: FilterItem[] | null) => void;
   setSelectedGroupFilter: (filterType: GroupFilterValue) => void;
   selectedGroupFilter: GroupFilterValue | null;
+  reset: () => void;
+};
+
+const initialState = {
+  groupsFilter: null,
+  selectedGroupFilter: null,
 };
 
 export const useFiltersStore = create<filtersStore>((set) => ({
-  groupsFilter: null,
-  selectedGroupFilter: null,
+  ...initialState,
 
   setGroupsFilter: (value) => {
     set((state) => ({
@@ -32,5 +37,9 @@ export const useFiltersStore = create<filtersStore>((set) => ({
         selectedGroupFilter: filterType,
       };
     });
+  },
+
+  reset: () => {
+    set(initialState);
   },
 }));
