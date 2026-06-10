@@ -15,6 +15,7 @@ type Settings = {
   currencyCode: string | null;
   currencySymbol: string | null;
   conversionFactor: number | null;
+  lastCheckPosition: string | null;
 };
 
 type ProfilePayload = {
@@ -22,6 +23,11 @@ type ProfilePayload = {
   account: Account | null;
   settings: Settings | null;
   setupRequired: boolean | null;
+};
+
+type Location = {
+  countryCode: string;
+  cityId: number;
 };
 
 type ProfileState = {
@@ -33,13 +39,19 @@ type ProfileState = {
   setupRequired: boolean | null;
   clearProfile: () => void;
   changeProfileAccount: (payload: Account) => void;
+  updateLocation: (payload: Location) => void;
+  reset: () => void;
 };
 
-export const useProfileStore = create<ProfileState>((set) => ({
+const initialState = {
   user: null,
   account: null,
   settings: null,
   setupRequired: null,
+};
+
+export const useProfileStore = create<ProfileState>((set) => ({
+  ...initialState,
 
   setProfile: ({ user, account, settings, setupRequired }) => {
     set((state) => ({ ...state, user, account, settings, setupRequired }));
@@ -83,5 +95,25 @@ export const useProfileStore = create<ProfileState>((set) => ({
       settings: null,
       setupRequired: null,
     }));
+  },
+
+  updateLocation: (location) => {
+    set((state) => {
+      if (!state.settings) {
+        return state;
+      }
+
+      return {
+        settings: {
+          ...state.settings,
+          countryCode: location.countryCode,
+          cityId: location.cityId,
+        },
+      };
+    });
+  },
+
+  reset: () => {
+    set(initialState);
   },
 }));

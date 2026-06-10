@@ -3,4 +3,5 @@ export type CreateAccountFormValues = {
   currencyCode: string;
   currencySymbol: string;
   accountAmount: string;
+  conversionFactor: number;
 };

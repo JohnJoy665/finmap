@@ -72,6 +72,12 @@ export const createProfileSchema = Joi.object({
       "string.pattern.base": "Допустимы латинские символы, цифры, -, _",
       "any.required": "Введите имя",
     }),
+
+  timezone: Joi.string().min(1).max(64).required().messages({
+    "string.empty": "timezone is required",
+    "string.max": "timezone must be less than or equal to 64 characters",
+    "any.required": "timezone is required",
+  }),
 });
 
 export const getUniqNameQuerySchema = Joi.object({

@@ -85,6 +85,7 @@ function SpendingsListItemActions({
       type: "changeSpendingAmount",
       strategy: "destroy",
       props: {
+        conversionFactor: spending.conversionFactor,
         currencySymbol: spending.currencySymbol,
         accountAmount: String(
           Number(spending.amount) / spending.conversionFactor
@@ -153,15 +154,6 @@ function SpendingsListItemActions({
       >
         Изменить сумму покупки
       </Button>
-
-      {/* <Button
-        block
-        type="text"
-        icon={<SwapOutlined />}
-        className={styles.actionButton}
-      >
-        Изменить категорию
-      </Button> */}
 
       <Button
         block

@@ -158,6 +158,7 @@ type GetSpendingsByGroupParams = {
   groupId: string;
   limitCount: number;
   offsetCount: number;
+  timezone: string;
 };
 
 export type SpendingByGroupItem = {
@@ -186,6 +187,7 @@ export async function getSpendingsByGroup({
   groupId,
   limitCount,
   offsetCount,
+  timezone,
 }: GetSpendingsByGroupParams): Promise<GetSpendingsByGroupResponse> {
   try {
     const query = `
@@ -194,7 +196,8 @@ export async function getSpendingsByGroup({
           $1::uuid AS user_id,
           $2::uuid AS group_id,
           $3::int AS limit_count,
-          $4::int AS offset_count
+          $4::int AS offset_count,
+          COALESCE($5::text, 'UTC') AS timezone
       ),
 
       limited_spendings AS (
@@ -234,8 +237,8 @@ export async function getSpendingsByGroup({
             SELECT jsonb_agg(
               jsonb_build_object(
                 'id', i.id::text,
-                'date', TO_CHAR(i.spending_date, 'DD.MM'),
-                'time', TO_CHAR(i.spending_date, 'HH24:MI'),
+                'date', TO_CHAR(i.spending_date AT TIME ZONE p.timezone, 'DD.MM'),
+                'time', TO_CHAR(i.spending_date AT TIME ZONE p.timezone, 'HH24:MI'),
                 'amount', i.amount::text,
                 'conversionFactor', i.conversion_factor,
                 'currencySymbol', i.currency_symbol,
@@ -246,6 +249,7 @@ export async function getSpendingsByGroup({
               ORDER BY i.spending_date DESC, i.id DESC
             )
             FROM items i
+            JOIN params p ON true
           ),
           '[]'::jsonb
         ),
@@ -262,6 +266,7 @@ export async function getSpendingsByGroup({
       groupId,
       limitCount,
       offsetCount,
+      timezone,
     ]);
 
     return result.rows[0].result;

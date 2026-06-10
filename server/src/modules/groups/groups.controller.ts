@@ -6,7 +6,11 @@ import {
   getGroupsFilters,
 } from "./groups.service";
 import { sendSuccess } from "../../utils/apiResponse";
-import { createGroupSchema, getGroupSchema } from "./groups.schemas";
+import {
+  createGroupSchema,
+  getGroupSchema,
+  getGroupsFiltersQuerySchema,
+} from "./groups.schemas";
 import { AppError } from "../../utils/AppError";
 
 export async function createGroupController(
@@ -108,6 +112,12 @@ export async function getGroupsFiltersController(
   next: NextFunction
 ) {
   try {
+    const { error, value } = getGroupsFiltersQuerySchema.validate(req.query);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
     const userId = req.user?.userId;
     const userSettings = req.userSettings;
 
@@ -118,6 +128,7 @@ export async function getGroupsFiltersController(
     const filters = await getGroupsFilters({
       userId,
       userSettings,
+      groupFilterPeriod: value.groupFilterPeriod ?? null,
     });
 
     return sendSuccess(res, filters);

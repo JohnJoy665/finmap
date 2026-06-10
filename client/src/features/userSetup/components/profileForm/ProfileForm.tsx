@@ -37,7 +37,7 @@ function ProfileForm({
   setSelectedLanguageCode,
 }: ProfileFormProps) {
   const [form] = Form.useForm<ProfileFormValues>();
-
+  const timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const clearProfile = useProfileStore((store) => store.clearProfile);
   const navigate = useNavigate();
 
@@ -53,6 +53,7 @@ function ProfileForm({
           currencyCode: values.currencyCode,
           uniqUserName: values.uniqUserName,
           accountAmount: values.accountAmount,
+          timezone,
         });
 
         if (newUserSettingId) {
@@ -85,6 +86,7 @@ function ProfileForm({
         currencyCode: "",
         currencySymbol: "",
         accountAmount: "",
+        conversionFactor: 100,
       }}
       onFinish={handleSubmit}
     >

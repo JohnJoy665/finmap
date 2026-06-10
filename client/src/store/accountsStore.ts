@@ -11,10 +11,15 @@ type AccountStore = {
   setAccounts: (account: Account[]) => void;
   updateListAmountAccounts: (payload: ChangedAccount[]) => void;
   addToListAmountAccounts: (payload: Account) => void;
+  reset: () => void;
+};
+
+const initialState = {
+  accounts: [],
 };
 
 export const useAccountsStore = create<AccountStore>((set) => ({
-  accounts: [],
+  ...initialState,
 
   setAccounts: (accounts) => {
     set({ accounts });
@@ -43,5 +48,9 @@ export const useAccountsStore = create<AccountStore>((set) => ({
       ...state,
       accounts: [...state.accounts, payload],
     }));
+  },
+
+  reset: () => {
+    set(initialState);
   },
 }));

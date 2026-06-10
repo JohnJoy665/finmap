@@ -393,25 +393,34 @@ type FilterItem = {
   label: string;
   amount?: string;
   isActive: boolean;
+  daysInPeriod: number;
+  dateFrom: string;
+  dateTo: string;
 };
 
 type GetGroupsFiltersRequest = {
   userId: string;
   userSettings: UserSettings;
+  groupFilterPeriod: GroupFilterValue | null;
 };
 
 type GroupFilterRow = {
   value: GroupFilterValue;
   label: string;
   amount: string | null;
+  days_in_period: number;
+  date_from: string;
+  date_to: string;
 };
 
 export async function getGroupsFilters({
   userId,
   userSettings,
+  groupFilterPeriod,
 }: GetGroupsFiltersRequest): Promise<FilterItem[]> {
   try {
     const currencyCode = userSettings.currencyCode;
+    const timeZone = userSettings.timezone ?? "UTC";
 
     if (!currencyCode) {
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
@@ -419,104 +428,185 @@ export async function getGroupsFilters({
 
     const result = await pool.query<GroupFilterRow>(
       `
-      WITH selected_rate AS (
+      WITH params AS (
+        SELECT
+          $1::uuid AS user_id,
+          $2::varchar AS currency_code,
+          $3::numeric AS conversion_factor,
+          $4::text AS time_zone,
+          NOW() AS current_at
+      ),
+      selected_rate AS (
         SELECT
           CASE
-            WHEN $2::varchar = 'USD' THEN 1::numeric
+            WHEN p.currency_code = 'USD' THEN 1::numeric
             ELSE (
               SELECT er.exchange_rate
               FROM exchange_rates er
               WHERE er.base_currency = 'USD'
-                AND er.target_currency = $2
-                AND er.date_rate <= NOW()
+                AND er.target_currency = p.currency_code
+                AND er.date_rate <= p.current_at
               ORDER BY er.date_rate DESC
               LIMIT 1
             )
           END AS exchange_rate
+        FROM params p
       ),
-      periods AS (
-        SELECT
-          1 AS sort_order,
-          'today'::text AS value,
-          'Сегодня'::text AS label,
-          date_trunc('day', NOW()) AS amount_from,
-          date_trunc('day', NOW()) AS show_from,
-          NOW() AS show_to
-    
-        UNION ALL
-    
-        SELECT
-          2 AS sort_order,
-          'week'::text AS value,
-          'Неделя'::text AS label,
-          NOW() - INTERVAL '7 days' AS amount_from,
-          NOW() - INTERVAL '7 days' AS show_from,
-          date_trunc('day', NOW()) AS show_to
-    
-        UNION ALL
-    
-        SELECT
-          3 AS sort_order,
-          'month'::text AS value,
-          'Месяц'::text AS label,
-          NOW() - INTERVAL '30 days' AS amount_from,
-          NOW() - INTERVAL '30 days' AS show_from,
-          NOW() - INTERVAL '7 days' AS show_to
-    
-        UNION ALL
-    
-        SELECT
-          4 AS sort_order,
-          'year'::text AS value,
-          'Год'::text AS label,
-          date_trunc('year', NOW()) AS amount_from,
-          date_trunc('year', NOW()) AS show_from,
-          NOW() - INTERVAL '30 days' AS show_to
+      oldest_user_spending AS (
+        SELECT MIN(s.spending_date) AS oldest_spending_date
+        FROM spendings s
+        CROSS JOIN params p
+        WHERE s.user_id = p.user_id
       ),
+      time_bounds AS (
+        SELECT
+          p.current_at,
+          p.time_zone,
+
+          (
+            date_trunc('day', p.current_at AT TIME ZONE p.time_zone)
+            AT TIME ZONE p.time_zone
+          ) AS user_today_start
+
+        FROM params p
+      ),
+periods AS (
+  SELECT
+    1 AS sort_order,
+    'today'::text AS value,
+    'Сегодня'::text AS label,
+    1::int AS max_days_in_period,
+    tb.user_today_start AS amount_from,
+    tb.current_at AS amount_to,
+    tb.user_today_start AS show_from,
+    tb.current_at AS show_to
+  FROM time_bounds tb
+
+  UNION ALL
+
+  SELECT
+    2 AS sort_order,
+    'week'::text AS value,
+    'Неделя'::text AS label,
+    7::int AS max_days_in_period,
+    tb.current_at - INTERVAL '7 days' AS amount_from,
+    tb.current_at AS amount_to,
+    tb.current_at - INTERVAL '7 days' AS show_from,
+    tb.user_today_start AS show_to
+  FROM time_bounds tb
+
+  UNION ALL
+
+  SELECT
+    3 AS sort_order,
+    'month'::text AS value,
+    'Месяц'::text AS label,
+    30::int AS max_days_in_period,
+    tb.current_at - INTERVAL '30 days' AS amount_from,
+    tb.current_at AS amount_to,
+    tb.current_at - INTERVAL '30 days' AS show_from,
+    tb.current_at - INTERVAL '7 days' AS show_to
+  FROM time_bounds tb
+
+  UNION ALL
+
+  SELECT
+    4 AS sort_order,
+    'year'::text AS value,
+    'Год'::text AS label,
+    365::int AS max_days_in_period,
+    tb.current_at - INTERVAL '365 days' AS amount_from,
+    tb.current_at AS amount_to,
+    tb.current_at - INTERVAL '365 days' AS show_from,
+    tb.current_at - INTERVAL '30 days' AS show_to
+  FROM time_bounds tb
+),
       visible_periods AS (
         SELECT p.*
         FROM periods p
+        CROSS JOIN params prm
         WHERE EXISTS (
           SELECT 1
           FROM spendings s
-          WHERE s.user_id = $1
+          WHERE s.user_id = prm.user_id
             AND s.spending_date >= p.show_from
             AND s.spending_date < p.show_to
         )
       ),
-      aggregated AS (
-        SELECT
-          p.sort_order,
-          p.value,
-          p.label,
-          COALESCE(SUM(s.base_amount_micro), 0)::numeric AS total_base_micro,
-          COUNT(s.id) FILTER (
-            WHERE s.id IS NOT NULL
-              AND s.base_amount_micro IS NULL
-          ) AS missed_base_amount_count
-        FROM visible_periods p
-        LEFT JOIN spendings s
-          ON s.user_id = $1
-          AND s.spending_date >= p.amount_from
-        GROUP BY p.sort_order, p.value, p.label
-      )
-      SELECT
-        a.value,
-        a.label,
-        CASE
-          WHEN a.missed_base_amount_count > 0 THEN NULL
-          WHEN sr.exchange_rate IS NULL THEN NULL
-          ELSE ROUND(
-            (a.total_base_micro / 1000000::numeric)
-            * sr.exchange_rate
-            * $3::numeric
-          )::bigint::text
-        END AS amount
-      FROM aggregated a
-      CROSS JOIN selected_rate sr
-      ORDER BY a.sort_order;
+     aggregated AS (
+  SELECT
+    p.sort_order,
+    p.value,
+    p.label,
+    p.max_days_in_period,
+    p.amount_from,
+    p.amount_to,
+
+    CASE
+      WHEN p.value = 'today' THEN p.amount_from
+      WHEN ous.oldest_spending_date < p.amount_from THEN p.amount_from
+      ELSE MIN(s.spending_date)
+    END AS effective_date_from,
+
+    COALESCE(SUM(s.base_amount_micro), 0)::numeric AS total_base_micro,
+
+    COUNT(s.id) FILTER (
+      WHERE s.id IS NOT NULL
+        AND s.base_amount_micro IS NULL
+    ) AS missed_base_amount_count
+
+  FROM visible_periods p
+  CROSS JOIN params prm
+  CROSS JOIN oldest_user_spending ous
+  LEFT JOIN spendings s
+    ON s.user_id = prm.user_id
+    AND s.spending_date >= p.amount_from
+    AND s.spending_date < p.amount_to
+  GROUP BY
+    p.sort_order,
+    p.value,
+    p.label,
+    p.max_days_in_period,
+    p.amount_from,
+    p.amount_to,
+    ous.oldest_spending_date
+)
+ SELECT
+  a.value,
+  a.label,
+
+  LEAST(
+    a.max_days_in_period,
+    GREATEST(
+      1,
+      (
+        (a.amount_to AT TIME ZONE prm.time_zone)::date
+        -
+        (a.effective_date_from AT TIME ZONE prm.time_zone)::date
+        + 1
+      )::int
+    )
+  ) AS days_in_period,
+
+  (a.effective_date_from AT TIME ZONE prm.time_zone)::text AS date_from,
+  (a.amount_to AT TIME ZONE prm.time_zone)::text AS date_to,
+
+  CASE
+    WHEN a.missed_base_amount_count > 0 THEN NULL
+    WHEN sr.exchange_rate IS NULL THEN NULL
+    ELSE ROUND(
+      (a.total_base_micro / 1000000::numeric)
+      * sr.exchange_rate
+      * prm.conversion_factor
+    )::bigint::text
+  END AS amount
+
+FROM aggregated a
+CROSS JOIN selected_rate sr
+CROSS JOIN params prm
+ORDER BY a.sort_order;
       `,
-      [userId, currencyCode, userSettings.conversionFactor]
+      [userId, currencyCode, userSettings.conversionFactor, timeZone]
     );
 
     const filters = result.rows.map((row) => {
@@ -524,6 +614,9 @@ export async function getGroupsFilters({
         value: row.value,
         label: row.label,
         isActive: false,
+        daysInPeriod: row.days_in_period,
+        dateFrom: row.date_from,
+        dateTo: row.date_to,
       };
 
       if (row.amount !== null) {
@@ -534,7 +627,9 @@ export async function getGroupsFilters({
     });
 
     const activeFilter =
-      filters.find((filter) => filter.value === "week") ?? filters[0];
+      filters.find((filter) => filter.value === groupFilterPeriod) ??
+      filters.find((filter) => filter.value === "week") ??
+      filters[0];
 
     if (activeFilter) {
       activeFilter.isActive = true;

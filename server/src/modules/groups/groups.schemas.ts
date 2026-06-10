@@ -29,3 +29,9 @@ export const getGroupSchema = Joi.object({
     .valid("today", "week", "month", "year")
     .default("week"),
 });
+
+export const getGroupsFiltersQuerySchema = Joi.object({
+  groupFilterPeriod: Joi.string()
+    .valid("today", "week", "month", "year")
+    .optional(),
+}).unknown(false);

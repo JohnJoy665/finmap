@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import GroupGrid from "../../features/operations/groups/components/groupGrid/GroupGrid";
 import SearchGroup from "../../features/operations/groups/components/searchGroup/SearchGroup";
 import { getGroupsRequest } from "../../features/operations/groups/api/getGroups";
@@ -6,55 +6,58 @@ import { useGroupStrore } from "../../store/groupStore";
 import { useProfileStore } from "../../store/profileStore";
 import FilterGroupContainer from "../../features/operations/groups/components/filterGroupContainer/FilterGroupContainer";
 import { getGroupsFilters } from "../../features/operations/groups/api/getGroupsFilters";
-
-export type GroupFilterValue = "today" | "week" | "month" | "year";
-
-type FilterItem = {
-  value: GroupFilterValue;
-  label: string;
-  amount?: string;
-  isActive: boolean;
-};
+import type { GroupFilterValue } from "../../shared/types/group.types";
+import { useFiltersStore } from "../../store/filtersStore";
 
 function Operations() {
-  const [filters, setFilters] = useState<FilterItem[] | null>(null);
   const setGroups = useGroupStrore((store) => store.setGroups);
-
-  const activeAccountId = useProfileStore((store) => store.account?.id);
-
   const conversionFactor = useProfileStore(
     (store) => store.account?.conversionFactor
   );
-
-  const selectedPeriodType = useGroupStrore(
-    (store) => store.selectedPeriodType
+  const groupsFilter = useFiltersStore((store) => store.groupsFilter);
+  const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
+  const setSelectedGroupFilter = useFiltersStore(
+    (store) => store.setSelectedGroupFilter
   );
-
-  const setSelectedPeriodType = useGroupStrore(
-    (store) => store.setSelectedPeriodType
+  const selectedGroupFilter = useFiltersStore(
+    (store) => store.selectedGroupFilter
   );
-
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
   useEffect(() => {
+    if (groupsFilter) return;
     async function getFilters() {
       try {
-        const filters = await getGroupsFilters();
-        setFilters(filters.data);
+        const filters = await getGroupsFilters({
+          groupFilterPeriod: selectedGroupFilter,
+        });
+        setGroupsFilter(filters.data);
+        const selectedFilterFromServer = filters.data.find(
+          (filter) => filter.isActive
+        )?.value;
+
+        if (selectedFilterFromServer) {
+          setSelectedGroupFilter(selectedFilterFromServer);
+        }
       } catch (error) {
         console.log(error);
       }
     }
     getFilters();
-  }, [currencyCode]);
+  }, [
+    setGroupsFilter,
+    selectedGroupFilter,
+    setSelectedGroupFilter,
+    groupsFilter,
+    currencyCode,
+  ]);
 
   useEffect(() => {
-    if (!activeAccountId || !filters) return;
-
     async function getGroups() {
+      if (!groupsFilter || !selectedGroupFilter) return;
       try {
         const groups = await getGroupsRequest({
-          periodType: selectedPeriodType,
+          periodType: selectedGroupFilter,
         });
         setGroups(groups.data);
       } catch (error) {
@@ -63,26 +66,19 @@ function Operations() {
     }
 
     getGroups();
-  }, [setGroups, activeAccountId, filters]);
+  }, [setGroups, selectedGroupFilter, groupsFilter]);
 
   function changeFilter(targetValue: GroupFilterValue) {
-    setSelectedPeriodType(targetValue);
-    setFilters((prev) =>
-      prev
-        ? prev.map((filter) => ({
-            ...filter,
-            isActive: filter.value === targetValue,
-          }))
-        : prev
-    );
+    if (selectedGroupFilter === targetValue) return;
+    setSelectedGroupFilter(targetValue);
   }
 
   return (
     <>
       <SearchGroup />
-      {filters && conversionFactor && filters.length > 0 && (
+      {groupsFilter && conversionFactor && groupsFilter.length > 0 && (
         <FilterGroupContainer
-          filters={filters}
+          filters={groupsFilter}
           onChange={changeFilter}
           conversionFactor={conversionFactor}
         />

@@ -6,6 +6,7 @@ export type UserSettingsRow = {
   language_code: string | null;
   country_code: string | null;
   city_id: number | null;
+  timezone: string | null;
 
   visible_account: boolean;
   visible_user_name: boolean;
@@ -29,6 +30,7 @@ export type UserSettings = {
   languageCode: string | null;
   countryCode: string | null;
   cityId: number | null;
+  timezone: string | null;
 
   visibleAccount: boolean;
   visibleUserName: boolean;

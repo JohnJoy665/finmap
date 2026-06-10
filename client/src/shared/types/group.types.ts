@@ -11,3 +11,15 @@ export type Group = {
   amount: string | null;
   is_converted: boolean;
 };
+
+export type GroupFilterValue = "today" | "week" | "month" | "year";
+
+export type FilterItem = {
+  value: GroupFilterValue;
+  label: string;
+  amount?: string;
+  isActive: boolean;
+  daysInPeriod: number;
+  dateFrom: string;
+  dateTo: string;
+};

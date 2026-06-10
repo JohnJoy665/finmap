@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import React from "react";
 import { changeCurrentAccount } from "../../../createAccount/api/changeCurrentAccount";
 import { useProfileStore } from "../../../../store/profileStore";
+import { useFiltersStore } from "../../../../store/filtersStore";
 
 type AccountsDropdownProps = {
   accounts: Account[];
@@ -23,6 +24,7 @@ function AccountsDropdown({
   const changeProfileAccount = useProfileStore(
     (store) => store.changeProfileAccount
   );
+  const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
 
   function setActiveAccount(accountId: string) {
     if (accountId === activeAccount?.id) return;
@@ -32,6 +34,7 @@ function AccountsDropdown({
         accountId: accountId,
       });
       changeProfileAccount(currentAccount.data);
+      setGroupsFilter(null);
       onClose();
     }
 

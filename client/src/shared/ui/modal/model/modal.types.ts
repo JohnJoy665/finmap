@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 export type ModalType =
   | "confirmAction"
   | "renameSpending"
-  | "changeSpendingAmount";
+  | "changeSpendingAmount"
+  | "changeLocation";
 
 export type ModalStrategy = "destroy" | "keepAlive";
 
@@ -49,11 +50,11 @@ export type ChangeSpendingAmountProps = {
   spendingId: string;
   currencySymbol: string;
   accountAmount: string;
+  conversionFactor: number;
   onChangeAmount: (payload: {
     spendingId: string;
     currencySymbol: string;
     spendingAmount: string;
-    accountId: string;
     accountAmount: string;
   }) => void | Promise<void>;
 };
@@ -63,7 +64,29 @@ export type ChangeSpendingAmountModalItem =
     type: "changeSpendingAmount";
   };
 
+///////////////////////////////////////////////////////
+
+export type ChangeLocationModalProps = {
+  content: string;
+  countryCode: string;
+  countryName: string;
+  cityId: number;
+  cityName: string;
+  languageCode: string;
+  onChangeLocation: (payload: {
+    countryCode: string;
+    cityId: number;
+  }) => void | Promise<void>;
+};
+
+export type ChangeLocationModalItem = ModalItem<ChangeLocationModalProps> & {
+  type: "changeLocation";
+};
+
+//////////////////////////////////////////////////////
+
 export type AppModalItem =
   | ConfirmActionModalItem
   | RenameSpendingModalItem
-  | ChangeSpendingAmountModalItem;
+  | ChangeSpendingAmountModalItem
+  | ChangeLocationModalItem;

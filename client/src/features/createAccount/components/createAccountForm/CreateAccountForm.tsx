@@ -64,6 +64,7 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
         currencyCode: "",
         currencySymbol: "",
         accountAmount: "",
+        conversionFactor: 100,
       }}
       onFinish={handleSubmit}
     >
