@@ -1,27 +1,16 @@
-import { useEffect, useRef } from "react";
-
+import CommonDashboards from "../../../features/dashboards/components/commonDashboards/CommonDashboards";
+import DashboardPanel from "../../../features/dashboards/components/dashboardPanel/DashboardPanel";
+import CategoryWidget from "../../../shared/widgets/categoryWidjet/components/categoryWidget/CategoryWidget";
+import styles from "./Analytics.module.css";
 function Analytics() {
-  const renderCount = useRef(0);
-  const renderCountElement = useRef<HTMLSpanElement | null>(null);
-
-  useEffect(() => {
-    renderCount.current += 1;
-
-    if (renderCountElement.current) {
-      renderCountElement.current.textContent = String(renderCount.current);
-    }
-
-    console.log("Analytics render:", renderCount.current);
-  });
-
   return (
-    <>
-      <p>Analytics</p>
-
-      <p>
-        Количество ререндеров: <span ref={renderCountElement}>0</span>
-      </p>
-    </>
+    <div className={styles.container}>
+      <DashboardPanel>
+        <CommonDashboards>
+          <CategoryWidget />
+        </CommonDashboards>
+      </DashboardPanel>
+    </div>
   );
 }
 

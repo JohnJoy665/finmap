@@ -1,15 +1,14 @@
-import { Grid } from "antd";
+import { useState } from "react";
 
-type BreakPoint = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
+function useIsMobile() {
+  const [isMobile] = useState(() => {
+    console.log("calculate isMobile");
+    if (typeof window === "undefined") return false;
 
-function useIsMobile(breakPoint: BreakPoint = "sm") {
-  const screens = Grid.useBreakpoint();
+    return window.innerWidth < 900;
+  });
 
-  const isMobile = !screens[breakPoint];
-
-  return {
-    isMobile,
-  };
+  return { isMobile };
 }
 
 export default useIsMobile;

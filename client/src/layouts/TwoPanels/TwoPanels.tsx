@@ -13,9 +13,7 @@ function TwoPanels({ left, right }: TwoPanelsProps) {
   return (
     <Flex className={style.container} vertical={false}>
       <div
-        className={`${style.left} ${
-          isMobile ? style["left--mobile"] : style["left--desctop"]
-        }`}
+        className={`${style.left} ${isMobile ? style["left--mobile"] : style["left--desctop"]}`}
       >
         {left}
       </div>
