@@ -25,6 +25,17 @@ function CategoryWidget() {
   const groupsFilter = useFiltersStore((store) => store.groupsFilter);
 
   useEffect(() => {
+    if (!account?.amount) return;
+    console.log(account?.amount);
+  }, [account?.amount]);
+
+  useEffect(() => {
+    console.log("second effect fired", {
+      groupsFilter,
+      selectedGroupFilter,
+      account,
+      amount: account?.amount,
+    });
     if (!groupsFilter || !selectedGroupFilter || !account) return;
 
     const currentFilter = groupsFilter.find(
@@ -66,7 +77,7 @@ function CategoryWidget() {
     return () => {
       isCancelled = true;
     };
-  }, [groupsFilter, selectedGroupFilter, account]);
+  }, [groupsFilter, selectedGroupFilter, account?.amount]);
 
   const hasData = Boolean(widgetData?.categories?.length);
 

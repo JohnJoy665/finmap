@@ -1,6 +1,6 @@
 import { request } from "../../../../shared/api/request";
 import type { ApiSuccess } from "../../../../shared/api/types";
-import type { SpendingByGroupItem } from "../../../../shared/types/spendings,types";
+import type { SpendingByGroupItem } from "../../../../shared/types/spendings.types";
 
 export type GetSpendingsByGroupRequest = {
   groupId: string;

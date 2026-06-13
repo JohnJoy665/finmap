@@ -29,7 +29,10 @@ function Operations() {
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
   useEffect(() => {
+    console.log("Попытка запуска обновления фильтров");
+    console.log(groupsFilter);
     if (groupsFilter) return;
+    console.log("Попытка запуска обновления фильтров удалась");
     async function getFilters() {
       try {
         const filters = await getGroupsFilters({

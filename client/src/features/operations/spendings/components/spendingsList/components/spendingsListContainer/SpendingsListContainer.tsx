@@ -3,7 +3,7 @@ import SpendingsList from "../spendingsList/SpendingsList";
 import styles from "./SpendingsListContainer.module.css";
 import { useEffect, useState } from "react";
 import { getSpendingsByGroup } from "../../../../api/getSpendingsByGroup";
-import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
+import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings.types";
 import { useProfileStore } from "../../../../../../../store/profileStore";
 import { useAccountsStore } from "../../../../../../../store/accountsStore";
 import { useFiltersStore } from "../../../../../../../store/filtersStore";
