@@ -25,9 +25,8 @@ export const createGroupSchema = Joi.object({
 });
 
 export const getGroupSchema = Joi.object({
-  periodType: Joi.string()
-    .valid("today", "week", "month", "year")
-    .default("week"),
+  dateFromUTC: Joi.string().isoDate().required(),
+  dateToUTC: Joi.string().isoDate().required(),
 });
 
 export const getGroupsFiltersQuerySchema = Joi.object({

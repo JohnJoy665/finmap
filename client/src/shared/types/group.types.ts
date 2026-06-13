@@ -17,9 +17,15 @@ export type GroupFilterValue = "today" | "week" | "month" | "year";
 export type FilterItem = {
   value: GroupFilterValue;
   label: string;
-  amount?: string;
+  amount: string | null;
   isActive: boolean;
   daysInPeriod: number;
-  dateFrom: string;
-  dateTo: string;
+
+  dateFromLocal: string;
+  dateToLocal: string;
+
+  dateFromUTC: string;
+  dateToUTC: string;
+
+  timezone: string;
 };

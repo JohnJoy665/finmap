@@ -2,8 +2,8 @@ import { request } from "../../../../shared/api/request";
 import type { ApiSuccess } from "../../../../shared/api/types";
 
 type GetCategoryStatisticsWidgetParams = {
-  dateFrom: string;
-  dateTo: string;
+  dateFromUTC: string;
+  dateToUTC: string;
 };
 
 export type CategoryStatisticsWidgetSubTitle = {
@@ -27,8 +27,8 @@ export type CategoryStatisticsWidgetResponse = {
 };
 
 export async function getCategoryStatisticsWidget({
-  dateFrom,
-  dateTo,
+  dateFromUTC,
+  dateToUTC,
 }: GetCategoryStatisticsWidgetParams): Promise<
   ApiSuccess<CategoryStatisticsWidgetResponse>
 > {
@@ -36,8 +36,8 @@ export async function getCategoryStatisticsWidget({
     method: "GET",
     url: "/widjets/category-statistics",
     params: {
-      dateFrom,
-      dateTo,
+      dateFromUTC,
+      dateToUTC,
     },
   });
 }

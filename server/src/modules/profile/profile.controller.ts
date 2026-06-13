@@ -3,9 +3,14 @@ import {
   checkUniqName,
   createProfile,
   getUserProfile,
+  updateProfileTimezone,
 } from "./profile.service";
 import { sendSuccess } from "../../utils/apiResponse";
-import { createProfileSchema, getUniqNameQuerySchema } from "./profile.schemas";
+import {
+  createProfileSchema,
+  getUniqNameQuerySchema,
+  updateProfileTimezoneSchema,
+} from "./profile.schemas";
 import { AppError } from "../../utils/AppError";
 
 export async function getProfile(
@@ -75,6 +80,35 @@ export async function getUniqNameController(
     const result = await checkUniqName({
       userId,
       uniqUserName: value.uniqUserName,
+    });
+
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateProfileTimezoneController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = updateProfileTimezoneSchema.validate(req.body);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await updateProfileTimezone({
+      userId,
+      timezone: value.timezone,
     });
 
     sendSuccess(res, result);

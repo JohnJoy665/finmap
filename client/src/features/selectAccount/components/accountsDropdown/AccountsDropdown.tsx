@@ -24,7 +24,9 @@ function AccountsDropdown({
   const changeProfileAccount = useProfileStore(
     (store) => store.changeProfileAccount
   );
-  const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
+  const requestGroupsFiltersReload = useFiltersStore(
+    (store) => store.requestGroupsFiltersReload
+  );
 
   function setActiveAccount(accountId: string) {
     if (accountId === activeAccount?.id) return;
@@ -34,7 +36,7 @@ function AccountsDropdown({
         accountId: accountId,
       });
       changeProfileAccount(currentAccount.data);
-      setGroupsFilter(null);
+      requestGroupsFiltersReload();
       onClose();
     }
 

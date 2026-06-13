@@ -65,7 +65,8 @@ export async function getGroupsController(
     const groups = await getGroups({
       userId,
       userSettings,
-      periodType: value.periodType,
+      dateFromUTC: value.dateFromUTC,
+      dateToUTC: value.dateToUTC,
     });
     return sendSuccess(res, groups);
   } catch (error) {

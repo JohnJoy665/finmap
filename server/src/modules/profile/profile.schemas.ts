@@ -95,3 +95,31 @@ export const getUniqNameQuerySchema = Joi.object({
       "any.required": "Введите имя",
     }),
 });
+
+function isValidTimeZone(value: string, helpers: Joi.CustomHelpers) {
+  const timezone = value.trim();
+
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: timezone });
+    return timezone;
+  } catch {
+    return helpers.error("any.invalid");
+  }
+}
+
+export const updateProfileTimezoneSchema = Joi.object({
+  timezone: Joi.string()
+    .trim()
+    .min(1)
+    .max(64)
+    .custom(isValidTimeZone)
+    .required()
+    .messages({
+      "string.base": "Timezone must be a string",
+      "string.empty": "Timezone is required",
+      "string.min": "Timezone is required",
+      "string.max": "Timezone must be less than or equal to 64 characters",
+      "any.invalid": "Timezone is not valid",
+      "any.required": "Timezone is required",
+    }),
+});

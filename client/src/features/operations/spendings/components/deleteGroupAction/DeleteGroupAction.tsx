@@ -22,7 +22,9 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
     (store) => store.updateListAmountAccounts
   );
   const activeAccount = useProfileStore((state) => state.account?.id);
-  const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
+  const requestGroupsFiltersReload = useFiltersStore(
+    (store) => store.requestGroupsFiltersReload
+  );
   function handleCancel() {
     navigate("/app/operations");
   }
@@ -38,7 +40,7 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
         updateProfileAmount(activeAccountAmount);
       }
       updateListAmountAccounts(deletedGoup.data.accounts);
-      setGroupsFilter(null);
+      requestGroupsFiltersReload();
       return deletedGoup;
     });
 

@@ -33,8 +33,8 @@ export async function getCategoryStatisticsWidgetController(
     const data = await getCategoryStatisticsWidget({
       userId,
       userSettings,
-      dateFrom: value.dateFrom,
-      dateTo: value.dateTo,
+      dateFromUTC: value.dateFromUTC,
+      dateToUTC: value.dateToUTC,
     });
 
     sendSuccess(res, data);

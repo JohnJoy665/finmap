@@ -28,8 +28,8 @@ type UserSettings = {
 type GetCategoryStatisticsWidgetRequest = {
   userId: string;
   userSettings: UserSettings;
-  dateFrom: string;
-  dateTo: string;
+  dateFromUTC: string;
+  dateToUTC: string;
 };
 
 type CategoryStatisticsRow = {
@@ -59,21 +59,32 @@ type CategoryStatisticsWidgetResponse = {
   categories: CategoryStatisticsItem[];
 };
 
-function formatDateForSubtitle(dateTime: string) {
-  const datePart = dateTime.split(" ")[0];
+function formatDateForSubtitle(dateTimeUTC: string, timezone?: string) {
+  if (!dateTimeUTC) return "";
 
-  if (!datePart) return "";
+  const date = new Date(dateTimeUTC);
 
-  const [year, month, day] = datePart.split("-");
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
 
-  if (!year || !month || !day) return datePart;
+  const formatter = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: timezone || "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
-  return `${day}.${month}.${year}`;
+  return formatter.format(date);
 }
 
-function formatPeriodSubtitle(dateFrom: string, dateTo: string) {
-  const from = formatDateForSubtitle(dateFrom);
-  const to = formatDateForSubtitle(dateTo);
+function formatPeriodSubtitle(
+  dateFromUTC: string,
+  dateToUTC: string,
+  timezone?: string
+) {
+  const from = formatDateForSubtitle(dateFromUTC, timezone);
+  const to = formatDateForSubtitle(dateToUTC, timezone);
 
   if (!from || !to) return "";
 
@@ -87,14 +98,14 @@ function formatPeriodSubtitle(dateFrom: string, dateTo: string) {
 export async function getCategoryStatisticsWidget({
   userId,
   userSettings,
-  dateFrom,
-  dateTo,
+  dateFromUTC,
+  dateToUTC,
 }: GetCategoryStatisticsWidgetRequest): Promise<CategoryStatisticsWidgetResponse> {
   try {
     const langCode = userSettings.languageCode ?? "ru";
     const currencyCode = userSettings.currencyCode;
     const conversionFactor = userSettings.conversionFactor;
-    const timeZone = userSettings.timezone;
+    const timeZone = userSettings.timezone?.trim() || "UTC";
 
     if (!currencyCode) {
       throw new AppError(
@@ -128,8 +139,8 @@ export async function getCategoryStatisticsWidget({
           $3::varchar AS currency_code,
           $4::numeric AS conversion_factor,
           $5::text AS time_zone,
-          ($6::timestamp AT TIME ZONE $5::text) AS date_from,
-          ($7::timestamp AT TIME ZONE $5::text) AS date_to,
+          $6::timestamptz AS date_from,
+          $7::timestamptz AS date_to,
           NOW() AS current_at
       ),
 
@@ -232,8 +243,8 @@ export async function getCategoryStatisticsWidget({
       currencyCode,
       conversionFactor,
       timeZone,
-      dateFrom,
-      dateTo,
+      dateFromUTC,
+      dateToUTC,
     ];
 
     const { rows } = await pool.query<CategoryStatisticsRow>(query, params);
@@ -252,7 +263,7 @@ export async function getCategoryStatisticsWidget({
       subTitles: [
         {
           subTitle: "За период:",
-          value: formatPeriodSubtitle(dateFrom, dateTo),
+          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
         },
         {
           subTitle: "Всего категорий:",

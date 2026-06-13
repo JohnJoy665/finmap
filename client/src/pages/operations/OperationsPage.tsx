@@ -8,15 +8,18 @@ import FilterGroupContainer from "../../features/operations/groups/components/fi
 import { getGroupsFilters } from "../../features/operations/groups/api/getGroupsFilters";
 import type { GroupFilterValue } from "../../shared/types/group.types";
 import { useFiltersStore } from "../../store/filtersStore";
-import CommonDashboards from "../../features/dashboards/components/commonDashboards/CommonDashboards";
-import StatsWidget from "../../shared/widgets/statsWidget/StatsWidget";
-import CategoryWidjetPanel from "../../shared/widgets/categoryWidjet/components/categoryWidjetPanel/CategoryWidjetPanel";
-import CategoryWidjetListItem from "../../shared/widgets/categoryWidjet/components/categoryWidjetListItem/CategoryWidjetListItem";
+// import CommonDashboards from "../../features/dashboards/components/commonDashboards/CommonDashboards";
+// import StatsWidget from "../../shared/widgets/statsWidget/StatsWidget";
+// import CategoryWidjetPanel from "../../shared/widgets/categoryWidjet/components/categoryWidjetPanel/CategoryWidjetPanel";
+// import CategoryWidjetListItem from "../../shared/widgets/categoryWidjet/components/categoryWidjetListItem/CategoryWidjetListItem";
 
 function Operations() {
   const setGroups = useGroupStrore((store) => store.setGroups);
   const conversionFactor = useProfileStore(
     (store) => store.account?.conversionFactor
+  );
+  const groupsFiltersReloadKey = useFiltersStore(
+    (store) => store.groupsFiltersReloadKey
   );
   const groupsFilter = useFiltersStore((store) => store.groupsFilter);
   const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
@@ -29,16 +32,17 @@ function Operations() {
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
   useEffect(() => {
-    console.log("Попытка запуска обновления фильтров");
-    console.log(groupsFilter);
-    if (groupsFilter) return;
-    console.log("Попытка запуска обновления фильтров удалась");
     async function getFilters() {
       try {
+        const currentSelectedGroupFilter =
+          useFiltersStore.getState().selectedGroupFilter;
+
         const filters = await getGroupsFilters({
-          groupFilterPeriod: selectedGroupFilter,
+          groupFilterPeriod: currentSelectedGroupFilter,
         });
+
         setGroupsFilter(filters.data);
+
         const selectedFilterFromServer = filters.data.find(
           (filter) => filter.isActive
         )?.value;
@@ -50,21 +54,28 @@ function Operations() {
         console.log(error);
       }
     }
+
     getFilters();
   }, [
-    setGroupsFilter,
-    selectedGroupFilter,
-    setSelectedGroupFilter,
-    groupsFilter,
+    groupsFiltersReloadKey,
     currencyCode,
+    setGroupsFilter,
+    setSelectedGroupFilter,
   ]);
 
   useEffect(() => {
     async function getGroups() {
       if (!groupsFilter || !selectedGroupFilter) return;
       try {
+        const currentFilter = groupsFilter.find(
+          (filter) => filter.value === selectedGroupFilter
+        );
+
+        if (!currentFilter) return;
+
         const groups = await getGroupsRequest({
-          periodType: selectedGroupFilter,
+          dateFromUTC: currentFilter.dateFromUTC,
+          dateToUTC: currentFilter.dateToUTC,
         });
         setGroups(groups.data);
       } catch (error) {
