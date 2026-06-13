@@ -3,15 +3,17 @@
 }
 
 .item {
-  display: grid !important;
-  grid-template-columns: 38px minmax(0, 1fr) 42px;
-  align-items: center !important;
-  column-gap: 12px;
-  padding: 0 !important;
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 44px;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 44px;
+  padding: 6px 0 8px;
 }
 
 .item + .item {
-  margin-top: 18px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .avatar {
@@ -24,70 +26,86 @@
   justify-content: center;
 }
 
-.content {
+.main {
   min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 8px;
 }
 
 .name {
-  display: block;
   min-width: 0;
-  max-width: 100%;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500 !important;
   line-height: 1.25;
   color: var(--ant-color-text-secondary);
 }
 
 .amount {
-  display: block;
-  margin-top: 3px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1.25;
   white-space: nowrap;
 }
 
-.progress {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  line-height: 1;
-}
-
-.progress :global(.ant-progress-outer) {
-  width: 100% !important;
-}
-
-.progress :global(.ant-progress-inner) {
-  width: 100% !important;
-  border-radius: 999px;
-}
-
-.progress :global(.ant-progress-bg) {
-  min-width: 8px;
-  border-radius: 999px !important;
-}
-
 .percent {
-  font-size: 14px;
-  font-weight: 600 !important;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
   text-align: right;
   white-space: nowrap;
   color: var(--ant-color-text-secondary);
 }
 
+.progress {
+  position: absolute;
+  left: 40px;
+  right: 44px;
+  bottom: 3px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.progress::before {
+  content: "";
+  display: block;
+  width: var(--category-percent);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--category-color);
+}
+
 @media (max-width: 360px) {
   .item {
-    grid-template-columns: 34px minmax(0, 1fr) 34px;
-    column-gap: 9px;
+    grid-template-columns: 28px minmax(0, 1fr) 38px;
+    column-gap: 8px;
+    min-height: 42px;
   }
 
   .avatar {
-    width: 32px !important;
-    height: 32px !important;
-    line-height: 32px !important;
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
   }
 
-  .name {
-    max-width: 100%;
+  .main {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1px;
+  }
+
+  .amount {
+    font-size: 12px;
+  }
+
+  .percent {
+    font-size: 12px;
+  }
+
+  .progress {
+    left: 36px;
+    right: 38px;
   }
 }

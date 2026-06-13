@@ -1,4 +1,4 @@
-import { Avatar, Progress, Typography } from "antd";
+import { Avatar, Typography } from "antd";
 import styles from "./CategoryWidjetListItem.module.css";
 import type { CategoryStatisticsWidgetItem } from "../../api/getCategoryStatisticsWidget";
 import { categoryTheme } from "../../../../ui/colors/iconColors";
@@ -21,7 +21,8 @@ function CategoryWidjetListItem({ categories }: CategoryWidjetListItemProps) {
       {categories.map((item) => {
         const theme: { color: string; bg: string } =
           categoryTheme[item.id] ?? categoryTheme.GRO;
-        const Icon = categoryIcons[item.id];
+
+        const Icon = categoryIcons[item.id] ?? categoryIcons.GRO;
 
         const displayAmount =
           item.amount !== null
@@ -33,15 +34,24 @@ function CategoryWidjetListItem({ categories }: CategoryWidjetListItemProps) {
             : "Нет данных";
 
         return (
-          <div key={item.id} className={styles.item}>
+          <div
+            key={item.id}
+            className={styles.item}
+            style={
+              {
+                "--category-color": theme.color,
+                "--category-percent": `${item.percent}%`,
+              } as React.CSSProperties
+            }
+          >
             <Avatar
-              size={36}
+              size={30}
               className={styles.avatar}
               style={{ backgroundColor: theme.bg }}
-              icon={<Icon size={18} color={theme.color} strokeWidth={2.2} />}
+              icon={<Icon size={16} color={theme.color} strokeWidth={2.2} />}
             />
 
-            <div className={styles.content}>
+            <div className={styles.main}>
               <Text ellipsis className={styles.name}>
                 {item.title}
               </Text>
@@ -49,19 +59,11 @@ function CategoryWidjetListItem({ categories }: CategoryWidjetListItemProps) {
               <Text type="secondary" className={styles.amount}>
                 {displayAmount} {item.currencyCode}
               </Text>
-
-              <Progress
-                percent={item.percent}
-                showInfo={false}
-                strokeColor={theme.color}
-                railColor="rgba(15, 23, 42, 0.07)"
-                className={styles.progress}
-              />
             </div>
 
-            <Text strong className={styles.percent}>
-              {item.percent}%
-            </Text>
+            <Text className={styles.percent}>{item.percent}%</Text>
+
+            <div className={styles.progress} />
           </div>
         );
       })}
