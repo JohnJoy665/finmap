@@ -5,7 +5,7 @@ import { changeProfileLocation } from "../../features/checkEnvironment/api/chang
 import { useProfileStore } from "../../store/profileStore";
 
 type ProfileEnvironmentWatcherProps = {
-  lastCheckPosition: string;
+  lastCheckPosition: string | null;
   languageCode: string;
 };
 
@@ -56,8 +56,10 @@ function ProfileEnvironmentWatcher({
     async function getEnvironment() {
       try {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const diff = Date.now() - new Date(lastCheckPosition).getTime();
-        const shouldCheckPosition = diff > CHECK_INTERVAL_MS;
+        const shouldCheckPosition =
+          !lastCheckPosition ||
+          Date.now() - new Date(lastCheckPosition).getTime() >
+            CHECK_INTERVAL_MS;
 
         let latitude: number | null = null;
         let longitude: number | null = null;

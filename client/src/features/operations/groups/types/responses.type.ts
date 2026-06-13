@@ -14,9 +14,15 @@ export type deleteGroupWithSpendingResponse = {
 export type GetGroupsFiltersResponse = {
   value: GroupFilterValue;
   label: string;
-  amount?: string;
+  amount: string | null;
   isActive: boolean;
   daysInPeriod: number;
-  dateFrom: string;
-  dateTo: string;
+
+  dateFromLocal: string;
+  dateToLocal: string;
+
+  dateFromUTC: string;
+  dateToUTC: string;
+
+  timezone: string;
 };

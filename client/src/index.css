@@ -21,4 +21,5 @@ body {
   font-family: var(--ant-font-family);
   background: var(--ant-color-bg-layout);
   font-family: "Inter", system-ui, sans-serif;
+  background-color: azure;
 }

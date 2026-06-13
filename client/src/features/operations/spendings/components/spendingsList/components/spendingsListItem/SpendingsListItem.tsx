@@ -1,6 +1,6 @@
 import { Typography } from "antd";
 import styles from "./SpendingsListItem.module.css";
-import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
+import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings.types";
 
 const { Text } = Typography;
 

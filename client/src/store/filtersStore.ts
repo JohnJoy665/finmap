@@ -7,15 +7,24 @@ type filtersStore = {
   setSelectedGroupFilter: (filterType: GroupFilterValue) => void;
   selectedGroupFilter: GroupFilterValue | null;
   reset: () => void;
+  requestGroupsFiltersReload: () => void;
+  groupsFiltersReloadKey: number;
 };
 
 const initialState = {
   groupsFilter: null,
   selectedGroupFilter: null,
+  groupsFiltersReloadKey: 0,
 };
 
 export const useFiltersStore = create<filtersStore>((set) => ({
   ...initialState,
+
+  requestGroupsFiltersReload: () => {
+    set((state) => ({
+      groupsFiltersReloadKey: state.groupsFiltersReloadKey + 1,
+    }));
+  },
 
   setGroupsFilter: (value) => {
     set((state) => ({

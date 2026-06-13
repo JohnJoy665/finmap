@@ -1,13 +1,10 @@
 import { Outlet } from "react-router-dom";
 import TwoPanels from "../TwoPanels/TwoPanels";
 import RightPanel from "../rightPanel/RightPanel";
-import { Grid } from "antd";
+import useIsMobile from "../../hooks/useIsMobile";
 
 function MainLayout() {
-  const { useBreakpoint } = Grid;
-  const screens = useBreakpoint();
-  const isMobile = !screens.sm;
-
+  const { isMobile } = useIsMobile();
   return (
     <TwoPanels
       left={

@@ -16,6 +16,7 @@ import { citiesRouter } from "./modules/cities/cities.routers";
 import { currenciesRouter } from "./modules/currencies/currencies.routers";
 import { accountsRouter } from "./modules/accounts/accounts.routers";
 import { environmentsRouter } from "./modules/environments/environmentsRouter";
+import { widjetsRouter } from "./modules/widjets/widjets.routers";
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/api/environments", environmentsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/groups", groupsRouter);
 app.use("/api/spendings", spendingsRouter);
+app.use("/api/widjets", widjetsRouter);
 
 app.use(errorMiddleware);
 

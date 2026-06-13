@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useProfileStore } from "../../store/profileStore";
-import { getProfileRequest } from "../../api/profileApi";
+import { getProfileRequest, updateProfileTimezone } from "../../api/profileApi";
 import ProfileEnvironmentWatcher from "./ProfileEnvironmentWatcher";
 
 function ProfileGate() {
@@ -10,7 +10,7 @@ function ProfileGate() {
   const setProfile = useProfileStore((state) => state.setProfile);
   const setupRequired = useProfileStore((state) => state.setupRequired);
   const lastCheckPosition = useProfileStore(
-    (state) => state.settings?.lastCheckPosition
+    (state) => state.settings?.lastCheckPosition ?? null
   );
   const languageCode = useProfileStore((state) => state.settings?.languageCode);
 
@@ -19,7 +19,40 @@ function ProfileGate() {
 
     async function getProfile() {
       const response = await getProfileRequest();
-      setProfile(response.data);
+      const profile = response.data;
+
+      const settings = profile.settings ?? null;
+
+      if (!settings) {
+        setProfile({
+          ...profile,
+          settings: null,
+        });
+
+        return;
+      }
+
+      const browserTimezone =
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+      if (settings.timezone !== browserTimezone) {
+        const timezoneResponse = await updateProfileTimezone(browserTimezone);
+
+        setProfile({
+          ...profile,
+          settings: {
+            ...settings,
+            timezone: timezoneResponse.data.timezone,
+          },
+        });
+
+        return;
+      }
+
+      setProfile({
+        ...profile,
+        settings,
+      });
     }
 
     getProfile();
@@ -39,7 +72,7 @@ function ProfileGate() {
 
   return (
     <>
-      {!setupRequired && lastCheckPosition && languageCode && (
+      {!setupRequired && languageCode && (
         <ProfileEnvironmentWatcher
           lastCheckPosition={lastCheckPosition}
           languageCode={languageCode}

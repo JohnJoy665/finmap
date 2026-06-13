@@ -2,7 +2,7 @@ import { Collapse } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 import SpendingsListItem from "../spendingsListItem/SpendingsListItem";
 import styles from "./SpendingsList.module.css";
-import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
+import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings.types";
 import SpendingsListItemActions from "../spendingsListItemActions/SpendingsListItemActions";
 
 type SpendingsListProps = {

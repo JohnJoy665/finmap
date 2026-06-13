@@ -28,6 +28,7 @@ type SettingProfileRow = {
   visible_user_name: boolean;
   visible_group_spendings: boolean;
   last_check_position: string;
+  timezone: string;
 };
 
 export async function getUserProfile(userId: string) {
@@ -62,7 +63,8 @@ export async function getUserProfile(userId: string) {
         uss.visible_account,
         uss.visible_user_name,
         uss.visible_group_spendings,
-        uss.last_check_position
+        uss.last_check_position,
+        uss.timezone
       FROM user_settings uss
       WHERE uss.user_id = $1
       LIMIT 1
@@ -131,6 +133,7 @@ export async function getUserProfile(userId: string) {
             visibleUserName: settings.visible_user_name,
             visibleGroupSpendings: settings.visible_group_spendings,
             lastCheckPosition: settings.last_check_position,
+            timezone: settings.timezone,
           }
         : null,
 
@@ -502,6 +505,82 @@ export async function checkUniqName({
     return {
       uniqUserName: normalizedName,
       isAvailable: !isTaken,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}
+
+type UpdateProfileTimezoneRequest = {
+  userId: string;
+  timezone: string;
+};
+
+type UpdateProfileTimezoneRow = {
+  timezone: string;
+  timezone_updated: boolean;
+};
+
+export async function updateProfileTimezone({
+  userId,
+  timezone,
+}: UpdateProfileTimezoneRequest) {
+  try {
+    const normalizedTimezone = timezone.trim();
+
+    const result = await pool.query<UpdateProfileTimezoneRow>(
+      `
+      UPDATE user_settings
+      SET timezone = $2
+      WHERE user_id = $1
+        AND timezone IS DISTINCT FROM $2
+      RETURNING
+        timezone,
+        true AS timezone_updated
+      `,
+      [userId, normalizedTimezone]
+    );
+
+    if (result.rows.length > 0) {
+      return {
+        timezone: result.rows[0].timezone,
+        timezoneUpdated: result.rows[0].timezone_updated,
+      };
+    }
+
+    const currentResult = await pool.query<{ timezone: string }>(
+      `
+      SELECT timezone
+      FROM user_settings
+      WHERE user_id = $1
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (currentResult.rows.length === 0) {
+      throw new AppError(
+        404,
+        "USER_SETTINGS_NOT_FOUND",
+        "User settings not found"
+      );
+    }
+
+    return {
+      timezone: currentResult.rows[0].timezone,
+      timezoneUpdated: false,
     };
   } catch (error: any) {
     if (error instanceof AppError) {

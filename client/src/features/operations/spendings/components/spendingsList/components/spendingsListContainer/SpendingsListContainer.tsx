@@ -3,7 +3,7 @@ import SpendingsList from "../spendingsList/SpendingsList";
 import styles from "./SpendingsListContainer.module.css";
 import { useEffect, useState } from "react";
 import { getSpendingsByGroup } from "../../../../api/getSpendingsByGroup";
-import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings,types";
+import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings.types";
 import { useProfileStore } from "../../../../../../../store/profileStore";
 import { useAccountsStore } from "../../../../../../../store/accountsStore";
 import { useFiltersStore } from "../../../../../../../store/filtersStore";
@@ -32,7 +32,9 @@ function SpendingsListContainer({
     (store) => store.updateListAmountAccounts
   );
 
-  const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
+  const requestGroupsFiltersReload = useFiltersStore(
+    (store) => store.requestGroupsFiltersReload
+  );
 
   const isLastSpending = spendings.length === 1;
 
@@ -104,7 +106,7 @@ function SpendingsListContainer({
         amount: newAccountSpending,
       },
     ]);
-    setGroupsFilter(null);
+    requestGroupsFiltersReload();
   }
 
   function deleteSpending(
@@ -129,7 +131,7 @@ function SpendingsListContainer({
         amount: accountAmount,
       },
     ]);
-    setGroupsFilter(null);
+    requestGroupsFiltersReload();
   }
 
   return (

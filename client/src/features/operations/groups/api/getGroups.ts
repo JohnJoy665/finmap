@@ -4,13 +4,15 @@ import type { Group } from "../../../../shared/types/group.types";
 import type { GetGroupsRequest } from "../types/requests.types";
 
 export function getGroupsRequest({
-  periodType,
+  dateFromUTC,
+  dateToUTC,
 }: GetGroupsRequest): Promise<ApiSuccess<Group[]>> {
   return request<Group[]>({
     method: "GET",
     url: "/groups",
     params: {
-      periodType,
+      dateFromUTC,
+      dateToUTC,
     },
   });
 }

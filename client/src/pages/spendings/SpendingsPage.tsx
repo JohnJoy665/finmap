@@ -45,7 +45,9 @@ function SpendingsPage() {
 
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
-  const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
+  const requestGroupsFiltersReload = useFiltersStore(
+    (store) => store.requestGroupsFiltersReload
+  );
 
   useEffect(() => {
     async function requestCategories() {
@@ -65,7 +67,7 @@ function SpendingsPage() {
   }
 
   function changeAccountAmmount(newAmmount: string, activeAccount: string) {
-    setGroupsFilter(null);
+    requestGroupsFiltersReload();
     updateProfileAmount(newAmmount);
     updateListAmountAccounts([
       {
@@ -92,7 +94,7 @@ function SpendingsPage() {
           });
           if (!activeAccount) return;
           changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
-          setGroupsFilter(null);
+          requestGroupsFiltersReload();
           return newSpending;
         });
 
@@ -131,7 +133,7 @@ function SpendingsPage() {
         });
         if (!activeAccount) return;
         changeAccountAmmount(newGroup.data.accountAmount, activeAccount);
-        setGroupsFilter(null);
+        requestGroupsFiltersReload();
         return newGroup;
       });
 
