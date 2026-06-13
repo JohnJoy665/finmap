@@ -8,6 +8,8 @@ import {
   fromMinorToMajorNormalize,
 } from "../../../../../utils/toMinorAmount";
 
+import type { CategoryCode } from "../../../../ui/colors/iconColors";
+
 type CategoryWidjetListItemProps = {
   categories: CategoryStatisticsWidgetItem[];
   isLoading: boolean;
@@ -20,9 +22,10 @@ function CategoryWidjetListItem({ categories }: CategoryWidjetListItemProps) {
     <div className={styles.list}>
       {categories.map((item) => {
         const theme: { color: string; bg: string } =
-          categoryTheme[item.id] ?? categoryTheme.GRO;
+          categoryTheme[item.id as CategoryCode] ?? categoryTheme.GRO;
 
-        const Icon = categoryIcons[item.id] ?? categoryIcons.GRO;
+        const Icon =
+          categoryIcons[item.id as CategoryCode] ?? categoryIcons.GRO;
 
         const displayAmount =
           item.amount !== null

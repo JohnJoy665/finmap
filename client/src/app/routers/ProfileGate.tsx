@@ -21,16 +21,27 @@ function ProfileGate() {
       const response = await getProfileRequest();
       const profile = response.data;
 
+      const settings = profile.settings ?? null;
+
+      if (!settings) {
+        setProfile({
+          ...profile,
+          settings: null,
+        });
+
+        return;
+      }
+
       const browserTimezone =
         Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
-      if (profile.settings?.timezone !== browserTimezone) {
+      if (settings.timezone !== browserTimezone) {
         const timezoneResponse = await updateProfileTimezone(browserTimezone);
 
         setProfile({
           ...profile,
           settings: {
-            ...profile.settings,
+            ...settings,
             timezone: timezoneResponse.data.timezone,
           },
         });
@@ -38,7 +49,10 @@ function ProfileGate() {
         return;
       }
 
-      setProfile(profile);
+      setProfile({
+        ...profile,
+        settings,
+      });
     }
 
     getProfile();

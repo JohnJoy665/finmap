@@ -27,10 +27,9 @@ function GroupWidget() {
 
     const currentFilter = groupsFilter.find((filter) => filter.isActive);
 
-    if (!currentFilter) return;
-
     async function getWidjet() {
       try {
+        if (!currentFilter) return;
         setIsLoading(true);
 
         const response = await getGroupStatisticsWidget({

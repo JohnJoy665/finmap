@@ -26,11 +26,11 @@ function CategoryWidget() {
 
     const currentFilter = groupsFilter.find((filter) => filter.isActive);
 
-    if (!currentFilter) return;
-
     async function getWidjet() {
       try {
         setIsLoading(true);
+
+        if (!currentFilter) return;
 
         const response = await getCategoryStatisticsWidget({
           dateFromUTC: currentFilter.dateFromUTC,
