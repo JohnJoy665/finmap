@@ -102,7 +102,7 @@ export async function getCategoryStatisticsWidget({
   dateToUTC,
 }: GetCategoryStatisticsWidgetRequest): Promise<CategoryStatisticsWidgetResponse> {
   try {
-    const langCode = userSettings.languageCode ?? "ru";
+    const langCode = userSettings.languageCode ?? "en";
     const currencyCode = userSettings.currencyCode;
     const conversionFactor = userSettings.conversionFactor;
     const timeZone = userSettings.timezone?.trim() || "UTC";
@@ -271,6 +271,210 @@ export async function getCategoryStatisticsWidget({
         },
       ],
       categories,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}
+
+type GetGroupStatisticsWidgetRequest = {
+  userId: string;
+  userSettings: UserSettings;
+  dateFromUTC: string;
+  dateToUTC: string;
+};
+
+type GroupStatisticsWidgetRow = {
+  group_id: string;
+  group_name: string;
+  amount_minor: string | null;
+  currency_code: string;
+  conversion_factor: string;
+  percent: string | number;
+};
+
+export type GroupStatisticsWidgetItem = {
+  id: string;
+  title: string;
+  amount: string | null;
+  currencyCode: string;
+  conversionFactor: number;
+  percent: number;
+};
+
+export type GroupStatisticsWidgetSubTitle = {
+  subTitle: string;
+  value: string | number;
+};
+
+export type GroupStatisticsWidgetResponse = {
+  title: string;
+  subTitles: GroupStatisticsWidgetSubTitle[];
+  groups: GroupStatisticsWidgetItem[];
+};
+
+export async function getGroupStatisticsWidget({
+  userId,
+  userSettings,
+  dateFromUTC,
+  dateToUTC,
+}: GetGroupStatisticsWidgetRequest): Promise<GroupStatisticsWidgetResponse> {
+  try {
+    const langCode = userSettings.languageCode ?? "en";
+    const currencyCode = userSettings.currencyCode;
+
+    if (!currencyCode) {
+      throw new AppError(
+        400,
+        "CURRENCY_NOT_FOUND",
+        "User currency is not specified"
+      );
+    }
+
+    const conversionFactor = userSettings.conversionFactor;
+    const timeZone = userSettings.timezone?.trim() || "UTC";
+
+    const query = `
+      WITH params AS (
+        SELECT
+          $1::uuid        AS user_id,
+          $2::varchar(3)  AS currency_code,
+          $3::numeric     AS conversion_factor,
+          $4::varchar(10) AS lang_code,
+          $5::timestamptz AS date_from_utc,
+          $6::timestamptz AS date_to_utc
+      ),
+
+      filtered_spendings AS (
+        SELECT
+          s.id,
+          s.spending_date,
+          s.base_amount_micro,
+          sg.id AS group_id,
+          sg.name AS group_name
+        FROM spendings s
+        INNER JOIN params p
+          ON s.user_id = p.user_id
+         AND s.spending_date >= p.date_from_utc
+         AND s.spending_date < p.date_to_utc
+        INNER JOIN spendings_group sg
+          ON sg.id = s.group_id
+      ),
+
+      converted_spendings AS (
+        SELECT
+          fs.group_id,
+          fs.group_name,
+
+          CASE
+            WHEN fs.base_amount_micro IS NULL THEN NULL
+
+            WHEN p.currency_code = 'USD' THEN
+              (fs.base_amount_micro::numeric / 1000000)
+              * p.conversion_factor
+
+            WHEN er.exchange_rate IS NULL THEN NULL
+
+            ELSE
+              (fs.base_amount_micro::numeric / 1000000)
+              * er.exchange_rate
+              * p.conversion_factor
+          END AS amount_minor_raw
+
+        FROM filtered_spendings fs
+        CROSS JOIN params p
+
+        LEFT JOIN LATERAL (
+          SELECT er.exchange_rate
+          FROM exchange_rates er
+          WHERE er.base_currency = 'USD'
+            AND er.target_currency = p.currency_code
+            AND er.date_rate <= fs.spending_date
+          ORDER BY er.date_rate DESC
+          LIMIT 1
+        ) er ON p.currency_code <> 'USD'
+      ),
+
+      group_totals AS (
+        SELECT
+          group_id,
+          group_name,
+          ROUND(SUM(amount_minor_raw))::bigint AS amount_minor
+        FROM converted_spendings
+        GROUP BY group_id, group_name
+      ),
+
+      totals_with_percent AS (
+        SELECT
+          gt.group_id,
+          gt.group_name,
+          gt.amount_minor,
+          ROUND(
+            gt.amount_minor::numeric
+            / NULLIF(SUM(gt.amount_minor) OVER (), 0)
+            * 100,
+            1
+          ) AS percent
+        FROM group_totals gt
+        WHERE gt.amount_minor IS NOT NULL
+          AND gt.amount_minor <> 0
+      )
+
+      SELECT
+        twp.group_id,
+        twp.group_name,
+        twp.amount_minor,
+        p.currency_code,
+        p.conversion_factor,
+        twp.percent
+      FROM totals_with_percent twp
+      CROSS JOIN params p
+      ORDER BY twp.amount_minor DESC;
+    `;
+
+    const { rows } = await pool.query<GroupStatisticsWidgetRow>(query, [
+      userId,
+      currencyCode,
+      conversionFactor,
+      langCode,
+      dateFromUTC,
+      dateToUTC,
+    ]);
+
+    const groups: GroupStatisticsWidgetItem[] = rows.map((row) => ({
+      id: row.group_id,
+      title: row.group_name,
+      amount: row.amount_minor === null ? null : String(row.amount_minor),
+      currencyCode: row.currency_code,
+      conversionFactor: Number(row.conversion_factor),
+      percent: Number(row.percent),
+    }));
+
+    return {
+      title: "Расходы по группам",
+      subTitles: [
+        {
+          subTitle: "За период:",
+          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+        },
+        {
+          subTitle: "Всего групп:",
+          value: groups.length,
+        },
+      ],
+      groups,
     };
   } catch (error: any) {
     if (error instanceof AppError) {

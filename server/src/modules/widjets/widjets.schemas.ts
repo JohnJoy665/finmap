@@ -2,7 +2,7 @@ import Joi from "joi";
 
 const dateTimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?$/;
 
-export const getCategoryStatisticsWidgetQuerySchema = Joi.object({
+export const getStatisticsWidgetQuerySchema = Joi.object({
   dateFromUTC: Joi.string().isoDate().required().messages({
     "string.empty": "dateFromUTC is required",
     "string.isoDate":

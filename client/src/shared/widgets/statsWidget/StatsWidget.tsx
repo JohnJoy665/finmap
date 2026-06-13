@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, Collapse } from "antd";
 import type { CollapseProps } from "antd";
 
@@ -6,21 +5,21 @@ import styles from "./StatsWidget.module.css";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 type StatsWidgetProps = {
+  widgetKey: string;
   mainPanel: React.ReactNode;
   listItems: React.ReactNode;
   disabled?: boolean;
 };
 
 function StatsWidget({
+  widgetKey,
   mainPanel,
   listItems,
   disabled = false,
 }: StatsWidgetProps) {
-  const [open, setOpen] = useState(false);
-
   const items: CollapseProps["items"] = [
     {
-      key: "category-stats",
+      key: widgetKey,
       label: mainPanel,
       children: listItems,
       collapsible: disabled ? "disabled" : "header",
@@ -32,14 +31,11 @@ function StatsWidget({
       <Collapse
         ghost
         items={items}
-        activeKey={!disabled && open ? ["category-stats"] : []}
-        onChange={(keys) => {
-          if (disabled) return;
-
-          setOpen(keys.length > 0);
-        }}
         expandIconPlacement="end"
         className={styles.collapse}
+        onChange={(keys) => {
+          console.log("clicked widget:", widgetKey, keys);
+        }}
         expandIcon={({ isActive }) =>
           disabled ? null : (
             <span

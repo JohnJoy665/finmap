@@ -3,25 +3,26 @@ import { useEffect, useState } from "react";
 import { useFiltersStore } from "../../../../../store/filtersStore";
 import { useProfileStore } from "../../../../../store/profileStore";
 import StatsWidget from "../../../statsWidget/StatsWidget";
-import CategoryWidjetListItem from "../categoryWidjetListItem/CategoryWidjetListItem";
 import CategoryWidjetPanel from "../categoryWidjetPanel/CategoryWidjetPanel";
+import GroupWidjetListItems from "../groupWidjetListItems/GroupWidjetListItems";
 import {
-  getCategoryStatisticsWidget,
-  type CategoryStatisticsWidgetResponse,
-} from "../../api/getCategoryStatisticsWidget";
+  getGroupStatisticsWidget,
+  type GroupStatisticsWidgetResponse,
+} from "../../api/getGroupStatisticsWidget";
 
-function CategoryWidget() {
+function GroupWidget() {
   const [widgetData, setWidgetData] =
-    useState<CategoryStatisticsWidgetResponse | null>(null);
+    useState<GroupStatisticsWidgetResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const account = useProfileStore((store) => store.account);
+  const accountAmount = useProfileStore((store) => store.account?.amount);
 
   const groupsFilter = useFiltersStore((store) => store.groupsFilter);
 
   useEffect(() => {
-    if (!groupsFilter || !account) return;
+    if (!groupsFilter || accountAmount === undefined) return;
+
     let isCancelled = false;
 
     const currentFilter = groupsFilter.find((filter) => filter.isActive);
@@ -32,7 +33,7 @@ function CategoryWidget() {
       try {
         setIsLoading(true);
 
-        const response = await getCategoryStatisticsWidget({
+        const response = await getGroupStatisticsWidget({
           dateFromUTC: currentFilter.dateFromUTC,
           dateToUTC: currentFilter.dateToUTC,
         });
@@ -57,13 +58,13 @@ function CategoryWidget() {
     return () => {
       isCancelled = true;
     };
-  }, [groupsFilter, account]);
+  }, [groupsFilter, accountAmount]);
 
-  const hasData = Boolean(widgetData?.categories?.length);
+  const hasData = Boolean(widgetData?.groups?.length);
 
   return widgetData ? (
     <StatsWidget
-      widgetKey="category-widget"
+      widgetKey="group-widget"
       disabled={!hasData}
       mainPanel={
         <CategoryWidjetPanel
@@ -73,8 +74,8 @@ function CategoryWidget() {
         />
       }
       listItems={
-        <CategoryWidjetListItem
-          categories={widgetData.categories}
+        <GroupWidjetListItems
+          groups={widgetData.groups}
           isLoading={isLoading}
         />
       }
@@ -82,4 +83,4 @@ function CategoryWidget() {
   ) : null;
 }
 
-export default CategoryWidget;
+export default GroupWidget;

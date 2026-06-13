@@ -1,4 +1,4 @@
-import Title from "antd/es/typography/Title";
+// import Title from "antd/es/typography/Title";
 import styles from "./CommonDashboards.module.css";
 
 type CommonDashboardsProps = {
@@ -8,7 +8,7 @@ type CommonDashboardsProps = {
 function CommonDashboards({ children }: CommonDashboardsProps) {
   return (
     <div className={styles.wrapper}>
-      <Title level={4}>Персональные отчеты</Title>
+      {/* <Title level={4}>Персональные отчеты</Title> */}
       <div className={styles.gridContainer}>{children}</div>
     </div>
   );

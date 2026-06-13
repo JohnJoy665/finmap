@@ -8,12 +8,13 @@ import FilterGroupContainer from "../../features/operations/groups/components/fi
 import { getGroupsFilters } from "../../features/operations/groups/api/getGroupsFilters";
 import type { GroupFilterValue } from "../../shared/types/group.types";
 import { useFiltersStore } from "../../store/filtersStore";
-// import CommonDashboards from "../../features/dashboards/components/commonDashboards/CommonDashboards";
-// import StatsWidget from "../../shared/widgets/statsWidget/StatsWidget";
-// import CategoryWidjetPanel from "../../shared/widgets/categoryWidjet/components/categoryWidjetPanel/CategoryWidjetPanel";
-// import CategoryWidjetListItem from "../../shared/widgets/categoryWidjet/components/categoryWidjetListItem/CategoryWidjetListItem";
+import useIsMobile from "../../hooks/useIsMobile";
+import CommonDashboards from "../../features/dashboards/components/commonDashboards/CommonDashboards";
+import CategoryWidget from "../../shared/widgets/categoryWidjet/components/categoryWidget/CategoryWidget";
+import GroupWidget from "../../shared/widgets/categoryWidjet/components/groupWidget/GroupWidget";
 
 function Operations() {
+  const { isMobile } = useIsMobile();
   const setGroups = useGroupStrore((store) => store.setGroups);
   const conversionFactor = useProfileStore(
     (store) => store.account?.conversionFactor
@@ -102,24 +103,12 @@ function Operations() {
         />
       )}
       <GroupGrid />
-      {/* <CommonDashboards>
-        <StatsWidget
-          mainPanel={<CategoryWidjetPanel />}
-          listItems={<CategoryWidjetListItem />}
-        />
-        <StatsWidget
-          mainPanel={<CategoryWidjetPanel />}
-          listItems={<CategoryWidjetListItem />}
-        />
-        <StatsWidget
-          mainPanel={<CategoryWidjetPanel />}
-          listItems={<CategoryWidjetListItem />}
-        />
-        <StatsWidget
-          mainPanel={<CategoryWidjetPanel />}
-          listItems={<CategoryWidjetListItem />}
-        />
-      </CommonDashboards> */}
+      {isMobile && (
+        <CommonDashboards>
+          <CategoryWidget />
+          <GroupWidget />
+        </CommonDashboards>
+      )}
     </>
   );
 }
