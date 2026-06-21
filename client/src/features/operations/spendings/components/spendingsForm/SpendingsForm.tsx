@@ -120,7 +120,7 @@ function SpendingsForm({
       </Form.Item>
 
       <Flex gap="middle">
-        <Button block danger onClick={handleClouse}>
+        <Button block onClick={handleClouse}>
           Назад
         </Button>
 

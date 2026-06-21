@@ -5,6 +5,16 @@ import {
   fromMinorToMajorNormalize,
 } from "../../../../../utils/toMinorAmount";
 
+type OtherGroupItem = {
+  id: "OTHER";
+  title: string;
+  amount: string;
+  percent: number;
+  currencyCode: string;
+  conversionFactor: number;
+  isOther: true;
+};
+
 type GroupStatisticsWidgetItem = {
   id: string;
   title: string;
@@ -14,9 +24,10 @@ type GroupStatisticsWidgetItem = {
   percent: number;
 };
 
+export type GroupWidgetDisplayItem = GroupStatisticsWidgetItem | OtherGroupItem;
+
 type GroupWidjetListItemsProps = {
   groups: GroupStatisticsWidgetItem[];
-  isLoading: boolean;
 };
 
 function GroupWidjetListItems({ groups }: GroupWidjetListItemsProps) {

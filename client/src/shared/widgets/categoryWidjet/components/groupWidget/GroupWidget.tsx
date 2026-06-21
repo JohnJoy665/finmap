@@ -2,39 +2,56 @@ import { useEffect, useState } from "react";
 
 import { useFiltersStore } from "../../../../../store/filtersStore";
 import { useProfileStore } from "../../../../../store/profileStore";
-import StatsWidget from "../../../statsWidget/StatsWidget";
-import CategoryWidjetPanel from "../categoryWidjetPanel/CategoryWidjetPanel";
-import GroupWidjetListItems from "../groupWidjetListItems/GroupWidjetListItems";
+import GroupWidjetListItems, {
+  type GroupWidgetDisplayItem,
+} from "../groupWidjetListItems/GroupWidjetListItems";
 import {
   getGroupStatisticsWidget,
   type GroupStatisticsWidgetResponse,
 } from "../../api/getGroupStatisticsWidget";
+import PreviewWidget from "../previewWidget/PreviewWidget";
+import { useOperationsStore } from "../../../../../store/operationsStore";
+import useIsMobile from "../../../../../hooks/useIsMobile";
 
-function GroupWidget() {
+type GroupWidgetProps = {
+  reloadOnAccountChange?: boolean;
+};
+
+function GroupWidget({ reloadOnAccountChange = true }: GroupWidgetProps) {
+  const { isMobile } = useIsMobile();
   const [widgetData, setWidgetData] =
     useState<GroupStatisticsWidgetResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const accountAmount = useProfileStore((store) => store.account?.amount);
+  const operationsRevision = useOperationsStore(
+    (state) => state.operationsRevision
+  );
 
-  const groupsFilter = useFiltersStore((store) => store.groupsFilter);
+  const accountId = useProfileStore((state) => state.account?.id ?? null);
+  const groupsFilter = useFiltersStore((state) => state.groupsFilter);
+
+  const activeFilter = groupsFilter?.find((filter) => filter.isActive) ?? null;
+
+  const dateFromUTC = activeFilter?.dateFromUTC ?? null;
+  const dateToUTC = activeFilter?.dateToUTC ?? null;
+
+  const accountReloadKey = reloadOnAccountChange ? accountId : "Ignore-case";
 
   useEffect(() => {
-    if (!groupsFilter || accountAmount === undefined) return;
+    if (!dateFromUTC || !dateToUTC) return;
+
+    if (reloadOnAccountChange && !accountId) return;
 
     let isCancelled = false;
 
-    const currentFilter = groupsFilter.find((filter) => filter.isActive);
-
     async function getWidjet() {
       try {
-        if (!currentFilter) return;
         setIsLoading(true);
 
         const response = await getGroupStatisticsWidget({
-          dateFromUTC: currentFilter.dateFromUTC,
-          dateToUTC: currentFilter.dateToUTC,
+          dateFromUTC,
+          dateToUTC,
         });
 
         if (isCancelled) return;
@@ -57,29 +74,62 @@ function GroupWidget() {
     return () => {
       isCancelled = true;
     };
-  }, [groupsFilter, accountAmount]);
+  }, [
+    dateFromUTC,
+    dateToUTC,
+    accountReloadKey,
+    accountReloadKey,
+    operationsRevision,
+  ]);
 
-  const hasData = Boolean(widgetData?.groups?.length);
+  if (!widgetData) return null;
 
-  return widgetData ? (
-    <StatsWidget
-      widgetKey="group-widget"
-      disabled={!hasData}
-      mainPanel={
-        <CategoryWidjetPanel
-          title={widgetData.title}
-          subTitles={widgetData.subTitles}
-          isLoading={isLoading}
-        />
-      }
-      listItems={
-        <GroupWidjetListItems
-          groups={widgetData.groups}
-          isLoading={isLoading}
-        />
-      }
+  const groups: GroupWidgetDisplayItem[] = widgetData.groups;
+
+  return (
+    <PreviewWidget<GroupWidgetDisplayItem>
+      isMobile={isMobile}
+      title={widgetData.title}
+      subTitles={widgetData.subTitles}
+      isLoading={isLoading}
+      items={groups}
+      previewLimit={4}
+      renderList={(items) => <GroupWidjetListItems groups={items} />}
+      getPreviewItems={({ items, visibleItems, hiddenItems }) => {
+        if (hiddenItems.length === 0) {
+          return visibleItems;
+        }
+
+        const otherPercent = hiddenItems.reduce(
+          (sum, item) => sum + Number(item.percent || 0),
+          0
+        );
+
+        const otherAmount = hiddenItems
+          .reduce((sum, item) => {
+            if (item.amount === null) return sum;
+
+            return sum + Number(item.amount);
+          }, 0)
+          .toString();
+
+        const firstCategory = items[0];
+
+        return [
+          ...visibleItems,
+          {
+            id: "OTHER",
+            title: "Остальные группы",
+            amount: otherAmount,
+            percent: Number(otherPercent.toFixed(1)),
+            currencyCode: firstCategory?.currencyCode ?? "",
+            conversionFactor: firstCategory?.conversionFactor ?? 100,
+            isOther: true,
+          },
+        ];
+      }}
     />
-  ) : null;
+  );
 }
 
 export default GroupWidget;

@@ -58,13 +58,18 @@ function GroupGrid() {
   function handleAddPurchase(group: Group) {
     navigate("/app/operations/spendings", {
       state: {
+        mode: "add-purchase",
         group,
       },
     });
   }
 
   function handleCreateGroup() {
-    navigate("/app/operations/spendings");
+    navigate("/app/operations/spendings", {
+      state: {
+        mode: "edit-group",
+      },
+    });
   }
 
   return (

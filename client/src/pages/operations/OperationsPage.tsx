@@ -54,8 +54,8 @@ function Operations() {
 
       try {
         const selectedValue = selectedGroupFilterRef.current ?? null;
-        clearGroupsFilter();
-        setGroups([]);
+        // clearGroupsFilter();
+        // setGroups([]);
 
         const filtersResponse = await getGroupsFilters({
           groupFilterPeriod: selectedValue,
@@ -151,8 +151,8 @@ function Operations() {
 
       {isMobile && (
         <CommonDashboards>
-          <CategoryWidget />
-          <GroupWidget />
+          <CategoryWidget reloadOnAccountChange={false} />
+          <GroupWidget reloadOnAccountChange={false} />
         </CommonDashboards>
       )}
     </>

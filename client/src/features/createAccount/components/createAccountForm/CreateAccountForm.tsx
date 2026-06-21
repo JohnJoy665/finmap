@@ -1,4 +1,4 @@
-import { Button, Form } from "antd";
+import { Button, Flex, Form } from "antd";
 import CurrencySelect from "../../../../shared/components/currencySelect/CurrencySelect";
 import AmountInput from "../../../../shared/components/amountInput/AmountInput";
 import { createAccount } from "../../api/createAccount";
@@ -55,6 +55,10 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
     createNewAccount();
   }
 
+  function handleClouse() {
+    navigate("/app");
+  }
+
   return (
     <Form
       form={form}
@@ -72,9 +76,14 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
 
       <AmountInput lable="Какая сумма на счете?" />
 
-      <Button type="primary" htmlType="submit">
-        Сохранить
-      </Button>
+      <Flex gap="middle">
+        <Button block onClick={handleClouse}>
+          Назад
+        </Button>
+        <Button block type="primary" htmlType="submit">
+          Сохранить
+        </Button>
+      </Flex>
     </Form>
   );
 }

@@ -1,6 +1,6 @@
 import { Typography, Space } from "antd";
 import type { CategoryStatisticsWidgetSubTitle } from "../../api/getCategoryStatisticsWidget";
-import styles from "./CategoryWidjetPanel.module.css";
+import styles from "./WidjetPanel.module.css";
 
 type CategoryWidjetPanelProps = {
   title: string;
@@ -10,7 +10,7 @@ type CategoryWidjetPanelProps = {
 
 const { Text, Title } = Typography;
 
-function CategoryWidjetPanel({
+function WidjetPanel({
   title,
   subTitles,
   isLoading,
@@ -42,4 +42,4 @@ function CategoryWidjetPanel({
   );
 }
 
-export default CategoryWidjetPanel;
+export default WidjetPanel;
