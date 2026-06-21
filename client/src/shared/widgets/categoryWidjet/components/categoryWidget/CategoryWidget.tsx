@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 
 import { useFiltersStore } from "../../../../../store/filtersStore";
 import { useProfileStore } from "../../../../../store/profileStore";
-import StatsWidget from "../../../statsWidget/StatsWidget";
-import CategoryWidjetListItem from "../categoryWidjetListItem/CategoryWidjetListItem";
-import CategoryWidjetPanel from "../categoryWidjetPanel/CategoryWidjetPanel";
 import {
   getCategoryStatisticsWidget,
   type CategoryStatisticsWidgetResponse,
 } from "../../api/getCategoryStatisticsWidget";
+import PreviewStatsWidget from "../previewStatsWidget/PreviewStatsWidget";
 
 function CategoryWidget() {
   const [widgetData, setWidgetData] =
@@ -59,25 +57,13 @@ function CategoryWidget() {
     };
   }, [groupsFilter, account]);
 
-  const hasData = Boolean(widgetData?.categories?.length);
-
   return widgetData ? (
-    <StatsWidget
-      widgetKey="category-widget"
-      disabled={!hasData}
-      mainPanel={
-        <CategoryWidjetPanel
-          title={widgetData.title}
-          subTitles={widgetData.subTitles}
-          isLoading={isLoading}
-        />
-      }
-      listItems={
-        <CategoryWidjetListItem
-          categories={widgetData.categories}
-          isLoading={isLoading}
-        />
-      }
+    <PreviewStatsWidget
+      title={widgetData.title}
+      subTitles={widgetData.subTitles}
+      isLoading={isLoading}
+      categories={widgetData.categories}
+      previewLimit={4}
     />
   ) : null;
 }
