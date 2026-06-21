@@ -136,7 +136,9 @@ function SpendingsListContainer({
 
   return (
     <div className={styles.spendingsListContainer}>
-      <Text className={styles.title}>Последние покупки</Text>
+      <Text strong className={styles.title}>
+        Последние покупки
+      </Text>
 
       <SpendingsList
         handleRenameSpending={renameSpending}

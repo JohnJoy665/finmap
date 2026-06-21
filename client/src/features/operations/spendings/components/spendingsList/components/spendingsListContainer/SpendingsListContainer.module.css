@@ -5,8 +5,7 @@
 .title {
   display: block;
   margin-bottom: 10px;
-  font-size: 14px;
-  color: #666;
+  color: var(--ant-color-text-secondary);
 }
 
 .showMore {

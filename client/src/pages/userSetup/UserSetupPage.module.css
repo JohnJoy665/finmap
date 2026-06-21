@@ -1,0 +1,13 @@
+.title {
+  color: var(--ant-color-text) !important;
+  margin-top: 16px !important;
+  margin-bottom: 32px !important;
+}
+
+.container {
+  padding: 11px;
+}
+
+.subText {
+  margin-top: 32px;
+}

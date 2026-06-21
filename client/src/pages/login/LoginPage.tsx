@@ -1,4 +1,4 @@
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import style from "./Login.module.css";
@@ -6,6 +6,7 @@ import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { getLoginRequest } from "../../api/authApi";
 
 const Item = Form.Item;
+const { Title } = Typography;
 
 type LoginFormValues = {
   email: string;
@@ -33,9 +34,9 @@ function Login() {
   return (
     <div className={style.container}>
       <Form className={style.form} layout="vertical" onFinish={handleSubmit}>
-        <Item>
-          <h1>Вход</h1>
-        </Item>
+        <Title className={style.title} level={3}>
+          Вход
+        </Title>
 
         <Item
           name="email"
