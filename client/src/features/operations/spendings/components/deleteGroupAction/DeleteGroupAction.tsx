@@ -5,7 +5,6 @@ import { useModalStore } from "../../../../../shared/ui/modal";
 import { deleteGroupWithSpending } from "../../../groups/api/deleteGroupWithSpendings";
 import { useNavigate } from "react-router-dom";
 import { useAccountsStore } from "../../../../../store/accountsStore";
-import { useFiltersStore } from "../../../../../store/filtersStore";
 
 type DeleteGroupButtonProps = {
   groupId: string;
@@ -22,9 +21,6 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
     (store) => store.updateListAmountAccounts
   );
   const activeAccount = useProfileStore((state) => state.account?.id);
-  const requestGroupsFiltersReload = useFiltersStore(
-    (store) => store.requestGroupsFiltersReload
-  );
   function handleCancel() {
     navigate("/app/operations");
   }
@@ -40,7 +36,6 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
         updateProfileAmount(activeAccountAmount);
       }
       updateListAmountAccounts(deletedGoup.data.accounts);
-      requestGroupsFiltersReload();
       return deletedGoup;
     });
 

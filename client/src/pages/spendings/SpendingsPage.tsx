@@ -14,7 +14,6 @@ import { useRequestLock } from "../../hooks/useRequestLock";
 import { useAccountsStore } from "../../store/accountsStore";
 import SpendingsListContainer from "../../features/operations/spendings/components/spendingsList/components/spendingsListContainer/SpendingsListContainer";
 import { useModalStore } from "../../shared/ui/modal";
-import { useFiltersStore } from "../../store/filtersStore";
 
 function SpendingsPage() {
   const openModal = useModalStore((state) => state.openModal);
@@ -45,10 +44,6 @@ function SpendingsPage() {
 
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
-  const requestGroupsFiltersReload = useFiltersStore(
-    (store) => store.requestGroupsFiltersReload
-  );
-
   useEffect(() => {
     async function requestCategories() {
       const { categories, setCategories } = usePurchaseStore.getState();
@@ -67,7 +62,6 @@ function SpendingsPage() {
   }
 
   function changeAccountAmmount(newAmmount: string, activeAccount: string) {
-    requestGroupsFiltersReload();
     updateProfileAmount(newAmmount);
     updateListAmountAccounts([
       {
@@ -94,7 +88,6 @@ function SpendingsPage() {
           });
           if (!activeAccount) return;
           changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
-          requestGroupsFiltersReload();
           return newSpending;
         });
 
@@ -133,7 +126,6 @@ function SpendingsPage() {
         });
         if (!activeAccount) return;
         changeAccountAmmount(newGroup.data.accountAmount, activeAccount);
-        requestGroupsFiltersReload();
         return newGroup;
       });
 

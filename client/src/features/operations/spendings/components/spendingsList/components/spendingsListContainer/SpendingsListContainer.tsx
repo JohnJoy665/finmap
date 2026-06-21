@@ -6,7 +6,6 @@ import { getSpendingsByGroup } from "../../../../api/getSpendingsByGroup";
 import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings.types";
 import { useProfileStore } from "../../../../../../../store/profileStore";
 import { useAccountsStore } from "../../../../../../../store/accountsStore";
-import { useFiltersStore } from "../../../../../../../store/filtersStore";
 
 const { Text } = Typography;
 
@@ -30,10 +29,6 @@ function SpendingsListContainer({
   );
   const updateListAmountAccounts = useAccountsStore(
     (store) => store.updateListAmountAccounts
-  );
-
-  const requestGroupsFiltersReload = useFiltersStore(
-    (store) => store.requestGroupsFiltersReload
   );
 
   const isLastSpending = spendings.length === 1;
@@ -106,7 +101,6 @@ function SpendingsListContainer({
         amount: newAccountSpending,
       },
     ]);
-    requestGroupsFiltersReload();
   }
 
   function deleteSpending(
@@ -131,7 +125,6 @@ function SpendingsListContainer({
         amount: accountAmount,
       },
     ]);
-    requestGroupsFiltersReload();
   }
 
   return (
