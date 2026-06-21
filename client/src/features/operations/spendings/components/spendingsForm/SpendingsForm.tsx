@@ -40,7 +40,7 @@ function SpendingsForm({
     setIsEditingCategory(false);
 
     form.setFieldsValue({
-      category: category.categoryId,
+      category: null,
     });
   }
 
