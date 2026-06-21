@@ -7,6 +7,7 @@ import {
   type CategoryStatisticsWidgetResponse,
 } from "../../api/getCategoryStatisticsWidget";
 import PreviewStatsWidget from "../previewStatsWidget/PreviewStatsWidget";
+import { useOperationsStore } from "../../../../../store/operationsStore";
 
 function CategoryWidget() {
   const [widgetData, setWidgetData] =
@@ -14,25 +15,27 @@ function CategoryWidget() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const account = useProfileStore((store) => store.account);
-
-  const groupsFilter = useFiltersStore((store) => store.groupsFilter);
+  const operationsRevision = useOperationsStore(
+    (state) => state.operationsRevision
+  );
+  const accountId = useProfileStore((state) => state.account?.id ?? null);
+  const groupsFilter = useFiltersStore((state) => state.groupsFilter);
+  const activeFilter = groupsFilter?.find((filter) => filter.isActive) ?? null;
+  const dateFromUTC = activeFilter?.dateFromUTC ?? null;
+  const dateToUTC = activeFilter?.dateToUTC ?? null;
 
   useEffect(() => {
-    if (!groupsFilter || !account) return;
+    if (!dateFromUTC || !dateToUTC || !accountId) return;
+
     let isCancelled = false;
 
-    const currentFilter = groupsFilter.find((filter) => filter.isActive);
-
-    async function getWidjet() {
+    async function getWidget() {
       try {
         setIsLoading(true);
 
-        if (!currentFilter) return;
-
         const response = await getCategoryStatisticsWidget({
-          dateFromUTC: currentFilter.dateFromUTC,
-          dateToUTC: currentFilter.dateToUTC,
+          dateFromUTC,
+          dateToUTC,
         });
 
         if (isCancelled) return;
@@ -50,12 +53,12 @@ function CategoryWidget() {
       }
     }
 
-    getWidjet();
+    getWidget();
 
     return () => {
       isCancelled = true;
     };
-  }, [groupsFilter, account]);
+  }, [dateFromUTC, dateToUTC, accountId, operationsRevision]);
 
   return widgetData ? (
     <PreviewStatsWidget

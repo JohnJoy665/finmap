@@ -6,6 +6,7 @@ import { getSpendingsByGroup } from "../../../../api/getSpendingsByGroup";
 import type { SpendingByGroupItem } from "../../../../../../../shared/types/spendings.types";
 import { useProfileStore } from "../../../../../../../store/profileStore";
 import { useAccountsStore } from "../../../../../../../store/accountsStore";
+import { useOperationsStore } from "../../../../../../../store/operationsStore";
 
 const { Text } = Typography;
 
@@ -29,6 +30,10 @@ function SpendingsListContainer({
   );
   const updateListAmountAccounts = useAccountsStore(
     (store) => store.updateListAmountAccounts
+  );
+
+  const refreshOperations = useOperationsStore(
+    (store) => store.refreshOperations
   );
 
   const isLastSpending = spendings.length === 1;
@@ -101,6 +106,7 @@ function SpendingsListContainer({
         amount: newAccountSpending,
       },
     ]);
+    refreshOperations();
   }
 
   function deleteSpending(
@@ -125,6 +131,7 @@ function SpendingsListContainer({
         amount: accountAmount,
       },
     ]);
+    refreshOperations();
   }
 
   return (
