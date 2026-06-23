@@ -11,7 +11,7 @@ import { useFiltersStore } from "../../store/filtersStore";
 import useIsMobile from "../../hooks/useIsMobile";
 import CommonDashboards from "../../features/dashboards/components/commonDashboards/CommonDashboards";
 import CategoryWidget from "../../shared/widgets/categoryWidjet/components/categoryWidget/CategoryWidget";
-import GroupWidget from "../../shared/widgets/categoryWidjet/components/groupWidget/GroupWidget";
+import GroupWidget from "../../shared/widgets/groupWidget/components/groupWidget/GroupWidget";
 
 function Operations() {
   const { isMobile } = useIsMobile();

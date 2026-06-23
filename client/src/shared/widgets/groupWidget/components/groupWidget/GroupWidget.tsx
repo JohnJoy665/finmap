@@ -5,13 +5,14 @@ import { useProfileStore } from "../../../../../store/profileStore";
 import GroupWidjetListItems, {
   type GroupWidgetDisplayItem,
 } from "../groupWidjetListItems/GroupWidjetListItems";
+
+import PreviewWidget from "../../../previewWidget/components/PreviewWidget";
+import { useOperationsStore } from "../../../../../store/operationsStore";
+import useIsMobile from "../../../../../hooks/useIsMobile";
 import {
   getGroupStatisticsWidget,
   type GroupStatisticsWidgetResponse,
 } from "../../api/getGroupStatisticsWidget";
-import PreviewWidget from "../previewWidget/PreviewWidget";
-import { useOperationsStore } from "../../../../../store/operationsStore";
-import useIsMobile from "../../../../../hooks/useIsMobile";
 
 type GroupWidgetProps = {
   reloadOnAccountChange?: boolean;

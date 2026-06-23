@@ -1,20 +1,17 @@
 import { Typography, Space } from "antd";
-import type { CategoryStatisticsWidgetSubTitle } from "../../api/getCategoryStatisticsWidget";
-import styles from "./WidjetPanel.module.css";
 
-type CategoryWidjetPanelProps = {
+import styles from "./WidjetPanel.module.css";
+import type { WidgetPanelSubTitle } from "../../../types/widgetPanel.types";
+
+type WidjetPanelProps = {
   title: string;
-  subTitles: CategoryStatisticsWidgetSubTitle[];
+  subTitles: WidgetPanelSubTitle[];
   isLoading: boolean;
 };
 
 const { Text, Title } = Typography;
 
-function WidjetPanel({
-  title,
-  subTitles,
-  isLoading,
-}: CategoryWidjetPanelProps) {
+function WidjetPanel({ title, subTitles, isLoading }: WidjetPanelProps) {
   const hasData = subTitles.length > 0;
 
   return (

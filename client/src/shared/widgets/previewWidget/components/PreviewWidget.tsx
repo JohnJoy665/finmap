@@ -2,12 +2,8 @@ import { useState, type ReactNode } from "react";
 import { Button, Card, Skeleton } from "antd";
 
 import styles from "./PreviewWidget.module.css";
-import WidjetPanel from "../widjetPanel/WidjetPanel";
-
-type WidgetSubTitle = {
-  subTitle: string;
-  value: string | number;
-};
+import WidjetPanel from "../../widgetPanel/components/WidjetPanel";
+import type { WidgetPanelSubTitle } from "../../../types/widgetPanel.types";
 
 type GetPreviewItemsParams<Item> = {
   items: Item[];
@@ -17,7 +13,7 @@ type GetPreviewItemsParams<Item> = {
 
 type PreviewWidgetProps<Item> = {
   title: string;
-  subTitles: WidgetSubTitle[];
+  subTitles: WidgetPanelSubTitle[];
   items?: Item[];
   isLoading: boolean;
   previewLimit?: number;

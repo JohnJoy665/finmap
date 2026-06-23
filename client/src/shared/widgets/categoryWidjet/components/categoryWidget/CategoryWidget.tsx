@@ -9,7 +9,7 @@ import {
   type CategoryStatisticsWidgetResponse,
 } from "../../api/getCategoryStatisticsWidget";
 
-import PreviewWidget from "../previewWidget/PreviewWidget";
+import PreviewWidget from "../../../previewWidget/components/PreviewWidget";
 import CategoryWidjetListItem, {
   type CategoryWidgetDisplayItem,
 } from "../categoryWidjetListItem/CategoryWidjetListItem";
