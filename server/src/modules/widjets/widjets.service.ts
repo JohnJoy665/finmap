@@ -492,3 +492,220 @@ export async function getGroupStatisticsWidget({
     throw error;
   }
 }
+
+export type CategoryAverageWidgetSubTitle = {
+  subTitle: string;
+  value: string | number;
+};
+
+export type CategoryAverageWidgetItem = {
+  id: string;
+  title: string;
+  countPurchase: number;
+  averageAmountMinor: string;
+  medianAmountMinor: string;
+  currencyCode: string;
+  conversionFactor: number;
+};
+
+export type CategoryAverageWidgetResponse = {
+  title: string;
+  subTitles: CategoryAverageWidgetSubTitle[];
+  categories: CategoryAverageWidgetItem[];
+};
+
+type CategoryAverageWidgetRow = {
+  category_code: string;
+  category_name: string;
+  count_purchase: number | string;
+  average_amount_minor: string | null;
+  median_amount_minor: string | null;
+  currency_code: string;
+  conversion_factor: string;
+};
+
+export async function getCategoryAverageWidget({
+  userId,
+  userSettings,
+  dateFromUTC,
+  dateToUTC,
+}: GetCategoryStatisticsWidgetRequest): Promise<CategoryAverageWidgetResponse> {
+  try {
+    const langCode = userSettings.languageCode ?? "en";
+    const currencyCode = userSettings.currencyCode;
+    const conversionFactor = userSettings.conversionFactor;
+    const timeZone = userSettings.timezone?.trim() || "UTC";
+
+    if (!currencyCode) {
+      throw new AppError(
+        400,
+        "USER_SETTINGS_ERROR",
+        "User currencyCode is required"
+      );
+    }
+
+    if (!conversionFactor) {
+      throw new AppError(
+        400,
+        "USER_SETTINGS_ERROR",
+        "User conversionFactor is required"
+      );
+    }
+
+    if (!timeZone) {
+      throw new AppError(
+        400,
+        "USER_SETTINGS_ERROR",
+        "User timezone is required"
+      );
+    }
+
+    const query = `
+      WITH params AS (
+        SELECT
+          $1::varchar AS lang_code,
+          $2::uuid AS user_id,
+          $3::varchar AS currency_code,
+          $4::numeric AS conversion_factor,
+          $5::text AS time_zone,
+          $6::timestamptz AS date_from,
+          $7::timestamptz AS date_to,
+          NOW() AS current_at
+      ),
+
+      selected_rate AS (
+        SELECT
+          CASE
+            WHEN p.currency_code = 'USD' THEN 1::numeric
+            ELSE (
+              SELECT er.exchange_rate
+              FROM exchange_rates er
+              WHERE er.base_currency = 'USD'
+                AND er.target_currency = p.currency_code
+                AND er.date_rate <= p.current_at
+              ORDER BY er.date_rate DESC
+              LIMIT 1
+            )
+          END AS exchange_rate
+        FROM params p
+      ),
+
+      filtered_spendings AS (
+        SELECT 
+          s.id,
+          s.name,
+          s.spending_date,
+          s.base_amount_micro,
+          s.currency_code AS original_currency_code,
+          c.code AS category_code,
+          COALESCE(cl.translation, c.comments)::varchar AS category_name
+        FROM spendings s
+        INNER JOIN params p
+          ON s.user_id = p.user_id
+         AND s.spending_date >= p.date_from
+         AND s.spending_date < p.date_to
+        INNER JOIN category c
+          ON c.id = s.category_id
+        LEFT JOIN category_lang cl
+          ON cl.lang_code = p.lang_code
+         AND cl.word_code = c.code
+      ),
+
+      converted_spendings AS (
+        SELECT
+          fs.category_code,
+          fs.category_name,
+
+          CASE
+            WHEN fs.base_amount_micro IS NULL THEN NULL
+            WHEN sr.exchange_rate IS NULL THEN NULL
+            ELSE
+              (fs.base_amount_micro::numeric / 1000000)
+              * sr.exchange_rate
+              * p.conversion_factor
+          END AS amount_minor_raw
+        FROM filtered_spendings fs
+        CROSS JOIN params p
+        CROSS JOIN selected_rate sr
+      ),
+
+      category_average AS (
+        SELECT
+          category_code,
+          category_name,
+          COUNT(amount_minor_raw)::int AS count_purchase,
+          ROUND(AVG(amount_minor_raw))::bigint AS average_amount_minor,
+          ROUND(
+            percentile_cont(0.5) WITHIN GROUP (ORDER BY amount_minor_raw)
+          )::bigint AS median_amount_minor
+        FROM converted_spendings
+        WHERE amount_minor_raw IS NOT NULL
+        GROUP BY category_code, category_name
+      )
+
+      SELECT
+        ca.category_code,
+        ca.category_name,
+        ca.count_purchase,
+        ca.average_amount_minor,
+        ca.median_amount_minor,
+        p.currency_code,
+        p.conversion_factor
+      FROM category_average ca
+      CROSS JOIN params p
+      WHERE ca.count_purchase > 0
+      ORDER BY ca.average_amount_minor DESC;
+    `;
+
+    const params = [
+      langCode,
+      userId,
+      currencyCode,
+      conversionFactor,
+      timeZone,
+      dateFromUTC,
+      dateToUTC,
+    ];
+
+    const { rows } = await pool.query<CategoryAverageWidgetRow>(query, params);
+
+    const categories: CategoryAverageWidgetItem[] = rows.map((row) => ({
+      id: row.category_code,
+      title: row.category_name,
+      countPurchase: Number(row.count_purchase),
+      averageAmountMinor: row.average_amount_minor ?? "0",
+      medianAmountMinor: row.median_amount_minor ?? "0",
+      currencyCode: row.currency_code,
+      conversionFactor: Number(row.conversion_factor),
+    }));
+
+    return {
+      title: "Средний чек по категориям",
+      subTitles: [
+        {
+          subTitle: "За период:",
+          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+        },
+        {
+          subTitle: "Всего категорий:",
+          value: categories.length,
+        },
+      ],
+      categories,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}

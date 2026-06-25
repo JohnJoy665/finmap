@@ -20,6 +20,8 @@ type PreviewWidgetProps<Item> = {
   renderList: (items: Item[]) => ReactNode;
   isMobile: boolean;
   getPreviewItems?: (params: GetPreviewItemsParams<Item>) => Item[];
+  listHeader?: ReactNode;
+  headerExtra?: ReactNode;
 };
 
 function PreviewWidget<Item>({
@@ -31,6 +33,8 @@ function PreviewWidget<Item>({
   renderList,
   getPreviewItems,
   isMobile,
+  listHeader,
+  headerExtra,
 }: PreviewWidgetProps<Item>) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -69,6 +73,14 @@ function PreviewWidget<Item>({
             subTitles={subTitles}
             isLoading={isLoading}
           />
+
+          {headerExtra ? (
+            <div className={styles.headerExtra}>{headerExtra}</div>
+          ) : null}
+
+          {listHeader ? (
+            <div className={styles.listHeader}>{listHeader}</div>
+          ) : null}
 
           <div className={styles.body}>
             {isLoading ? (
@@ -112,6 +124,14 @@ function PreviewWidget<Item>({
               subTitles={subTitles}
               isLoading={isLoading}
             />
+
+            {headerExtra ? (
+              <div className={styles.headerExtra}>{headerExtra}</div>
+            ) : null}
+
+            {listHeader ? (
+              <div className={styles.listHeader}>{listHeader}</div>
+            ) : null}
 
             <div className={styles.overlayBody}>{renderList(items)}</div>
 
