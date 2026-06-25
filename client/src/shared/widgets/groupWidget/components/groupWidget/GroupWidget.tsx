@@ -49,7 +49,7 @@ function GroupWidget({ reloadOnAccountChange = true }: GroupWidgetProps) {
     async function getWidjet() {
       try {
         setIsLoading(true);
-
+        if (!dateFromUTC || !dateToUTC) return;
         const response = await getGroupStatisticsWidget({
           dateFromUTC,
           dateToUTC,

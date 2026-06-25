@@ -57,6 +57,8 @@ function CategoryAverageWidget({
       try {
         setIsLoading(true);
 
+        if (!dateFromUTC || !dateToUTC) return;
+
         const response = await getCategoryAverageWidget({
           dateFromUTC,
           dateToUTC,

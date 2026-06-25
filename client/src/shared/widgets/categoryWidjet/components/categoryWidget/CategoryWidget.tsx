@@ -50,7 +50,7 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
     async function getWidget() {
       try {
         setIsLoading(true);
-
+        if (!dateFromUTC || !dateToUTC) return;
         const response = await getCategoryStatisticsWidget({
           dateFromUTC,
           dateToUTC,

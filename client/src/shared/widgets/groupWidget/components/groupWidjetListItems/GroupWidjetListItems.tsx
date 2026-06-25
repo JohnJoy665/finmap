@@ -46,7 +46,7 @@ function GroupWidjetListItems({ groups }: GroupWidjetListItemsProps) {
     <div className={styles.list}>
       {groups.map((item) => {
         const isOther = "isOther" in item && item.isOther;
-
+        if (!item.amount) return;
         const displayAmount = displayedPrice(
           item.amount,
           item.conversionFactor

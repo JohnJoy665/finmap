@@ -24,7 +24,7 @@ type AverageWidgetItem = {
   medianAmountMinor: string;
   currencyCode: string;
   conversionFactor: number;
-  type: "category" | "group";
+  type: string;
 };
 
 export type AverageWidgetDisplayItem = AverageWidgetItem | OtherAverageWidget;
