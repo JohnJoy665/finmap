@@ -709,3 +709,198 @@ export async function getCategoryAverageWidget({
     throw error;
   }
 }
+
+type GetGroupAverageWidgetRequest = {
+  userId: string;
+  userSettings: UserSettings;
+  dateFromUTC: string;
+  dateToUTC: string;
+};
+
+type GroupAverageWidgetRow = {
+  group_id: string;
+  group_name: string;
+  count_purchase: string | number;
+  average_amount_minor: string | null;
+  median_amount_minor: string | null;
+  currency_code: string;
+  conversion_factor: string;
+};
+
+export type GroupAverageWidgetItem = {
+  id: string;
+  title: string;
+  countPurchase: number;
+  averageAmountMinor: string;
+  medianAmountMinor: string;
+  currencyCode: string;
+  conversionFactor: number;
+};
+
+export type GroupAverageWidgetSubTitle = {
+  subTitle: string;
+  value: string | number;
+};
+
+export type GroupAverageWidgetResponse = {
+  title: string;
+  subTitles: GroupAverageWidgetSubTitle[];
+  categories: GroupAverageWidgetItem[];
+};
+
+export async function getGroupAverageWidget({
+  userId,
+  userSettings,
+  dateFromUTC,
+  dateToUTC,
+}: GetGroupAverageWidgetRequest): Promise<GroupAverageWidgetResponse> {
+  try {
+    const currencyCode = userSettings.currencyCode;
+
+    if (!currencyCode) {
+      throw new AppError(
+        400,
+        "CURRENCY_NOT_FOUND",
+        "User currency is not specified"
+      );
+    }
+
+    const conversionFactor = userSettings.conversionFactor;
+    const timeZone = userSettings.timezone?.trim() || "UTC";
+
+    const query = `
+      WITH params AS (
+        SELECT
+          $1::uuid        AS user_id,
+          $2::varchar(3)  AS currency_code,
+          $3::numeric     AS conversion_factor,
+          $4::timestamptz AS date_from_utc,
+          $5::timestamptz AS date_to_utc
+      ),
+
+      filtered_spendings AS (
+        SELECT
+          s.id,
+          s.spending_date,
+          s.base_amount_micro,
+          sg.id AS group_id,
+          sg.name AS group_name
+        FROM spendings s
+        INNER JOIN params p
+          ON s.user_id = p.user_id
+         AND s.spending_date >= p.date_from_utc
+         AND s.spending_date < p.date_to_utc
+        INNER JOIN spendings_group sg
+          ON sg.id = s.group_id
+      ),
+
+      converted_spendings AS (
+        SELECT
+          fs.group_id,
+          fs.group_name,
+
+          CASE
+            WHEN fs.base_amount_micro IS NULL THEN NULL
+
+            WHEN p.currency_code = 'USD' THEN
+              (fs.base_amount_micro::numeric / 1000000)
+              * p.conversion_factor
+
+            WHEN er.exchange_rate IS NULL THEN NULL
+
+            ELSE
+              (fs.base_amount_micro::numeric / 1000000)
+              * er.exchange_rate
+              * p.conversion_factor
+          END AS amount_minor_raw
+
+        FROM filtered_spendings fs
+        CROSS JOIN params p
+
+        LEFT JOIN LATERAL (
+          SELECT er.exchange_rate
+          FROM exchange_rates er
+          WHERE er.base_currency = 'USD'
+            AND er.target_currency = p.currency_code
+            AND er.date_rate <= fs.spending_date
+          ORDER BY er.date_rate DESC
+          LIMIT 1
+        ) er ON p.currency_code <> 'USD'
+      ),
+
+      group_average AS (
+        SELECT
+          group_id,
+          group_name,
+          COUNT(*) AS count_purchase,
+          ROUND(AVG(amount_minor_raw))::bigint AS average_amount_minor,
+          ROUND(
+            PERCENTILE_CONT(0.5)
+            WITHIN GROUP (ORDER BY amount_minor_raw)::numeric
+          )::bigint AS median_amount_minor
+        FROM converted_spendings
+        WHERE amount_minor_raw IS NOT NULL
+        GROUP BY group_id, group_name
+      )
+
+      SELECT
+        ga.group_id,
+        ga.group_name,
+        ga.count_purchase,
+        ga.average_amount_minor,
+        ga.median_amount_minor,
+        p.currency_code,
+        p.conversion_factor
+      FROM group_average ga
+      CROSS JOIN params p
+      ORDER BY ga.count_purchase DESC, ga.average_amount_minor DESC;
+    `;
+
+    const { rows } = await pool.query<GroupAverageWidgetRow>(query, [
+      userId,
+      currencyCode,
+      conversionFactor,
+      dateFromUTC,
+      dateToUTC,
+    ]);
+
+    const categories: GroupAverageWidgetItem[] = rows.map((row) => ({
+      id: row.group_id,
+      title: row.group_name,
+      countPurchase: Number(row.count_purchase),
+      averageAmountMinor: String(row.average_amount_minor ?? "0"),
+      medianAmountMinor: String(row.median_amount_minor ?? "0"),
+      currencyCode: row.currency_code,
+      conversionFactor: Number(row.conversion_factor),
+    }));
+
+    return {
+      title: "Средний чек по группам",
+      subTitles: [
+        {
+          subTitle: "За период:",
+          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+        },
+        {
+          subTitle: "Всего групп:",
+          value: categories.length,
+        },
+      ],
+      categories,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}

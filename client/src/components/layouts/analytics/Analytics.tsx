@@ -6,6 +6,7 @@ import GroupWidget from "../../../shared/widgets/groupWidget/components/groupWid
 import styles from "./Analytics.module.css";
 import { useLocation } from "react-router-dom";
 import CategoryAverageWidget from "../../../shared/widgets/categoryAverageWidget/components/categoryAverageWidget/CategoryAverageWidget";
+import GroupAverageWidget from "../../../shared/widgets/groupAverageWidget/components/groupAverageWidget/GroupAverageWidget";
 function Analytics() {
   const { pathname } = useLocation();
   const isGroupsPage = pathname === "/app/operations";
@@ -20,6 +21,7 @@ function Analytics() {
           <CategoryAverageWidget
             reloadOnAccountChange={reloadOnAccountChange}
           />
+          <GroupAverageWidget reloadOnAccountChange={reloadOnAccountChange} />
         </CommonDashboards>
       </DashboardPanel>
       {/* <DashboardPanel>

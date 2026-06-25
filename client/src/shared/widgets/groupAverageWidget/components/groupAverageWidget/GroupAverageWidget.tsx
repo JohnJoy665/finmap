@@ -3,32 +3,32 @@ import { useEffect, useState } from "react";
 import PreviewWidget from "../../../previewWidget/components/PreviewWidget";
 import useIsMobile from "../../../../../hooks/useIsMobile";
 
-import {
-  getCategoryAverageWidget,
-  type CategoryAverageWidgetResponse,
-} from "../../api/getCategoryAverageWidget";
-import ModeSwitch from "../modeSwitch/ModeSwitch";
 import { useOperationsStore } from "../../../../../store/operationsStore";
 import { useProfileStore } from "../../../../../store/profileStore";
 import { useFiltersStore } from "../../../../../store/filtersStore";
+import {
+  getGroupAverageWidget,
+  type GroupAverageWidgetResponse,
+} from "../../api/getGroupAverageWidget";
 import type { AverageWidgetDisplayItem } from "../../../widjetAverageListItem/WidjetAverageListItem";
 import WidjetAverageListItem from "../../../widjetAverageListItem/WidjetAverageListItem";
-import WidjetAverageListHeader from "../WidjetAverageListHeader/WidjetAverageListHeader";
+import ModeSwitch from "../../../categoryAverageWidget/components/modeSwitch/ModeSwitch";
+import WidjetAverageListHeader from "../../../categoryAverageWidget/components/WidjetAverageListHeader/WidjetAverageListHeader";
 
 type AverageMode = "average" | "median";
 
-type CategoryAverageWidgetProps = {
-  reloadOnAccountChange?: boolean;
+type GroupAverageWidgetProps = {
+  reloadOnAccountChange: boolean;
 };
 
-function CategoryAverageWidget({
+function GroupAverageWidget({
   reloadOnAccountChange = true,
-}: CategoryAverageWidgetProps) {
+}: GroupAverageWidgetProps) {
   const { isMobile } = useIsMobile();
   const [mode, setMode] = useState<AverageMode>("average");
 
   const [widgetData, setWidgetData] =
-    useState<CategoryAverageWidgetResponse | null>(null);
+    useState<GroupAverageWidgetResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -57,7 +57,7 @@ function CategoryAverageWidget({
       try {
         setIsLoading(true);
 
-        const response = await getCategoryAverageWidget({
+        const response = await getGroupAverageWidget({
           dateFromUTC,
           dateToUTC,
         });
@@ -114,7 +114,7 @@ function CategoryAverageWidget({
           ...visibleItems,
           {
             id: "OTHER",
-            title: "Остальные категории",
+            title: "Остальные группы",
             isOther: true,
           },
         ];
@@ -125,4 +125,4 @@ function CategoryAverageWidget({
   );
 }
 
-export default CategoryAverageWidget;
+export default GroupAverageWidget;

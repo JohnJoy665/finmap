@@ -13,6 +13,7 @@ import CommonDashboards from "../../features/dashboards/components/commonDashboa
 import CategoryWidget from "../../shared/widgets/categoryWidjet/components/categoryWidget/CategoryWidget";
 import GroupWidget from "../../shared/widgets/groupWidget/components/groupWidget/GroupWidget";
 import CategoryAverageWidget from "../../shared/widgets/categoryAverageWidget/components/categoryAverageWidget/CategoryAverageWidget";
+import GroupAverageWidget from "../../shared/widgets/groupAverageWidget/components/groupAverageWidget/GroupAverageWidget";
 
 function Operations() {
   const { isMobile } = useIsMobile();
@@ -154,7 +155,8 @@ function Operations() {
         <CommonDashboards>
           <CategoryWidget reloadOnAccountChange={false} />
           <GroupWidget reloadOnAccountChange={false} />
-          <CategoryAverageWidget />
+          <CategoryAverageWidget reloadOnAccountChange={false} />
+          <GroupAverageWidget reloadOnAccountChange={false} />
         </CommonDashboards>
       )}
     </>

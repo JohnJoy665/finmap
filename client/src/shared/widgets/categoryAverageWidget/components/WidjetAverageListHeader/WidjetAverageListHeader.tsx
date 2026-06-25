@@ -1,16 +1,14 @@
 import { Typography } from "antd";
 
-import styles from "./CategoryWidjetAverageListHeader.module.css";
+import styles from "./WidjetAverageListHeader.module.css";
 
 type AverageMode = "average" | "median";
 
-type CategoryWidjetAverageListHeaderProps = {
+type WidjetAverageListHeaderProps = {
   mode: AverageMode;
 };
 
-function CategoryWidjetAverageListHeader({
-  mode,
-}: CategoryWidjetAverageListHeaderProps) {
+function WidjetAverageListHeader({ mode }: WidjetAverageListHeaderProps) {
   const { Text } = Typography;
 
   const amountTitle = mode === "median" ? "Медианный чек" : "Средний чек";
@@ -24,4 +22,4 @@ function CategoryWidjetAverageListHeader({
   );
 }
 
-export default CategoryWidjetAverageListHeader;
+export default WidjetAverageListHeader;
