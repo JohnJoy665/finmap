@@ -1,0 +1,62 @@
+.root {
+  position: relative;
+}
+
+.widget {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.06),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.content {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.listHeader {
+  margin-top: 10px;
+}
+
+.body {
+  margin-top: 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+}
+
+.showMoreButton {
+  height: auto;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.overlayContent {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.overlayBody {
+  margin-top: 8px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 4px;
+}

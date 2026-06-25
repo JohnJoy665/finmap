@@ -2,27 +2,26 @@ import { useEffect, useState } from "react";
 
 import { useFiltersStore } from "../../../../../store/filtersStore";
 import { useProfileStore } from "../../../../../store/profileStore";
-import { useOperationsStore } from "../../../../../store/operationsStore";
-
-import {
-  getCategoryStatisticsWidget,
-  type CategoryStatisticsWidgetResponse,
-} from "../../api/getCategoryStatisticsWidget";
+import GroupWidjetListItems, {
+  type GroupWidgetDisplayItem,
+} from "../groupWidjetListItems/GroupWidjetListItems";
 
 import PreviewWidget from "../../../previewWidget/components/PreviewWidget";
-import CategoryWidjetListItem, {
-  type CategoryWidgetDisplayItem,
-} from "../categoryWidjetListItem/CategoryWidjetListItem";
+import { useOperationsStore } from "../../../../../store/operationsStore";
 import useIsMobile from "../../../../../hooks/useIsMobile";
+import {
+  getGroupStatisticsWidget,
+  type GroupStatisticsWidgetResponse,
+} from "../../api/getGroupStatisticsWidget";
 
-type CategoryWidgetProps = {
+type GroupWidgetProps = {
   reloadOnAccountChange?: boolean;
 };
 
-function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
+function GroupWidget({ reloadOnAccountChange = true }: GroupWidgetProps) {
   const { isMobile } = useIsMobile();
   const [widgetData, setWidgetData] =
-    useState<CategoryStatisticsWidgetResponse | null>(null);
+    useState<GroupStatisticsWidgetResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,11 +46,11 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
 
     let isCancelled = false;
 
-    async function getWidget() {
+    async function getWidjet() {
       try {
         setIsLoading(true);
         if (!dateFromUTC || !dateToUTC) return;
-        const response = await getCategoryStatisticsWidget({
+        const response = await getGroupStatisticsWidget({
           dateFromUTC,
           dateToUTC,
         });
@@ -71,7 +70,7 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
       }
     }
 
-    getWidget();
+    getWidjet();
 
     return () => {
       isCancelled = true;
@@ -79,24 +78,24 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
   }, [
     dateFromUTC,
     dateToUTC,
-    reloadOnAccountChange,
-    operationsRevision,
     accountReloadKey,
+    accountReloadKey,
+    operationsRevision,
   ]);
 
   if (!widgetData) return null;
 
-  const categories: CategoryWidgetDisplayItem[] = widgetData.categories;
+  const groups: GroupWidgetDisplayItem[] = widgetData.groups;
 
   return (
-    <PreviewWidget<CategoryWidgetDisplayItem>
+    <PreviewWidget<GroupWidgetDisplayItem>
       isMobile={isMobile}
       title={widgetData.title}
       subTitles={widgetData.subTitles}
       isLoading={isLoading}
-      items={categories}
+      items={groups}
       previewLimit={4}
-      renderList={(items) => <CategoryWidjetListItem categories={items} />}
+      renderList={(items) => <GroupWidjetListItems groups={items} />}
       getPreviewItems={({ items, visibleItems, hiddenItems }) => {
         if (hiddenItems.length === 0) {
           return visibleItems;
@@ -121,7 +120,7 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
           ...visibleItems,
           {
             id: "OTHER",
-            title: "Остальные категории",
+            title: "Остальные группы",
             amount: otherAmount,
             percent: Number(otherPercent.toFixed(1)),
             currencyCode: firstCategory?.currencyCode ?? "",
@@ -134,4 +133,4 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
   );
 }
 
-export default CategoryWidget;
+export default GroupWidget;

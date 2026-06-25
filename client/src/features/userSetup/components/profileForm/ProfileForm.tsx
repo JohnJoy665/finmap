@@ -1,4 +1,4 @@
-import { Button, Form } from "antd";
+import { Button, Flex, Form } from "antd";
 
 import { createProfile } from "../../api/createProfile";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,10 @@ import LanguageSelect from "../languageSelect/LanguageSelect";
 import CurrencySelect from "../../../../shared/components/currencySelect/CurrencySelect";
 import AmountInput from "../../../../shared/components/amountInput/AmountInput";
 import type { Currency } from "../../../../shared/types/currency.types";
+import { useAuthStore } from "../../../../store/authStore";
+import { useFiltersStore } from "../../../../store/filtersStore";
+import { useGroupStrore } from "../../../../store/groupStore";
+import { usePurchaseStore } from "../../../../store/purchaseStore";
 
 type ProfileFormProps = {
   languages: Language[];
@@ -71,6 +75,18 @@ function ProfileForm({
     getNewProfile();
   }
 
+  function handleLogout() {
+    useAuthStore.getState().logout();
+    useProfileStore.getState().reset();
+    useFiltersStore.getState().reset();
+    useGroupStrore.getState().reset();
+    usePurchaseStore.getState().reset();
+  }
+
+  function handleClouse() {
+    handleLogout();
+  }
+
   return (
     <Form
       form={form}
@@ -101,9 +117,14 @@ function ProfileForm({
 
       <AmountInput lable="Какая сумма на счете?" />
 
-      <Button type="primary" htmlType="submit">
-        Сохранить
-      </Button>
+      <Flex gap="middle">
+        <Button block onClick={handleClouse}>
+          Назад
+        </Button>
+        <Button block type="primary" htmlType="submit">
+          Сохранить
+        </Button>
+      </Flex>
     </Form>
   );
 }

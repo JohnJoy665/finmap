@@ -9,3 +9,8 @@
   width: 100%;
   max-width: 320px;
 }
+
+.title {
+  color: var(--ant-color-text) !important;
+  margin-bottom: 32px !important;
+}

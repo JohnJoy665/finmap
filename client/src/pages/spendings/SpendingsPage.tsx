@@ -15,12 +15,27 @@ import { useAccountsStore } from "../../store/accountsStore";
 import SpendingsListContainer from "../../features/operations/spendings/components/spendingsList/components/spendingsListContainer/SpendingsListContainer";
 import { useModalStore } from "../../shared/ui/modal";
 import { useFiltersStore } from "../../store/filtersStore";
+import { useGroupStrore } from "../../store/groupStore";
 
 function SpendingsPage() {
   const openModal = useModalStore((state) => state.openModal);
-  const { state } = useLocation();
-  const group: Group | undefined = state?.group;
   const navigate = useNavigate();
+  // const { state } = useLocation();
+
+  const location = useLocation();
+  const state = location.state as {
+    mode?: "add-purchase" | "edit-group";
+    group?: Group;
+  } | null;
+
+  const group: Group | undefined = state?.group;
+  const mode = state?.mode;
+
+  useEffect(() => {
+    if (!mode) {
+      navigate("/app/operations", { replace: true });
+    }
+  }, [mode, navigate]);
 
   const { isSubmitting, withRequestLock } = useRequestLock();
   const lastSpendingCurrencyCodeRef = useRef<string | null>(null);
@@ -45,9 +60,8 @@ function SpendingsPage() {
 
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
-  const requestGroupsFiltersReload = useFiltersStore(
-    (store) => store.requestGroupsFiltersReload
-  );
+  const clearGroupsFilter = useFiltersStore((store) => store.clearGroupsFilter);
+  const setGroups = useGroupStrore((store) => store.setGroups);
 
   useEffect(() => {
     async function requestCategories() {
@@ -63,11 +77,12 @@ function SpendingsPage() {
   }, []);
 
   function handleCancel() {
+    clearGroupsFilter();
+    setGroups([]);
     navigate("/app/operations");
   }
 
   function changeAccountAmmount(newAmmount: string, activeAccount: string) {
-    requestGroupsFiltersReload();
     updateProfileAmount(newAmmount);
     updateListAmountAccounts([
       {
@@ -94,7 +109,6 @@ function SpendingsPage() {
           });
           if (!activeAccount) return;
           changeAccountAmmount(newSpending.data.accountAmount, activeAccount);
-          requestGroupsFiltersReload();
           return newSpending;
         });
 
@@ -133,7 +147,6 @@ function SpendingsPage() {
         });
         if (!activeAccount) return;
         changeAccountAmmount(newGroup.data.accountAmount, activeAccount);
-        requestGroupsFiltersReload();
         return newGroup;
       });
 

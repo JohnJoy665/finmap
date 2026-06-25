@@ -1,9 +1,20 @@
 import { Avatar, Typography } from "antd";
+import { MoreHorizontal } from "lucide-react";
 import styles from "./GroupWidjetListItems.module.css";
 import {
   fromMinorToMajorFormated,
   fromMinorToMajorNormalize,
 } from "../../../../../utils/toMinorAmount";
+
+type OtherGroupItem = {
+  id: "OTHER";
+  title: string;
+  amount: string;
+  percent: number;
+  currencyCode: string;
+  conversionFactor: number;
+  isOther: true;
+};
 
 type GroupStatisticsWidgetItem = {
   id: string;
@@ -14,27 +25,38 @@ type GroupStatisticsWidgetItem = {
   percent: number;
 };
 
+export type GroupWidgetDisplayItem = GroupStatisticsWidgetItem | OtherGroupItem;
+
 type GroupWidjetListItemsProps = {
-  groups: GroupStatisticsWidgetItem[];
-  isLoading: boolean;
+  groups: GroupWidgetDisplayItem[];
 };
 
 function GroupWidjetListItems({ groups }: GroupWidjetListItemsProps) {
   const { Text } = Typography;
 
+  function displayedPrice(amount: string, conversionFactor: number): string {
+    if (Number(amount) <= 0) return "_.__";
+
+    return Number(amount) < 100_000_00
+      ? fromMinorToMajorNormalize(amount, conversionFactor)
+      : fromMinorToMajorFormated(amount, conversionFactor);
+  }
+
   return (
     <div className={styles.list}>
       {groups.map((item) => {
-        const displayAmount =
-          item.amount !== null
-            ? Number(item.amount) > 0
-              ? Number(item.amount) < 100_000_00
-                ? fromMinorToMajorNormalize(item.amount, item.conversionFactor)
-                : fromMinorToMajorFormated(item.amount, item.conversionFactor)
-              : "_.__"
-            : "Нет данных";
+        const isOther = "isOther" in item && item.isOther;
+        if (!item.amount) return;
+        const displayAmount = displayedPrice(
+          item.amount,
+          item.conversionFactor
+        );
 
-        const avatarLabel = item.title?.trim()?.[0]?.toUpperCase() ?? "?";
+        const avatarLabel = isOther ? (
+          <MoreHorizontal size={16} />
+        ) : (
+          (item.title?.trim()?.[0]?.toUpperCase() ?? "?")
+        );
 
         return (
           <div

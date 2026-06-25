@@ -1,5 +1,8 @@
 import { Avatar, Typography } from "antd";
+import { MoreHorizontal } from "lucide-react";
+
 import styles from "./CategoryWidjetListItem.module.css";
+
 import type { CategoryStatisticsWidgetItem } from "../../api/getCategoryStatisticsWidget";
 import { categoryTheme } from "../../../../ui/colors/iconColors";
 import { categoryIcons } from "../../../../../assets/icons/categoryIcons";
@@ -10,9 +13,22 @@ import {
 
 import type { CategoryCode } from "../../../../ui/colors/iconColors";
 
+type OtherCategoryItem = {
+  id: "OTHER";
+  title: string;
+  amount: string;
+  percent: number;
+  currencyCode: string;
+  conversionFactor: number;
+  isOther: true;
+};
+
+export type CategoryWidgetDisplayItem =
+  | CategoryStatisticsWidgetItem
+  | OtherCategoryItem;
+
 type CategoryWidjetListItemProps = {
-  categories: CategoryStatisticsWidgetItem[];
-  isLoading: boolean;
+  categories: CategoryWidgetDisplayItem[];
 };
 
 function CategoryWidjetListItem({ categories }: CategoryWidjetListItemProps) {
@@ -21,11 +37,15 @@ function CategoryWidjetListItem({ categories }: CategoryWidjetListItemProps) {
   return (
     <div className={styles.list}>
       {categories.map((item) => {
-        const theme: { color: string; bg: string } =
-          categoryTheme[item.id as CategoryCode] ?? categoryTheme.GRO;
+        const isOther = "isOther" in item && item.isOther;
 
-        const Icon =
-          categoryIcons[item.id as CategoryCode] ?? categoryIcons.GRO;
+        const theme: { color: string; bg: string } = isOther
+          ? { color: "#64748b", bg: "rgba(100, 116, 139, 0.12)" }
+          : (categoryTheme[item.id as CategoryCode] ?? categoryTheme.GRO);
+
+        const Icon = isOther
+          ? MoreHorizontal
+          : (categoryIcons[item.id as CategoryCode] ?? categoryIcons.GRO);
 
         const displayAmount =
           item.amount !== null

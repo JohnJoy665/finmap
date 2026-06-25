@@ -6,6 +6,7 @@ import { deleteGroupWithSpending } from "../../../groups/api/deleteGroupWithSpen
 import { useNavigate } from "react-router-dom";
 import { useAccountsStore } from "../../../../../store/accountsStore";
 import { useFiltersStore } from "../../../../../store/filtersStore";
+import { useGroupStrore } from "../../../../../store/groupStore";
 
 type DeleteGroupButtonProps = {
   groupId: string;
@@ -22,10 +23,12 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
     (store) => store.updateListAmountAccounts
   );
   const activeAccount = useProfileStore((state) => state.account?.id);
-  const requestGroupsFiltersReload = useFiltersStore(
-    (store) => store.requestGroupsFiltersReload
-  );
+  const clearGroupsFilter = useFiltersStore((store) => store.clearGroupsFilter);
+  const setGroups = useGroupStrore((store) => store.setGroups);
+
   function handleCancel() {
+    clearGroupsFilter();
+    setGroups([]);
     navigate("/app/operations");
   }
 
@@ -40,7 +43,6 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
         updateProfileAmount(activeAccountAmount);
       }
       updateListAmountAccounts(deletedGoup.data.accounts);
-      requestGroupsFiltersReload();
       return deletedGoup;
     });
 

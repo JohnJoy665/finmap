@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import GroupGrid from "../../features/operations/groups/components/groupGrid/GroupGrid";
 import SearchGroup from "../../features/operations/groups/components/searchGroup/SearchGroup";
 import { getGroupsRequest } from "../../features/operations/groups/api/getGroups";
@@ -11,90 +11,136 @@ import { useFiltersStore } from "../../store/filtersStore";
 import useIsMobile from "../../hooks/useIsMobile";
 import CommonDashboards from "../../features/dashboards/components/commonDashboards/CommonDashboards";
 import CategoryWidget from "../../shared/widgets/categoryWidjet/components/categoryWidget/CategoryWidget";
-import GroupWidget from "../../shared/widgets/categoryWidjet/components/groupWidget/GroupWidget";
+import GroupWidget from "../../shared/widgets/groupWidget/components/groupWidget/GroupWidget";
+import CategoryAverageWidget from "../../shared/widgets/categoryAverageWidget/components/categoryAverageWidget/CategoryAverageWidget";
+import GroupAverageWidget from "../../shared/widgets/groupAverageWidget/components/groupAverageWidget/GroupAverageWidget";
 
 function Operations() {
   const { isMobile } = useIsMobile();
+
+  const requestIdRef = useRef(0);
+
   const setGroups = useGroupStrore((store) => store.setGroups);
-  const conversionFactor = useProfileStore(
-    (store) => store.account?.conversionFactor
-  );
-  const groupsFiltersReloadKey = useFiltersStore(
-    (store) => store.groupsFiltersReloadKey
-  );
+
   const groupsFilter = useFiltersStore((store) => store.groupsFilter);
   const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
-  const setSelectedGroupFilter = useFiltersStore(
-    (store) => store.setSelectedGroupFilter
-  );
+  const clearGroupsFilter = useFiltersStore((store) => store.clearGroupsFilter);
+
   const selectedGroupFilter = useFiltersStore(
     (store) => store.selectedGroupFilter
   );
+
+  const setSelectedGroupFilter = useFiltersStore(
+    (store) => store.setSelectedGroupFilter
+  );
+
+  const conversionFactor = useProfileStore(
+    (store) => store.account?.conversionFactor
+  );
+
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
-  useEffect(() => {
-    async function getFilters() {
-      try {
-        const currentSelectedGroupFilter =
-          useFiltersStore.getState().selectedGroupFilter;
+  const selectedGroupFilterRef = useRef<GroupFilterValue | null>(
+    selectedGroupFilter
+  );
 
-        const filters = await getGroupsFilters({
-          groupFilterPeriod: currentSelectedGroupFilter,
+  useEffect(() => {
+    selectedGroupFilterRef.current = selectedGroupFilter;
+  }, [selectedGroupFilter]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function initPage() {
+      const requestId = ++requestIdRef.current;
+
+      try {
+        const selectedValue = selectedGroupFilterRef.current ?? null;
+        // clearGroupsFilter();
+        // setGroups([]);
+
+        const filtersResponse = await getGroupsFilters({
+          groupFilterPeriod: selectedValue,
         });
 
-        setGroupsFilter(filters.data);
+        if (isCancelled || requestId !== requestIdRef.current) return;
 
-        const selectedFilterFromServer = filters.data.find(
-          (filter) => filter.isActive
-        )?.value;
+        const freshFilters = filtersResponse.data;
 
-        if (selectedFilterFromServer) {
-          setSelectedGroupFilter(selectedFilterFromServer);
+        setGroupsFilter(freshFilters);
+
+        const activeFilter =
+          freshFilters.find((filter) => filter.isActive) || null;
+
+        if (!activeFilter) {
+          setGroups([]);
+          return;
         }
+
+        setSelectedGroupFilter(activeFilter.value);
+
+        const groupsResponse = await getGroupsRequest({
+          dateFromUTC: activeFilter.dateFromUTC,
+          dateToUTC: activeFilter.dateToUTC,
+        });
+
+        if (isCancelled || requestId !== requestIdRef.current) return;
+
+        setGroups(groupsResponse.data);
       } catch (error) {
         console.log(error);
       }
     }
 
-    getFilters();
+    initPage();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [
-    groupsFiltersReloadKey,
     currencyCode,
+    clearGroupsFilter,
     setGroupsFilter,
     setSelectedGroupFilter,
+    setGroups,
   ]);
 
-  useEffect(() => {
-    async function getGroups() {
-      if (!groupsFilter || !selectedGroupFilter) return;
-      try {
-        const currentFilter = groupsFilter.find(
-          (filter) => filter.value === selectedGroupFilter
-        );
+  async function changeFilter(targetValue: GroupFilterValue) {
+    if (!groupsFilter) return;
 
-        if (!currentFilter) return;
+    const currentFilter = groupsFilter.find((filter) => filter.isActive);
 
-        const groups = await getGroupsRequest({
-          dateFromUTC: currentFilter.dateFromUTC,
-          dateToUTC: currentFilter.dateToUTC,
-        });
-        setGroups(groups.data);
-      } catch (error) {
-        console.log(error);
-      }
+    if (currentFilter?.value === targetValue) return;
+
+    const targetFilter = groupsFilter.find(
+      (filter) => filter.value === targetValue
+    );
+
+    if (!targetFilter) return;
+
+    const requestId = ++requestIdRef.current;
+
+    try {
+      setSelectedGroupFilter(targetValue);
+      setGroups([]);
+
+      const groupsResponse = await getGroupsRequest({
+        dateFromUTC: targetFilter.dateFromUTC,
+        dateToUTC: targetFilter.dateToUTC,
+      });
+
+      if (requestId !== requestIdRef.current) return;
+
+      setGroups(groupsResponse.data);
+    } catch (error) {
+      console.log(error);
     }
-
-    getGroups();
-  }, [setGroups, selectedGroupFilter, groupsFilter]);
-
-  function changeFilter(targetValue: GroupFilterValue) {
-    if (selectedGroupFilter === targetValue) return;
-    setSelectedGroupFilter(targetValue);
   }
 
   return (
     <>
       <SearchGroup />
+
       {groupsFilter && conversionFactor && groupsFilter.length > 0 && (
         <FilterGroupContainer
           filters={groupsFilter}
@@ -102,11 +148,15 @@ function Operations() {
           conversionFactor={conversionFactor}
         />
       )}
+
       <GroupGrid />
+
       {isMobile && (
         <CommonDashboards>
-          <CategoryWidget />
-          <GroupWidget />
+          <CategoryWidget reloadOnAccountChange={false} />
+          <GroupWidget reloadOnAccountChange={false} />
+          <CategoryAverageWidget reloadOnAccountChange={false} />
+          <GroupAverageWidget reloadOnAccountChange={false} />
         </CommonDashboards>
       )}
     </>

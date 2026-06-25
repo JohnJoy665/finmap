@@ -1,0 +1,104 @@
+.root {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+.segmented {
+  padding: 0;
+  background: transparent !important;
+  border: none;
+}
+
+.segmented :global(.ant-segmented-group) {
+  background: transparent !important;
+  gap: 0;
+}
+
+.segmented :global(.ant-segmented-thumb) {
+  background: var(--app-accent) !important;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.segmented :global(.ant-segmented-item) {
+  min-height: 24px;
+  color: var(--ant-color-text-secondary);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 0;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.segmented :global(.ant-segmented-item + .ant-segmented-item) {
+  margin-left: -1px;
+}
+
+.segmented :global(.ant-segmented-item:first-child) {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.segmented :global(.ant-segmented-item:last-child) {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.segmented :global(.ant-segmented-item-label) {
+  min-height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.segmented :global(.ant-segmented-item-selected) {
+  color: #ffffff !important;
+  background: var(--app-accent) !important;
+  border-color: var(--app-accent) !important;
+}
+
+.segmented :global(.ant-segmented-item-selected:hover),
+.segmented :global(.ant-segmented-item-selected:focus),
+.segmented :global(.ant-segmented-item-selected:active) {
+  color: #ffffff !important;
+  background: var(--app-accent) !important;
+  border-color: var(--app-accent) !important;
+}
+
+.segmented :global(.ant-segmented-item-selected .ant-segmented-item-label) {
+  color: #ffffff !important;
+}
+
+.segmented
+  :global(.ant-segmented-item-selected:hover .ant-segmented-item-label),
+.segmented
+  :global(.ant-segmented-item-selected:focus .ant-segmented-item-label),
+.segmented
+  :global(.ant-segmented-item-selected:active .ant-segmented-item-label) {
+  color: #ffffff !important;
+}
+
+.segmented :global(.ant-segmented-item:hover) {
+  color: var(--app-accent);
+}
+
+.segmented :global(.ant-segmented-item-selected:hover) {
+  color: #ffffff !important;
+}
+
+.segmented :global(.ant-segmented-item:first-child.ant-segmented-item-selected),
+.segmented :global(.ant-segmented-item:first-child .ant-segmented-item-label) {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.segmented :global(.ant-segmented-item:last-child.ant-segmented-item-selected),
+.segmented :global(.ant-segmented-item:last-child .ant-segmented-item-label) {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}

@@ -1,0 +1,49 @@
+.header {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 48%) minmax(0, 18%) minmax(0, 34%);
+  align-items: center;
+  column-gap: 8px;
+}
+
+.title {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ant-color-text-tertiary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.title:first-child {
+  text-align: left;
+}
+
+.title:nth-child(2),
+.title:nth-child(3) {
+  text-align: right;
+}
+
+@media (max-width: 360px) {
+  .header {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+
+  .avatarStub {
+    width: 28px;
+  }
+
+  .main {
+    grid-template-columns: minmax(0, 46%) minmax(0, 16%) minmax(0, 38%);
+    column-gap: 6px;
+  }
+
+  .title {
+    font-size: 10px;
+  }
+}

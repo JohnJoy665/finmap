@@ -1,28 +1,34 @@
 import { useEffect, useState } from "react";
 
-import { useFiltersStore } from "../../../../../store/filtersStore";
-import { useProfileStore } from "../../../../../store/profileStore";
-import { useOperationsStore } from "../../../../../store/operationsStore";
-
-import {
-  getCategoryStatisticsWidget,
-  type CategoryStatisticsWidgetResponse,
-} from "../../api/getCategoryStatisticsWidget";
-
 import PreviewWidget from "../../../previewWidget/components/PreviewWidget";
-import CategoryWidjetListItem, {
-  type CategoryWidgetDisplayItem,
-} from "../categoryWidjetListItem/CategoryWidjetListItem";
 import useIsMobile from "../../../../../hooks/useIsMobile";
 
-type CategoryWidgetProps = {
-  reloadOnAccountChange?: boolean;
+import { useOperationsStore } from "../../../../../store/operationsStore";
+import { useProfileStore } from "../../../../../store/profileStore";
+import { useFiltersStore } from "../../../../../store/filtersStore";
+import {
+  getGroupAverageWidget,
+  type GroupAverageWidgetResponse,
+} from "../../api/getGroupAverageWidget";
+import type { AverageWidgetDisplayItem } from "../../../widjetAverageListItem/WidjetAverageListItem";
+import WidjetAverageListItem from "../../../widjetAverageListItem/WidjetAverageListItem";
+import ModeSwitch from "../../../categoryAverageWidget/components/modeSwitch/ModeSwitch";
+import WidjetAverageListHeader from "../../../categoryAverageWidget/components/WidjetAverageListHeader/WidjetAverageListHeader";
+
+type AverageMode = "average" | "median";
+
+type GroupAverageWidgetProps = {
+  reloadOnAccountChange: boolean;
 };
 
-function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
+function GroupAverageWidget({
+  reloadOnAccountChange = true,
+}: GroupAverageWidgetProps) {
   const { isMobile } = useIsMobile();
+  const [mode, setMode] = useState<AverageMode>("average");
+
   const [widgetData, setWidgetData] =
-    useState<CategoryStatisticsWidgetResponse | null>(null);
+    useState<GroupAverageWidgetResponse | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,7 +57,7 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
       try {
         setIsLoading(true);
         if (!dateFromUTC || !dateToUTC) return;
-        const response = await getCategoryStatisticsWidget({
+        const response = await getGroupAverageWidget({
           dateFromUTC,
           dateToUTC,
         });
@@ -86,52 +92,37 @@ function CategoryWidget({ reloadOnAccountChange = true }: CategoryWidgetProps) {
 
   if (!widgetData) return null;
 
-  const categories: CategoryWidgetDisplayItem[] = widgetData.categories;
+  const categories: AverageWidgetDisplayItem[] = widgetData.categories;
 
   return (
-    <PreviewWidget<CategoryWidgetDisplayItem>
+    <PreviewWidget<AverageWidgetDisplayItem>
       isMobile={isMobile}
       title={widgetData.title}
       subTitles={widgetData.subTitles}
       isLoading={isLoading}
       items={categories}
       previewLimit={4}
-      renderList={(items) => <CategoryWidjetListItem categories={items} />}
-      getPreviewItems={({ items, visibleItems, hiddenItems }) => {
+      renderList={(items) => (
+        <WidjetAverageListItem categories={items} mode={mode} />
+      )}
+      getPreviewItems={({ visibleItems, hiddenItems }) => {
         if (hiddenItems.length === 0) {
           return visibleItems;
         }
-
-        const otherPercent = hiddenItems.reduce(
-          (sum, item) => sum + Number(item.percent || 0),
-          0
-        );
-
-        const otherAmount = hiddenItems
-          .reduce((sum, item) => {
-            if (item.amount === null) return sum;
-
-            return sum + Number(item.amount);
-          }, 0)
-          .toString();
-
-        const firstCategory = items[0];
 
         return [
           ...visibleItems,
           {
             id: "OTHER",
-            title: "Остальные категории",
-            amount: otherAmount,
-            percent: Number(otherPercent.toFixed(1)),
-            currencyCode: firstCategory?.currencyCode ?? "",
-            conversionFactor: firstCategory?.conversionFactor ?? 100,
+            title: "Остальные группы",
             isOther: true,
           },
         ];
       }}
+      listHeader={<WidjetAverageListHeader mode={mode} />}
+      headerExtra={<ModeSwitch mode={mode} setMode={setMode} />}
     />
   );
 }
 
-export default CategoryWidget;
+export default GroupAverageWidget;

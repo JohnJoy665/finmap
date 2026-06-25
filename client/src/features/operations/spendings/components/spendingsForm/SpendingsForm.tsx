@@ -40,7 +40,7 @@ function SpendingsForm({
     setIsEditingCategory(false);
 
     form.setFieldsValue({
-      category: category.categoryId,
+      category: null,
     });
   }
 
@@ -120,7 +120,7 @@ function SpendingsForm({
       </Form.Item>
 
       <Flex gap="middle">
-        <Button block danger onClick={handleClouse}>
+        <Button block onClick={handleClouse}>
           Назад
         </Button>
 

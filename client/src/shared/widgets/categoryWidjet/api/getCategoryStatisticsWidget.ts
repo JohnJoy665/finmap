@@ -18,6 +18,7 @@ export type CategoryStatisticsWidgetItem = {
   percent: number;
   currencyCode: string;
   conversionFactor: number;
+  type: string;
 };
 
 export type CategoryStatisticsWidgetResponse = {
