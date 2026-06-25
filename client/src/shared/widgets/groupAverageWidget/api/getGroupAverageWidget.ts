@@ -19,6 +19,7 @@ export type GroupAverageWidgetItem = {
   medianAmountMinor: string;
   currencyCode: string;
   conversionFactor: number;
+  type: string;
 };
 
 export type GroupAverageWidgetResponse = {

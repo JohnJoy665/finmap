@@ -19,6 +19,7 @@ export type CategoryAverageWidgetItem = {
   medianAmountMinor: string;
   currencyCode: string;
   conversionFactor: number;
+  type: string;
 };
 
 export type CategoryAverageWidgetResponse = {

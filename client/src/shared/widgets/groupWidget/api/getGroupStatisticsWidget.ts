@@ -18,6 +18,7 @@ export type GroupStatisticsWidgetItem = {
   percent: number;
   currencyCode: string;
   conversionFactor: number;
+  type: string;
 };
 
 export type GroupStatisticsWidgetResponse = {

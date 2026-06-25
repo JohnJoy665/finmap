@@ -48,6 +48,7 @@ type CategoryStatisticsItem = {
   percent: number;
   currencyCode: string;
   conversionFactor: number;
+  type: "category";
 };
 
 type CategoryStatisticsWidgetResponse = {
@@ -256,6 +257,7 @@ export async function getCategoryStatisticsWidget({
       percent: row.percent === null ? 0 : Number(row.percent),
       currencyCode: row.currency_code,
       conversionFactor: Number(row.conversion_factor),
+      type: "category",
     }));
 
     return {
@@ -312,6 +314,7 @@ export type GroupStatisticsWidgetItem = {
   currencyCode: string;
   conversionFactor: number;
   percent: number;
+  type: string;
 };
 
 export type GroupStatisticsWidgetSubTitle = {
@@ -460,6 +463,7 @@ export async function getGroupStatisticsWidget({
       currencyCode: row.currency_code,
       conversionFactor: Number(row.conversion_factor),
       percent: Number(row.percent),
+      type: "group",
     }));
 
     return {
@@ -506,6 +510,7 @@ export type CategoryAverageWidgetItem = {
   medianAmountMinor: string;
   currencyCode: string;
   conversionFactor: number;
+  type: string;
 };
 
 export type CategoryAverageWidgetResponse = {
@@ -677,6 +682,7 @@ export async function getCategoryAverageWidget({
       medianAmountMinor: row.median_amount_minor ?? "0",
       currencyCode: row.currency_code,
       conversionFactor: Number(row.conversion_factor),
+      type: "category",
     }));
 
     return {
@@ -735,6 +741,7 @@ export type GroupAverageWidgetItem = {
   medianAmountMinor: string;
   currencyCode: string;
   conversionFactor: number;
+  type: string;
 };
 
 export type GroupAverageWidgetSubTitle = {
@@ -872,6 +879,7 @@ export async function getGroupAverageWidget({
       medianAmountMinor: String(row.median_amount_minor ?? "0"),
       currencyCode: row.currency_code,
       conversionFactor: Number(row.conversion_factor),
+      type: "group",
     }));
 
     return {

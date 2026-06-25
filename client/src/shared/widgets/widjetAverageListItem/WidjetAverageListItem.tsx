@@ -16,8 +16,6 @@ type OtherAverageWidget = {
   isOther: true;
 };
 
-export type AverageWidgetDisplayItem = AverageWidgetItem | OtherAverageWidget;
-
 type AverageWidgetItem = {
   id: string;
   title: string;
@@ -26,7 +24,10 @@ type AverageWidgetItem = {
   medianAmountMinor: string;
   currencyCode: string;
   conversionFactor: number;
+  type: "category" | "group";
 };
+
+export type AverageWidgetDisplayItem = AverageWidgetItem | OtherAverageWidget;
 
 type WidjetAverageListItemProps = {
   categories: AverageWidgetDisplayItem[];
@@ -53,28 +54,53 @@ function WidjetAverageListItem({
       : fromMinorToMajorFormated(amount, conversionFactor);
   }
 
+  function renderAvatar(item: AverageWidgetDisplayItem) {
+    const isOther = isOtherItem(item);
+
+    if (isOther) {
+      return (
+        <Avatar
+          size={30}
+          className={styles.avatar}
+          style={{ backgroundColor: "rgba(100, 116, 139, 0.12)" }}
+          icon={<MoreHorizontal size={16} color="#64748b" strokeWidth={2.2} />}
+        />
+      );
+    }
+
+    if (item.type === "group") {
+      const avatarLabel = item.title.trim().charAt(0).toUpperCase() || "?";
+
+      return (
+        <Avatar size={30} className={styles.avatar}>
+          {avatarLabel}
+        </Avatar>
+      );
+    }
+
+    const theme = categoryTheme[item.id as CategoryCode] ?? categoryTheme.GRO;
+
+    const Icon = categoryIcons[item.id as CategoryCode] ?? categoryIcons.GRO;
+
+    return (
+      <Avatar
+        size={30}
+        className={styles.avatar}
+        style={{ backgroundColor: theme.bg }}
+        icon={<Icon size={16} color={theme.color} strokeWidth={2.2} />}
+      />
+    );
+  }
+
   return (
     <div className={styles.list}>
       {categories.map((item) => {
         const isOther = isOtherItem(item);
 
-        const theme: { color: string; bg: string } = isOther
-          ? { color: "#64748b", bg: "rgba(100, 116, 139, 0.12)" }
-          : (categoryTheme[item.id as CategoryCode] ?? categoryTheme.GRO);
-
-        const Icon = isOther
-          ? MoreHorizontal
-          : (categoryIcons[item.id as CategoryCode] ?? categoryIcons.GRO);
-
         if (isOther) {
           return (
             <div key={item.id} className={styles.item}>
-              <Avatar
-                size={30}
-                className={styles.avatar}
-                style={{ backgroundColor: theme.bg }}
-                icon={<Icon size={16} color={theme.color} strokeWidth={2.2} />}
-              />
+              {renderAvatar(item)}
 
               <div className={styles.main}>
                 <Text ellipsis className={styles.nameOther}>
@@ -95,12 +121,7 @@ function WidjetAverageListItem({
 
         return (
           <div key={item.id} className={styles.item}>
-            <Avatar
-              size={30}
-              className={styles.avatar}
-              style={{ backgroundColor: theme.bg }}
-              icon={<Icon size={16} color={theme.color} strokeWidth={2.2} />}
-            />
+            {renderAvatar(item)}
 
             <div className={styles.main}>
               <Text ellipsis className={styles.name}>
