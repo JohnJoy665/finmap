@@ -3,6 +3,7 @@ import type { Account } from "../../../../shared/types/account.types";
 import styles from "./AccountsDropdown.module.css";
 import { useNavigate } from "react-router-dom";
 import React from "react";
+import { Settings } from "lucide-react";
 import { changeCurrentAccount } from "../../../createAccount/api/changeCurrentAccount";
 import { useProfileStore } from "../../../../store/profileStore";
 
@@ -44,6 +45,13 @@ function AccountsDropdown({
     onClose();
   }
 
+  function handleClickAccountSetting(accountId: string) {
+    navigate("/app/accounts/setting", {
+      state: { accountId },
+    });
+    onClose();
+  }
+
   return (
     <div className={styles.dropdown}>
       {accounts.map((account) => {
@@ -57,22 +65,32 @@ function AccountsDropdown({
         const isActive = account.id === activeAccount?.id;
 
         return (
-          <button
-            key={account.id}
-            type="button"
-            className={styles.accountItem}
-            onClick={() => setActiveAccount(account.id)}
-          >
-            <span className={styles.accountMain}>
-              <span className={styles.currency}>
-                {account.currencySymbol} {account.currencyCode}
+          <div key={account.id} className={styles.accountItem}>
+            <button
+              type="button"
+              className={styles.accountButton}
+              onClick={() => setActiveAccount(account.id)}
+            >
+              <span className={styles.accountMain}>
+                <span className={styles.currency}>
+                  {account.currencySymbol} {account.currencyCode}
+                </span>
+
+                {isActive && <span className={styles.active}>Активный</span>}
               </span>
 
-              {isActive && <span className={styles.active}>Активный</span>}
-            </span>
+              <span className={styles.amount}>{formattedAmount}</span>
+            </button>
 
-            <span className={styles.amount}>{formattedAmount}</span>
-          </button>
+            <button
+              type="button"
+              className={styles.settingButton}
+              onClick={() => handleClickAccountSetting(account.id)}
+              aria-label="Настройки счета"
+            >
+              <Settings size={16} strokeWidth={2.2} />
+            </button>
+          </div>
         );
       })}
 

@@ -10,7 +10,8 @@ import OperationsPage from "../pages/operations/OperationsPage";
 import SpendingsPage from "../pages/spendings/SpendingsPage";
 import ProfileGate from "./routers/ProfileGate";
 import UserSetupPage from "../pages/userSetup/UserSetupPage";
-import CreateAccountPage from "../pages/accounts/CreateAccountPage";
+import CreateAccountPage from "../pages/accounts/createAccountPage/CreateAccountPage";
+import SettingAccountPage from "../pages/accounts/settingAccountPage/SettingAccountPage";
 
 export const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
                   {
                     path: "accounts/create",
                     element: <CreateAccountPage />,
+                  },
+                  {
+                    path: "accounts/setting",
+                    element: <SettingAccountPage />,
                   },
                 ],
               },

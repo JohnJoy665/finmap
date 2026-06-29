@@ -1,5 +1,5 @@
 .dropdown {
-  width: 280px;
+  width: 290px;
   padding: 8px;
   border-radius: 12px;
   background: var(--ant-color-bg-elevated);
@@ -9,20 +9,12 @@
 .accountItem {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 12px;
+  grid-template-columns: 1fr 32px;
+  gap: 15px;
   align-items: center;
 
-  padding: 10px 12px;
-  border: none;
   border-radius: 10px;
-
   background: transparent;
-  color: var(--ant-color-text);
-  cursor: pointer;
-
-  font: inherit;
-  text-align: left;
 }
 
 .accountItem:hover {
@@ -31,6 +23,26 @@
 
 .accountItem:active {
   background: var(--ant-color-fill-secondary);
+}
+
+.accountButton {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+
+  padding: 10px 0 10px 12px;
+  border: none;
+  border-radius: 10px 0 0 10px;
+
+  background: transparent;
+  color: var(--ant-color-text);
+  cursor: pointer;
+
+  font: inherit;
+  text-align: left;
 }
 
 .accountMain {
@@ -64,6 +76,42 @@
   line-height: 1.4;
   color: var(--ant-color-primary);
   background: var(--ant-color-primary-bg);
+}
+
+.settingButton {
+  width: 35px;
+  height: 35px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+
+  color: var(--ant-color-white);
+  background: var(--ant-color-error);
+  cursor: pointer;
+
+  transition:
+    color var(--ant-motion-duration-mid),
+    background var(--ant-motion-duration-mid),
+    box-shadow var(--ant-motion-duration-mid);
+}
+
+.settingButton:hover {
+  color: var(--ant-color-white);
+  background: var(--ant-color-error-hover);
+}
+
+.settingButton:active {
+  color: var(--ant-color-white);
+  background: var(--ant-color-error-active);
+}
+
+.settingButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ant-color-error-outline);
 }
 
 .footer {
