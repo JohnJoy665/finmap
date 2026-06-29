@@ -364,9 +364,10 @@ export async function createProfile({
             currency_code,
             conversion_factor,
             city_id,
-            base_amount_micro
+            base_amount_micro,
+            is_initial
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, true)
           RETURNING amount
         `,
         [
