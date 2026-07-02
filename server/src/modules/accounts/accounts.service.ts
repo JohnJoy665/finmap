@@ -48,6 +48,7 @@ export type Account = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string;
 };
 
 type AccountRow = {
@@ -56,6 +57,7 @@ type AccountRow = {
   amount: string;
   currency_symbol: string;
   conversion_factor: number;
+  name: string;
 };
 
 export async function getAccounts({
@@ -69,7 +71,8 @@ export async function getAccounts({
         a.currency_code,
         a.amount AS amount,
         c.currency_symbol,
-        c.conversion_factor
+        c.conversion_factor,
+        a.name
       FROM accounts a
       INNER JOIN currencies c
         ON c.code = a.currency_code
@@ -85,6 +88,7 @@ export async function getAccounts({
       amount: row.amount,
       currencySymbol: row.currency_symbol,
       conversionFactor: row.conversion_factor,
+      name: row.name,
     }));
   } catch (error: any) {
     if (error instanceof AppError) {
@@ -367,5 +371,69 @@ export async function changeCurrentAccount({
     throw error;
   } finally {
     client.release();
+  }
+}
+
+type UpdateAccountNameRequest = {
+  userId: string;
+  accountId: string;
+  name: string;
+};
+
+type UpdateAccountNameRow = {
+  account_id: string;
+  name: string;
+};
+
+type UpdateAccountNameResponse = {
+  accountId: string;
+  name: string;
+};
+
+export async function updateAccountName({
+  userId,
+  accountId,
+  name,
+}: UpdateAccountNameRequest): Promise<UpdateAccountNameResponse> {
+  try {
+    const result = await pool.query<UpdateAccountNameRow>(
+      `
+      UPDATE accounts
+      SET
+        name = $1,
+        last_change_date = CURRENT_TIMESTAMP
+      WHERE id = $2
+        AND user_id = $3
+      RETURNING
+        id AS account_id,
+        name
+      `,
+      [name, accountId, userId]
+    );
+
+    const account = result.rows[0];
+
+    if (!account) {
+      throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
+    }
+
+    return {
+      accountId: account.account_id,
+      name: account.name,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
   }
 }

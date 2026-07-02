@@ -4,4 +4,5 @@ export type Account = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string | null;
 };

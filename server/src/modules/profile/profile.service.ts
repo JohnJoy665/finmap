@@ -14,6 +14,7 @@ type AccountProfileRow = {
   amount: string;
   currency_symbol: string;
   conversion_factor: string;
+  name: string;
 };
 
 type SettingProfileRow = {
@@ -85,7 +86,8 @@ export async function getUserProfile(userId: string) {
           acs.currency_code,
           acs.amount,
           cs.currency_symbol,
-          cs.conversion_factor
+          cs.conversion_factor,
+          acs.name
         FROM accounts acs
         INNER JOIN currencies cs ON TRIM(cs.code) = TRIM(acs.currency_code)
         WHERE acs.id = $1
@@ -117,6 +119,7 @@ export async function getUserProfile(userId: string) {
             amount: account.amount,
             currencySymbol: account.currency_symbol,
             conversionFactor: Number(account.conversion_factor),
+            name: account.name,
           }
         : null,
 

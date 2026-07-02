@@ -1,0 +1,10 @@
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin: 0 !important;
+  color: var(--ant-color-text);
+  font-weight: 600;
+}

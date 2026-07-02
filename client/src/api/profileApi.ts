@@ -10,6 +10,7 @@ type ProfileResponse = {
     amount: string;
     currencySymbol: string;
     conversionFactor: number;
+    name: string | null;
   } | null;
   settings: {
     id: string;

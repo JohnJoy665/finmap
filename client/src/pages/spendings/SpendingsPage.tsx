@@ -76,6 +76,8 @@ function SpendingsPage() {
     requestCategories();
   }, []);
 
+  // TODO добавить механику, при которой сброс групп и фильтров происходит и при переходе просто назад.
+
   function handleCancel() {
     clearGroupsFilter();
     setGroups([]);

@@ -31,6 +31,11 @@ type Location = {
   cityId: number;
 };
 
+type UpdateAccountNamePayload = {
+  accountId: string;
+  name: string;
+};
+
 type ProfileState = {
   user: User | null;
   account: Account | null;
@@ -41,6 +46,7 @@ type ProfileState = {
   clearProfile: () => void;
   changeProfileAccount: (payload: Account) => void;
   updateLocation: (payload: Location) => void;
+  updateProfileAccountName: (payload: UpdateAccountNamePayload) => void;
   reset: () => void;
 };
 
@@ -53,6 +59,22 @@ const initialState = {
 
 export const useProfileStore = create<ProfileState>((set) => ({
   ...initialState,
+
+  updateProfileAccountName: ({ accountId, name }) => {
+    set((state) => {
+      if (!state.account || state.account.id !== accountId) {
+        return state;
+      }
+
+      return {
+        ...state,
+        account: {
+          ...state.account,
+          name,
+        },
+      };
+    });
+  },
 
   setProfile: ({ user, account, settings, setupRequired }) => {
     set((state) => ({ ...state, user, account, settings, setupRequired }));

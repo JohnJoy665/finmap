@@ -4,7 +4,8 @@ export type ModalType =
   | "confirmAction"
   | "renameSpending"
   | "changeSpendingAmount"
-  | "changeLocation";
+  | "changeLocation"
+  | "setAccountCurrentAmount";
 
 export type ModalStrategy = "destroy" | "keepAlive";
 
@@ -85,8 +86,26 @@ export type ChangeLocationModalItem = ModalItem<ChangeLocationModalProps> & {
 
 //////////////////////////////////////////////////////
 
+export type SetAccountCurrentAmountModalProps = {
+  accountId: string;
+  currencySymbol: string;
+  conversionFactor: number;
+  currencyCode: string;
+  onSubmit: (payload: {
+    accountId: string;
+    amount: string;
+  }) => void | Promise<void>;
+  onCancel?: () => void;
+};
+
+export type SetAccountCurrentAmountModalItem =
+  ModalItem<SetAccountCurrentAmountModalProps> & {
+    type: "setAccountCurrentAmount";
+  };
+
 export type AppModalItem =
   | ConfirmActionModalItem
   | RenameSpendingModalItem
   | ChangeSpendingAmountModalItem
-  | ChangeLocationModalItem;
+  | ChangeLocationModalItem
+  | SetAccountCurrentAmountModalItem;

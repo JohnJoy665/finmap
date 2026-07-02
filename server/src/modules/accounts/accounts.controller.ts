@@ -5,10 +5,12 @@ import {
   changeCurrentAccount,
   createAccount,
   getAccounts,
+  updateAccountName,
 } from "./accounts.service";
 import {
   changeCurrentAccountSchema,
   createAcountSchema,
+  updateAccountNameSchema,
 } from "./accounts.schemas";
 
 export async function getAccountsController(
@@ -79,6 +81,39 @@ export async function changeCurrentAccountController( //
     });
 
     sendSuccess(res, account);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateAccountNameController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = updateAccountNameSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const data = await updateAccountName({
+      userId,
+      accountId: value.accountId,
+      name: value.name,
+    });
+
+    sendSuccess(res, data);
   } catch (error) {
     next(error);
   }
