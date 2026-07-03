@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { DollarOutlined } from "@ant-design/icons";
+import { EditOutlined } from "@ant-design/icons";
 
 import styles from "./ChangeIncomeAmountAction.module.css";
 import type { IncomeItem } from "../accountIncomesSection/AccountIncomesSection";
@@ -66,11 +66,11 @@ function ChangeIncomeAmountAction({
     <Button
       block
       type="text"
-      icon={<DollarOutlined />}
+      icon={<EditOutlined />}
       className={styles.actionButton}
       onClick={handleChangeAmount}
     >
-      Изменить сумму
+      Изменить сумму пополнения
     </Button>
   );
 }

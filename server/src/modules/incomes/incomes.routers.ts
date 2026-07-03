@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changeIncomeAmountController,
   createAccountIncomeController,
+  deleteIncomeController,
   getAccountIncomesController,
   getAccountInitializationController,
   initializeAccountController,
@@ -20,3 +21,4 @@ incomesRouter.post("/account-income", createAccountIncomeController);
 incomesRouter.get("/", getAccountIncomesController);
 incomesRouter.patch("/rename", renameIncomeController);
 incomesRouter.patch("/amount", changeIncomeAmountController);
+incomesRouter.delete("/:incomeId", deleteIncomeController);

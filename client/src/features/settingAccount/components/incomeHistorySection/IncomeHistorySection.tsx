@@ -16,12 +16,18 @@ type IncomeHistorySectionProps = {
     accountId: string,
     newAccountAmount: string
   ) => void;
+  handleDeleteIncome: (
+    incomeId: string,
+    accountId: string,
+    accountAmount: string
+  ) => void;
 };
 const { Text } = Typography;
 function IncomeHistorySection({
   incomes,
   handleRenameIncome,
   handleChangeIncomeAmount,
+  handleDeleteIncome,
 }: IncomeHistorySectionProps) {
   return (
     <Flex vertical>
@@ -47,6 +53,7 @@ function IncomeHistorySection({
             <IncomeHistoryListItemActions
               handleRenameIncome={handleRenameIncome}
               handleChangeIncomeAmount={handleChangeIncomeAmount}
+              handleDeleteIncome={handleDeleteIncome}
               key={income.id}
               income={income}
             />

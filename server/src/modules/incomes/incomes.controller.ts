@@ -5,6 +5,7 @@ import { sendSuccess } from "../../utils/apiResponse";
 import {
   changeIncomeAmountSchema,
   createAccountIncomeSchema,
+  deleteIncomeParamsSchema,
   getAccountIncomesQuerySchema,
   getAccountInitializationQuerySchema,
   initializeAccountSchema,
@@ -13,6 +14,7 @@ import {
 import {
   changeIncomeAmount,
   createAccountIncome,
+  deleteIncome,
   getAccountIncomes,
   getAccountInitialization,
   initializeAccount,
@@ -229,6 +231,35 @@ export async function changeIncomeAmountController(
     });
 
     sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteIncomeController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = deleteIncomeParamsSchema.validate(req.params);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await deleteIncome({
+      userId,
+      incomeId: value.incomeId,
+    });
+
+    sendSuccess(res, result, "Income deleted successfully");
   } catch (error) {
     next(error);
   }

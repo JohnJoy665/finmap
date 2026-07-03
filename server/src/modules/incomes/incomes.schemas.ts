@@ -148,3 +148,11 @@ export const changeIncomeAmountSchema = Joi.object({
       "any.required": "Amount is required",
     }),
 });
+
+export const deleteIncomeParamsSchema = Joi.object({
+  incomeId: Joi.string().uuid().required().messages({
+    "string.empty": "incomeId is required",
+    "string.guid": "incomeId must be a valid uuid",
+    "any.required": "incomeId is required",
+  }),
+});

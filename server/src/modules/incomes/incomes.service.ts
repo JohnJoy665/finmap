@@ -1,5 +1,6 @@
 import { pool } from "../../db/pool";
 import { AppError } from "../../utils/AppError";
+import { changeAccountAmount } from "../accounts/accounts.service";
 import {
   getBaseAmountMicro,
   getBaseAmountMicroByIncomeDate,
@@ -776,6 +777,102 @@ export async function changeIncomeAmount({
       incomeAmount: updatedIncome.amount,
       accountId: updatedAccount.id,
       accountAmount: updatedAccount.amount,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+type DeleteIncomeRequest = {
+  userId: string;
+  incomeId: string;
+};
+
+type IncomeForDeleteRow = {
+  id: string;
+  amount: string;
+  account_id: string;
+};
+
+type DeleteIncomeResponse = {
+  accountId: string;
+  accountAmount: string;
+  incomeId: string;
+};
+
+export async function deleteIncome({
+  userId,
+  incomeId,
+}: DeleteIncomeRequest): Promise<DeleteIncomeResponse> {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const incomeResult = await client.query<IncomeForDeleteRow>(
+      `
+      SELECT
+        id,
+        amount,
+        account_id
+      FROM incomes
+      WHERE id = $1
+        AND user_id = $2
+      FOR UPDATE;
+      `,
+      [incomeId, userId]
+    );
+
+    if (incomeResult.rows.length === 0) {
+      throw new AppError(404, "INCOME_NOT_FOUND", "Income not found");
+    }
+
+    const income = incomeResult.rows[0];
+
+    const updatedAccount = await changeAccountAmount(client, {
+      accountId: income.account_id,
+      userId,
+      deltaAmount: -BigInt(income.amount),
+    });
+
+    const deletedIncome = await client.query<{ id: string }>(
+      `
+      DELETE FROM incomes
+      WHERE id = $1
+        AND user_id = $2
+      RETURNING id;
+      `,
+      [incomeId, userId]
+    );
+
+    if (deletedIncome.rows.length === 0) {
+      throw new AppError(404, "INCOME_NOT_FOUND", "Income not found");
+    }
+
+    const deletedIncomeId = deletedIncome.rows[0].id;
+
+    await client.query("COMMIT");
+
+    return {
+      accountId: updatedAccount.id,
+      accountAmount: updatedAccount.amount,
+      incomeId: deletedIncomeId,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");

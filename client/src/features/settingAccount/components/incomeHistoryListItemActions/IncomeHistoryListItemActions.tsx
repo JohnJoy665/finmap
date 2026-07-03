@@ -13,12 +13,18 @@ type IncomeHistoryListItemActionsProps = {
     accountId: string,
     newAccountAmount: string
   ) => void;
+  handleDeleteIncome: (
+    incomeId: string,
+    accountId: string,
+    accountAmount: string
+  ) => void;
 };
 
 function IncomeHistoryListItemActions({
   income,
   handleRenameIncome,
   handleChangeIncomeAmount,
+  handleDeleteIncome,
 }: IncomeHistoryListItemActionsProps) {
   return (
     <div className={styles.actions}>
@@ -32,7 +38,10 @@ function IncomeHistoryListItemActions({
         income={income}
       />
 
-      <DeleteIncomeAction income={income} />
+      <DeleteIncomeAction
+        income={income}
+        handleDeleteIncome={handleDeleteIncome}
+      />
     </div>
   );
 }

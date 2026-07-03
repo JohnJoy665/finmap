@@ -107,6 +107,30 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
     ]);
     // refreshOperations();
   }
+
+  function deleteIncome(
+    incomeId: string,
+    accountId: string,
+    accountAmount: string
+  ) {
+    console.log(accountId, accountAmount);
+    const nextIncomes = incomes.filter((spending) => spending.id !== incomeId);
+
+    setIncomes(nextIncomes);
+
+    updateProfileAmount({
+      accountId,
+      newAmount: accountAmount,
+    });
+    updateListAmountAccounts([
+      {
+        accountId,
+        amount: accountAmount,
+      },
+    ]);
+    // refreshOperations();
+  }
+
   return (
     <Flex vertical className={styles.container}>
       <AddIncomeSection
@@ -118,6 +142,7 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
       <IncomeHistorySection
         handleRenameIncome={renameIncome}
         handleChangeIncomeAmount={changeIncomeAmount}
+        handleDeleteIncome={deleteIncome}
         incomes={incomes}
       />
       {((incomes.length >= OFFSET && hasMore) ||
