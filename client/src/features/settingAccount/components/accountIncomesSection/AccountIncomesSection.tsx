@@ -1,4 +1,6 @@
-import { Button, Flex } from "antd";
+import { Button, Collapse, Flex } from "antd";
+import type { CollapseProps } from "antd";
+import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 
 import AddIncomeSection from "../addIncomeSection/AddIncomeSection";
@@ -25,13 +27,16 @@ type AccountIncomesSectionProps = {
 
 function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
   const OFFSET = 5;
+
   const [offsetCount, setOffsetCount] = useState<number>(0);
   const [incomes, setIncomes] = useState<IncomeItem[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const [activeCollapseKeys, setActiveCollapseKeys] = useState<string[]>([]);
 
   const updateProfileAmount = useProfileStore(
     (state) => state.updateProfileAmount
   );
+
   const updateListAmountAccounts = useAccountsStore(
     (store) => store.updateListAmountAccounts
   );
@@ -63,7 +68,7 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
   }, [offsetCount, accountId]);
 
   function addNewIncomes() {
-    setOffsetCount((prev) => prev + 5);
+    setOffsetCount((prev) => prev + OFFSET);
   }
 
   function resetIncomesList() {
@@ -75,10 +80,10 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
     setIncomes((prev) => [newIncome, ...prev]);
   }
 
-  function renameIncome(IncomeId: string, newName: string) {
+  function renameIncome(incomeId: string, newName: string) {
     setIncomes((prev) =>
       prev.map((income) =>
-        income.id === IncomeId ? { ...income, name: newName } : income
+        income.id === incomeId ? { ...income, name: newName } : income
       )
     );
   }
@@ -96,16 +101,16 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
     );
 
     updateProfileAmount({
-      accountId: accountId,
+      accountId,
       newAmount: newAccountAmount,
     });
+
     updateListAmountAccounts([
       {
         accountId,
         amount: newAccountAmount,
       },
     ]);
-    // refreshOperations();
   }
 
   function deleteIncome(
@@ -113,8 +118,7 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
     accountId: string,
     accountAmount: string
   ) {
-    console.log(accountId, accountAmount);
-    const nextIncomes = incomes.filter((spending) => spending.id !== incomeId);
+    const nextIncomes = incomes.filter((income) => income.id !== incomeId);
 
     setIncomes(nextIncomes);
 
@@ -122,41 +126,94 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
       accountId,
       newAmount: accountAmount,
     });
+
     updateListAmountAccounts([
       {
         accountId,
         amount: accountAmount,
       },
     ]);
-    // refreshOperations();
   }
 
-  return (
-    <Flex vertical className={styles.container}>
-      <AddIncomeSection
-        onIncomeCreated={handleIncomeCreated}
-        key={`add-income-${accountId}`}
-        accountId={accountId}
-      />
+  const collapseItems: CollapseProps["items"] = [
+    {
+      key: "account-incomes",
+      label: <span className={styles.collapseTitle}>Пополнение счета</span>,
+      classNames: {
+        header: styles.rootCollapseHeader,
+        body: styles.rootCollapseBody,
+      },
+      styles: {
+        header: {
+          padding: 0,
+          alignItems: "center",
+        },
+        body: {
+          padding: 0,
+        },
+      },
+      children: (
+        <Flex vertical className={styles.panelContent}>
+          <AddIncomeSection
+            onIncomeCreated={handleIncomeCreated}
+            key={`add-income-${accountId}`}
+            accountId={accountId}
+          />
 
-      <IncomeHistorySection
-        handleRenameIncome={renameIncome}
-        handleChangeIncomeAmount={changeIncomeAmount}
-        handleDeleteIncome={deleteIncome}
-        incomes={incomes}
-      />
-      {((incomes.length >= OFFSET && hasMore) ||
-        (incomes.length > OFFSET && !hasMore)) && (
-        <Button
-          block
-          type="link"
-          className={styles.showMore}
-          onClick={hasMore ? addNewIncomes : resetIncomesList}
-        >
-          {hasMore ? "Показать еще" : "Скрыть"}
-        </Button>
-      )}
-    </Flex>
+          <IncomeHistorySection
+            handleRenameIncome={renameIncome}
+            handleChangeIncomeAmount={changeIncomeAmount}
+            handleDeleteIncome={deleteIncome}
+            incomes={incomes}
+          />
+
+          {((incomes.length >= OFFSET && hasMore) ||
+            (incomes.length > OFFSET && !hasMore)) && (
+            <Button
+              block
+              type="link"
+              className={styles.showMore}
+              onClick={hasMore ? addNewIncomes : resetIncomesList}
+            >
+              {hasMore ? "Показать еще" : "Скрыть"}
+            </Button>
+          )}
+        </Flex>
+      ),
+    },
+  ];
+
+  return (
+    <Collapse
+      ghost
+      bordered={false}
+      items={collapseItems}
+      activeKey={activeCollapseKeys}
+      expandIconPlacement="end"
+      className={styles.collapse}
+      onChange={(keys) =>
+        setActiveCollapseKeys(Array.isArray(keys) ? keys : [keys])
+      }
+      expandIcon={({ isActive }) =>
+        isActive ? (
+          <MinusOutlined
+            className={styles.collapseIcon}
+            style={{
+              color: "var(--app-accent)",
+              fontSize: 24,
+            }}
+          />
+        ) : (
+          <PlusOutlined
+            className={styles.collapseIcon}
+            style={{
+              color: "var(--app-accent)",
+              fontSize: 24,
+            }}
+          />
+        )
+      }
+    />
   );
 }
 

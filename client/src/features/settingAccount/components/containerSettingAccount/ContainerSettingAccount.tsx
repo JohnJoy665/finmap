@@ -1,4 +1,4 @@
-import { Divider, Flex } from "antd";
+import { Flex } from "antd";
 
 import AccountInfoSection from "../accountInfoSection/AccountInfoSection";
 import styles from "./ContainerSettingAccount.module.css";
@@ -15,8 +15,6 @@ function ContainerSettingAccount({ accountId }: ContainerSettingAccountProps) {
         key={`account-info-${accountId}`}
         accountId={accountId}
       />
-
-      <Divider className={styles.divider} />
 
       <AccountIncomesSection
         key={`account-incomes-${accountId}`}

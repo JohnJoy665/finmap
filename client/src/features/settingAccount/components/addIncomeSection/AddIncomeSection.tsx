@@ -10,6 +10,7 @@ import { createAccountIncome } from "../../api/createAccountIncome";
 import { useProfileStore } from "../../../../store/profileStore";
 import type { IncomeItem } from "../accountIncomesSection/AccountIncomesSection";
 import { useModalStore } from "../../../../shared/ui/modal";
+import { useNavigate } from "react-router-dom";
 
 type AddIncomeFormValues = {
   accountAmount: string;
@@ -29,7 +30,7 @@ function AddIncomeSection({
   onIncomeCreated,
 }: AddIncomeSectionProps) {
   const [form] = Form.useForm<AddIncomeFormValues>();
-
+  const navigate = useNavigate();
   const accounts = useAccountsStore((store) => store.accounts);
   const updateProfileAmount = useProfileStore(
     (store) => store.updateProfileAmount
@@ -163,8 +164,8 @@ function AddIncomeSection({
     });
   }
 
-  function handleBack() {
-    console.log("back");
+  function handleClouse() {
+    navigate("/app");
   }
 
   return (
@@ -226,7 +227,7 @@ function AddIncomeSection({
         </Form.Item>
 
         <Flex gap="middle">
-          <Button block onClick={handleBack} disabled={isLoading}>
+          <Button block onClick={handleClouse} disabled={isLoading}>
             Назад
           </Button>
 

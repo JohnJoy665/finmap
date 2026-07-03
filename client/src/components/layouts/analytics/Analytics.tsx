@@ -14,7 +14,7 @@ function Analytics() {
 
   return (
     <Flex vertical={true} gap={"middle"} className={styles.container}>
-      {/* <DashboardPanel>
+      <DashboardPanel>
         <CommonDashboards>
           <CategoryWidget reloadOnAccountChange={reloadOnAccountChange} />
           <GroupWidget reloadOnAccountChange={reloadOnAccountChange} />
@@ -23,10 +23,10 @@ function Analytics() {
           />
           <GroupAverageWidget reloadOnAccountChange={reloadOnAccountChange} />
         </CommonDashboards>
-      </DashboardPanel> */}
-      {/* <DashboardPanel>
+      </DashboardPanel>
+      <DashboardPanel>
         <p>Вот тут все красиво теперь!</p>
-      </DashboardPanel> */}
+      </DashboardPanel>
     </Flex>
   );
 }

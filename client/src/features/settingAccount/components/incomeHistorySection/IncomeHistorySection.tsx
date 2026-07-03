@@ -31,9 +31,11 @@ function IncomeHistorySection({
 }: IncomeHistorySectionProps) {
   return (
     <Flex vertical>
-      <Text strong className={styles.title}>
-        Последние пополнения
-      </Text>
+      {incomes.length > 0 && (
+        <Text strong className={styles.title}>
+          Последние пополнения
+        </Text>
+      )}
       <Collapse
         accordion
         ghost
