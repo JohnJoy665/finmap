@@ -37,11 +37,13 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
       const deletedGoup = await deleteGroupWithSpending(groupId);
       const activeAccountAmount = deletedGoup.data.accounts.find(
         (item) => item.accountId === activeAccount
-      )?.amount;
+      );
 
-      if (activeAccountAmount) {
-        updateProfileAmount(activeAccountAmount);
-      }
+      updateProfileAmount({
+        accountId: activeAccountAmount?.accountId,
+        newAmount: activeAccountAmount?.amount,
+      });
+
       updateListAmountAccounts(deletedGoup.data.accounts);
       return deletedGoup;
     });

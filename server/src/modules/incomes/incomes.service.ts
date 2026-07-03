@@ -458,3 +458,135 @@ export async function createAccountIncome({
     client.release();
   }
 }
+
+type GetAccountIncomesParams = {
+  userId: string;
+  accountId: string;
+  limitCount: number;
+  offsetCount: number;
+  timezone: string | null;
+};
+
+export type IncomeItem = {
+  id: string;
+  date: string;
+  time: string;
+  amount: string;
+  conversionFactor: number;
+  currencySymbol: string;
+  name: string | null;
+  currencyCode: string;
+};
+
+export type GetAccountIncomesResponse = {
+  items: IncomeItem[];
+  hasMore: boolean;
+};
+
+type GetAccountIncomesRow = {
+  result: GetAccountIncomesResponse;
+};
+
+export async function getAccountIncomes({
+  userId,
+  accountId,
+  limitCount,
+  offsetCount,
+  timezone,
+}: GetAccountIncomesParams): Promise<GetAccountIncomesResponse> {
+  try {
+    const query = `
+      WITH params AS (
+        SELECT
+          $1::uuid AS user_id,
+          $2::uuid AS account_id,
+          $3::int AS limit_count,
+          $4::int AS offset_count,
+          COALESCE($5::text, 'UTC') AS timezone
+      ),
+
+      limited_incomes AS (
+        SELECT
+          i.id,
+          i.date,
+          i.amount,
+          i.name,
+          i.currency_code,
+          c.currency_symbol,
+          c.conversion_factor
+        FROM public.incomes i
+        JOIN params p ON true
+        JOIN public.currencies c
+          ON c.code = TRIM(i.currency_code)
+        WHERE i.user_id = p.user_id
+          AND i.account_id = p.account_id
+          AND i.is_initial = false
+          AND i.is_adjustment = false
+          AND i.statistical = true
+        ORDER BY i.date DESC, i.id DESC
+        LIMIT (SELECT limit_count + 1 FROM params)
+        OFFSET (SELECT offset_count FROM params)
+      ),
+
+      items AS (
+        SELECT *
+        FROM limited_incomes
+        ORDER BY date DESC, id DESC
+        LIMIT (SELECT limit_count FROM params)
+      )
+
+      SELECT jsonb_build_object(
+        'items',
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'id', i.id::text,
+                'date', TO_CHAR(i.date AT TIME ZONE p.timezone, 'DD.MM'),
+                'time', TO_CHAR(i.date AT TIME ZONE p.timezone, 'HH24:MI'),
+                'amount', i.amount::text,
+                'conversionFactor', i.conversion_factor,
+                'currencySymbol', i.currency_symbol,
+                'name', i.name,
+                'currencyCode', i.currency_code
+              )
+              ORDER BY i.date DESC, i.id DESC
+            )
+            FROM items i
+            JOIN params p ON true
+          ),
+          '[]'::jsonb
+        ),
+        'hasMore',
+        (
+          SELECT COUNT(*) > (SELECT limit_count FROM params)
+          FROM limited_incomes
+        )
+      ) AS result;
+    `;
+
+    const result = await pool.query<GetAccountIncomesRow>(query, [
+      userId,
+      accountId,
+      limitCount,
+      offsetCount,
+      timezone,
+    ]);
+
+    return result.rows[0].result;
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}

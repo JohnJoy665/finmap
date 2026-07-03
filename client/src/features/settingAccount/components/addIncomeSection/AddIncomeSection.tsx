@@ -8,6 +8,8 @@ import { useAccountsStore } from "../../../../store/accountsStore";
 import AmountInput from "../../../../shared/components/amountInput/AmountInput";
 import { createAccountIncome } from "../../api/createAccountIncome";
 import { useProfileStore } from "../../../../store/profileStore";
+import type { IncomeItem } from "../accountIncomesSection/AccountIncomesSection";
+import { useModalStore } from "../../../../shared/ui/modal";
 
 type AddIncomeFormValues = {
   accountAmount: string;
@@ -19,9 +21,13 @@ type AddIncomeFormValues = {
 
 type AddIncomeSectionProps = {
   accountId: string;
+  onIncomeCreated: (income: IncomeItem) => void;
 };
 
-function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
+function AddIncomeSection({
+  accountId,
+  onIncomeCreated,
+}: AddIncomeSectionProps) {
   const [form] = Form.useForm<AddIncomeFormValues>();
 
   const accounts = useAccountsStore((store) => store.accounts);
@@ -32,9 +38,17 @@ function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
     (store) => store.updateListAmountAccounts
   );
   const currentAccount = accounts.find((account) => account.id === accountId);
-
+  const openModal = useModalStore((state) => state.openModal);
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  const accountName = currentAccount?.name?.trim();
+
+  const accountTitle = currentAccount
+    ? accountName
+      ? `«${accountName}»`
+      : `${currentAccount.currencySymbol}`
+    : "";
 
   useEffect(() => {
     if (!currentAccount) return;
@@ -65,7 +79,7 @@ function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
       .minute(now.minute())
       .second(now.second())
       .millisecond(now.millisecond())
-      .format("YYYY-MM-DD HH:mm:ss.SSS");
+      .toISOString();
   }
 
   function handleFieldsChange() {
@@ -88,12 +102,12 @@ function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
     );
   }
 
-  function changeAccountAmmount(newAmmount: string, activeAccount: string) {
-    updateProfileAmount(newAmmount);
+  function changeAccountAmmount(newAmount: string, activeAccount: string) {
+    updateProfileAmount({ accountId: activeAccount, newAmount });
     updateListAmountAccounts([
       {
         accountId: activeAccount,
-        amount: newAmmount,
+        amount: newAmount,
       },
     ]);
   }
@@ -118,13 +132,13 @@ function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
         response.data.account.accountId
       );
 
-      // TODO добавить обновление текущего аккаунта через стор и вообще всех аккаунтов через стор
-
       form.setFieldsValue({
         accountAmount: "",
         incomeName: "",
         incomeDate: dayjs(),
       });
+
+      onIncomeCreated(response.data.income);
 
       setIsSubmitDisabled(true);
     } catch (error) {
@@ -132,6 +146,21 @@ function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function onSubmit(values: AddIncomeFormValues) {
+    openModal({
+      type: "confirmAction",
+      strategy: "destroy",
+      props: {
+        danger: true,
+        title: "Подтвердите пополнение",
+        content: `Добавить ${values.accountAmount} ${values.currencySymbol} на счёт ${accountTitle}?`,
+        confirmText: "Ок",
+        cancelText: "Отмена",
+        onConfirm: () => handleSubmit(values),
+      },
+    });
   }
 
   function handleBack() {
@@ -150,7 +179,7 @@ function AddIncomeSection({ accountId }: AddIncomeSectionProps) {
           currencySymbol: currentAccount.currencySymbol,
           conversionFactor: currentAccount.conversionFactor,
         }}
-        onFinish={handleSubmit}
+        onFinish={onSubmit}
         onFieldsChange={handleFieldsChange}
       >
         <AmountInput required={true} lable="Сумма пополнения" />

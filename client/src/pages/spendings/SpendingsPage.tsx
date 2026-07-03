@@ -84,12 +84,12 @@ function SpendingsPage() {
     navigate("/app/operations");
   }
 
-  function changeAccountAmmount(newAmmount: string, activeAccount: string) {
-    updateProfileAmount(newAmmount);
+  function changeAccountAmmount(newAmount: string, activeAccount: string) {
+    updateProfileAmount({ accountId: activeAccount, newAmount });
     updateListAmountAccounts([
       {
         accountId: activeAccount,
-        amount: newAmmount,
+        amount: newAmount,
       },
     ]);
   }

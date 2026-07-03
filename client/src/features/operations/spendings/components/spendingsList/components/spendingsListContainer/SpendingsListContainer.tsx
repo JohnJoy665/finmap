@@ -24,7 +24,6 @@ function SpendingsListContainer({
   const [hasMore, setHasMore] = useState<boolean>(true);
   const OFFSET = 5;
 
-  const activeAccount = useProfileStore((state) => state.account?.id);
   const updateProfileAmount = useProfileStore(
     (state) => state.updateProfileAmount
   );
@@ -97,9 +96,10 @@ function SpendingsListContainer({
       )
     );
 
-    if (activeAccount === accountId) {
-      updateProfileAmount(newAccountSpending);
-    }
+    updateProfileAmount({
+      accountId: accountId,
+      newAmount: newAccountSpending,
+    });
     updateListAmountAccounts([
       {
         accountId,
@@ -122,9 +122,10 @@ function SpendingsListContainer({
 
     onLastSpendingCurrencyChange?.(nextSpendings[0]?.currencyCode || null);
 
-    if (activeAccount === accountId) {
-      updateProfileAmount(accountAmount);
-    }
+    updateProfileAmount({
+      accountId,
+      newAmount: accountAmount,
+    });
     updateListAmountAccounts([
       {
         accountId,

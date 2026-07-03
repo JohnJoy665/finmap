@@ -79,12 +79,31 @@ export const createAccountIncomeSchema = Joi.object({
     )
     .optional(),
 
-  date: Joi.string()
-    .pattern(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$/)
-    .required()
-    .messages({
-      "string.empty": "date is required",
-      "string.pattern.base": "date must be in format YYYY-MM-DD HH:mm:ss.SSS",
-      "any.required": "date is required",
-    }),
+  date: Joi.string().isoDate().required().messages({
+    "string.empty": "date is required",
+    "string.isoDate": "date must be a valid ISO date string",
+    "any.required": "date is required",
+  }),
+});
+
+export const getAccountIncomesQuerySchema = Joi.object({
+  accountId: Joi.string().uuid().required().messages({
+    "string.empty": "accountId is required",
+    "string.guid": "accountId must be a valid uuid",
+    "any.required": "accountId is required",
+  }),
+
+  limitCount: Joi.number().integer().min(1).required().messages({
+    "number.base": "limitCount must be a number",
+    "number.integer": "limitCount must be an integer",
+    "number.min": "limitCount must be greater than 0",
+    "any.required": "limitCount is required",
+  }),
+
+  offsetCount: Joi.number().integer().min(0).required().messages({
+    "number.base": "offsetCount must be a number",
+    "number.integer": "offsetCount must be an integer",
+    "number.min": "offsetCount must be greater than or equal to 0",
+    "any.required": "offsetCount is required",
+  }),
 });

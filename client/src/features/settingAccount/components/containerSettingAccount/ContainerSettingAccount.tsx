@@ -1,9 +1,8 @@
 import { Divider, Flex } from "antd";
 
 import AccountInfoSection from "../accountInfoSection/AccountInfoSection";
-import AddIncomeSection from "../addIncomeSection/AddIncomeSection";
-import IncomeHistorySection from "../incomeHistorySection/IncomeHistorySection";
 import styles from "./ContainerSettingAccount.module.css";
+import AccountIncomesSection from "../accountIncomesSection/AccountIncomesSection";
 
 type ContainerSettingAccountProps = {
   accountId: string;
@@ -19,11 +18,10 @@ function ContainerSettingAccount({ accountId }: ContainerSettingAccountProps) {
 
       <Divider className={styles.divider} />
 
-      <AddIncomeSection key={`add-income-${accountId}`} accountId={accountId} />
-
-      <Divider className={styles.divider} />
-
-      <IncomeHistorySection />
+      <AccountIncomesSection
+        key={`account-incomes-${accountId}`}
+        accountId={accountId}
+      />
     </Flex>
   );
 }

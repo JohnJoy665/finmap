@@ -25,10 +25,13 @@ function SettingAccountPage() {
   const state = location.state as SettingAccountPageState | null;
   const accountId = state?.accountId ?? null;
 
-  const accounts = useAccountsStore((store) => store.accounts);
-  const openModal = useModalStore((store) => store.openModal);
+  const currentAccount = useAccountsStore((store) =>
+    store.accounts.find((account) => account.id === accountId)
+  );
 
-  const activeAccount = useProfileStore((state) => state.account?.id);
+  const accountsCount = useAccountsStore((store) => store.accounts.length);
+
+  const openModal = useModalStore((store) => store.openModal);
 
   const updateListAmountAccounts = useAccountsStore(
     (store) => store.updateListAmountAccounts
@@ -69,23 +72,17 @@ function SettingAccountPage() {
         onSubmit: async ({ accountId, amount }) => {
           const amountMinor = String(Number(amount) * conversionFactor);
 
-          console.log({
-            accountId,
-            amount,
-            amountMinor,
-          });
-
           const response = await initializeAccount({
             accountId,
             amount: amountMinor,
           });
-          console.log(response?.data);
 
           if (response?.data.isInitialized) {
             setIsInitialized(true);
-            if (activeAccount === response.data.accountId) {
-              updateProfileAmount(response.data.amount);
-            }
+            updateProfileAmount({
+              accountId: response.data.accountId,
+              newAmount: response.data.amount,
+            });
             updateListAmountAccounts([
               {
                 accountId,
@@ -108,12 +105,9 @@ function SettingAccountPage() {
         return;
       }
 
-      const currentAccount = accounts.find((account) => {
-        return account.id === accountId;
-      });
-
       if (!currentAccount) {
-        if (accounts.length === 0) return;
+        if (accountsCount === 0) return;
+
         setIsLoading(false);
         navigate("/app", { replace: true });
         return;
@@ -158,23 +152,22 @@ function SettingAccountPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accountId, accounts, navigate]);
+  }, [
+    accountId,
+    currentAccount?.id,
+    currentAccount?.conversionFactor,
+    currentAccount?.currencyCode,
+    currentAccount?.currencySymbol,
+    accountsCount,
+    navigate,
+  ]);
 
   if (!accountId) {
     return <Navigate to="/app" replace />;
   }
 
   return (
-    // <>
-    //   <p>test setting account page</p>
-    //   <p>{accountId}</p>
-    //   <p>{isLoading ? "Загрузка..." : "Загрузка завершена"}</p>
-    //   <p>{`${isInitialized ? "Инициализировано" : "Не инициализировано"}`}</p>
-    // </>
     <div className={styles.container}>
-      {/* <Title className={styles.title} level={3}>
-        Настройка счета
-      </Title> */}
       <ContainerSettingAccount accountId={accountId} />
     </div>
   );

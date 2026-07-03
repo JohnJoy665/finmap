@@ -36,12 +36,17 @@ type UpdateAccountNamePayload = {
   name: string;
 };
 
+type UpdateProfileAmountParams = {
+  accountId: string | null;
+  newAmount: string;
+};
+
 type ProfileState = {
   user: User | null;
   account: Account | null;
   settings: Settings | null;
   setProfile: (payload: ProfilePayload) => void;
-  updateProfileAmount: (amount: string) => void;
+  updateProfileAmount: (payload: UpdateProfileAmountParams) => void;
   setupRequired: boolean | null;
   clearProfile: () => void;
   changeProfileAccount: (payload: Account) => void;
@@ -80,9 +85,13 @@ export const useProfileStore = create<ProfileState>((set) => ({
     set((state) => ({ ...state, user, account, settings, setupRequired }));
   },
 
-  updateProfileAmount: (amount) => {
+  updateProfileAmount: (payload) => {
     set((state) => {
-      if (!state.account) {
+      if (
+        !state.account ||
+        !payload.accountId ||
+        state.account.id !== payload.accountId
+      ) {
         return state;
       }
 
@@ -90,7 +99,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
         ...state,
         account: {
           ...state.account,
-          amount,
+          amount: payload.newAmount,
         },
       };
     });

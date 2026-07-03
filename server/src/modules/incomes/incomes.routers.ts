@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createAccountIncomeController,
+  getAccountIncomesController,
   getAccountInitializationController,
   initializeAccountController,
 } from "./incomes.controller";
@@ -14,3 +15,4 @@ incomesRouter.get(
 
 incomesRouter.post("/account-initialization", initializeAccountController);
 incomesRouter.post("/account-income", createAccountIncomeController);
+incomesRouter.get("/", getAccountIncomesController);

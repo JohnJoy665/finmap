@@ -4,11 +4,13 @@ import { AppError } from "../../utils/AppError";
 import { sendSuccess } from "../../utils/apiResponse";
 import {
   createAccountIncomeSchema,
+  getAccountIncomesQuerySchema,
   getAccountInitializationQuerySchema,
   initializeAccountSchema,
 } from "./incomes.schemas";
 import {
   createAccountIncome,
+  getAccountIncomes,
   getAccountInitialization,
   initializeAccount,
 } from "./incomes.service";
@@ -120,6 +122,43 @@ export async function createAccountIncomeController(
     });
 
     sendSuccess(res, data);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getAccountIncomesController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = getAccountIncomesQuerySchema.validate(req.query, {
+      abortEarly: false,
+      stripUnknown: true,
+      convert: true,
+    });
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+    const userSettings = req.userSettings;
+
+    if (!userId || !userSettings) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await getAccountIncomes({
+      userId,
+      accountId: value.accountId,
+      limitCount: value.limitCount,
+      offsetCount: value.offsetCount,
+      timezone: userSettings.timezone,
+    });
+
+    sendSuccess(res, result);
   } catch (error) {
     next(error);
   }

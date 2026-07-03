@@ -126,7 +126,7 @@ function AccountInfoSection({ accountId }: AccountInfoSectionProps) {
           label="Название счета"
           rules={[
             {
-              max: 50,
+              max: 25,
               message: "Максимум 50 символов",
             },
           ]}
