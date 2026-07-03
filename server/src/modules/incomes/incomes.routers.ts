@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  changeIncomeAmountController,
   createAccountIncomeController,
   getAccountIncomesController,
   getAccountInitializationController,
@@ -18,3 +19,4 @@ incomesRouter.post("/account-initialization", initializeAccountController);
 incomesRouter.post("/account-income", createAccountIncomeController);
 incomesRouter.get("/", getAccountIncomesController);
 incomesRouter.patch("/rename", renameIncomeController);
+incomesRouter.patch("/amount", changeIncomeAmountController);

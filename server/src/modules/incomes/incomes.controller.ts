@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 import { AppError } from "../../utils/AppError";
 import { sendSuccess } from "../../utils/apiResponse";
 import {
+  changeIncomeAmountSchema,
   createAccountIncomeSchema,
   getAccountIncomesQuerySchema,
   getAccountInitializationQuerySchema,
@@ -10,6 +11,7 @@ import {
   renameIncomeSchema,
 } from "./incomes.schemas";
 import {
+  changeIncomeAmount,
   createAccountIncome,
   getAccountIncomes,
   getAccountInitialization,
@@ -191,6 +193,39 @@ export async function renameIncomeController(
       userId,
       incomeId: value.incomeId,
       newName: value.newName,
+    });
+
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function changeIncomeAmountController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = changeIncomeAmountSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await changeIncomeAmount({
+      userId,
+      incomeId: value.incomeId,
+      incomeAmount: value.incomeAmount,
     });
 
     sendSuccess(res, result);

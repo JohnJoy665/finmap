@@ -33,7 +33,7 @@ export const modalRegistry = {
     <RenameItemModal {...commonProps} {...modal.props} />
   ),
 
-  changeSpendingAmount: (modal, commonProps) => (
+  changeAmount: (modal, commonProps) => (
     <ChangeAmountModal {...commonProps} {...modal.props} />
   ),
 

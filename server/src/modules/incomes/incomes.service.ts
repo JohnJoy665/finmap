@@ -1,6 +1,9 @@
 import { pool } from "../../db/pool";
 import { AppError } from "../../utils/AppError";
-import { getBaseAmountMicro } from "../rates/rates.service";
+import {
+  getBaseAmountMicro,
+  getBaseAmountMicroByIncomeDate,
+} from "../rates/rates.service";
 
 type GetAccountInitializationRequest = {
   userId: string;
@@ -647,5 +650,150 @@ export async function renameIncome({
     }
 
     throw error;
+  }
+}
+
+type ChangeIncomeAmountRequest = {
+  userId: string;
+  incomeId: string;
+  incomeAmount: string;
+};
+
+type IncomeForChangeAmountRow = {
+  id: string;
+  amount: string;
+  currency_code: string;
+  account_id: string;
+  date: Date;
+  conversion_factor: number | null;
+};
+
+type UpdatedAccountRow = {
+  id: string;
+  amount: string;
+};
+
+type UpdatedIncomeRow = {
+  id: string;
+  amount: string;
+};
+
+export async function changeIncomeAmount({
+  userId,
+  incomeId,
+  incomeAmount,
+}: ChangeIncomeAmountRequest) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const incomeResult = await client.query<IncomeForChangeAmountRow>(
+      `
+      SELECT
+        id,
+        amount::text,
+        currency_code::text,
+        account_id,
+        "date",
+        conversion_factor
+      FROM incomes
+      WHERE id = $1
+        AND user_id = $2
+      FOR UPDATE;
+      `,
+      [incomeId, userId]
+    );
+
+    const income = incomeResult.rows[0];
+
+    if (!income) {
+      throw new AppError(404, "INCOME_NOT_FOUND", "Income not found");
+    }
+
+    if (!income.conversion_factor) {
+      throw new AppError(
+        400,
+        "CONVERSION_FACTOR_NOT_FOUND",
+        "Conversion factor not found"
+      );
+    }
+
+    const oldAmount = BigInt(income.amount);
+    const newAmount = BigInt(incomeAmount);
+
+    const deltaAmount = newAmount - oldAmount;
+
+    const baseAmountMicro = await getBaseAmountMicroByIncomeDate(client, {
+      minorAmountOriginal: incomeAmount,
+      currencyCode: income.currency_code.trim(),
+      conversionFactor: income.conversion_factor,
+      incomeDate: income.date,
+    });
+
+    const updatedIncomeResult = await client.query<UpdatedIncomeRow>(
+      `
+      UPDATE incomes
+      SET
+        amount = $1,
+        base_amount_micro = $2
+      WHERE id = $3
+        AND user_id = $4
+      RETURNING
+        id,
+        amount::text;
+      `,
+      [incomeAmount, baseAmountMicro?.toString() ?? null, incomeId, userId]
+    );
+
+    const updatedAccountResult = await client.query<UpdatedAccountRow>(
+      `
+      UPDATE accounts
+      SET
+        amount = amount + $1,
+        last_change_date = CURRENT_TIMESTAMP
+      WHERE id = $2
+        AND user_id = $3
+      RETURNING
+        id,
+        amount::text;
+      `,
+      [deltaAmount.toString(), income.account_id, userId]
+    );
+
+    const updatedAccount = updatedAccountResult.rows[0];
+
+    if (!updatedAccount) {
+      throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
+    }
+
+    await client.query("COMMIT");
+
+    const updatedIncome = updatedIncomeResult.rows[0];
+
+    return {
+      incomeId: updatedIncome.id,
+      incomeAmount: updatedIncome.amount,
+      accountId: updatedAccount.id,
+      accountAmount: updatedAccount.amount,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
   }
 }

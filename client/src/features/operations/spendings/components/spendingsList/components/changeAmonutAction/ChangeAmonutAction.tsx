@@ -44,19 +44,19 @@ function ChangeAmonutAction({
 
   function handleChangeAmount() {
     openModal({
-      type: "changeSpendingAmount",
+      type: "changeAmount",
       strategy: "destroy",
       props: {
         conversionFactor: spending.conversionFactor,
         currencySymbol: spending.currencySymbol,
-        accountAmount: String(
-          Number(spending.amount) / spending.conversionFactor
-        ),
-        spendingId: spending.id,
+        oldAmount: String(Number(spending.amount) / spending.conversionFactor),
+        fieldLable: "Сумма покупки",
+        title: "Изменить сумму покупки",
+        itemId: spending.id,
         onChangeAmount: async (values) => {
           await getChangeSpendingAmount(
-            values.spendingId,
-            values.spendingAmount,
+            values.itemId,
+            values.newAmount,
             spending.conversionFactor
           );
         },

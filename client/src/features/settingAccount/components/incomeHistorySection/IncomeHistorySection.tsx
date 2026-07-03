@@ -10,11 +10,18 @@ import IncomeHistoryListItemActions from "../incomeHistoryListItemActions/Income
 type IncomeHistorySectionProps = {
   incomes: IncomeItem[];
   handleRenameIncome: (IncomeId: string, newName: string) => void;
+  handleChangeIncomeAmount: (
+    incomeId: string,
+    newIncomeAmount: string,
+    accountId: string,
+    newAccountAmount: string
+  ) => void;
 };
 const { Text } = Typography;
 function IncomeHistorySection({
   incomes,
   handleRenameIncome,
+  handleChangeIncomeAmount,
 }: IncomeHistorySectionProps) {
   return (
     <Flex vertical>
@@ -39,6 +46,7 @@ function IncomeHistorySection({
           children: (
             <IncomeHistoryListItemActions
               handleRenameIncome={handleRenameIncome}
+              handleChangeIncomeAmount={handleChangeIncomeAmount}
               key={income.id}
               income={income}
             />

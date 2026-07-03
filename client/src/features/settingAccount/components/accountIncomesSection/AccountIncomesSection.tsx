@@ -5,6 +5,8 @@ import AddIncomeSection from "../addIncomeSection/AddIncomeSection";
 import IncomeHistorySection from "../incomeHistorySection/IncomeHistorySection";
 import styles from "./AccountIncomesSection.module.css";
 import { getAccountIncomes } from "../../api/getAccountIncomes";
+import { useProfileStore } from "../../../../store/profileStore";
+import { useAccountsStore } from "../../../../store/accountsStore";
 
 export type IncomeItem = {
   id: string;
@@ -26,6 +28,13 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
   const [offsetCount, setOffsetCount] = useState<number>(0);
   const [incomes, setIncomes] = useState<IncomeItem[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
+
+  const updateProfileAmount = useProfileStore(
+    (state) => state.updateProfileAmount
+  );
+  const updateListAmountAccounts = useAccountsStore(
+    (store) => store.updateListAmountAccounts
+  );
 
   useEffect(() => {
     async function loadIncomes() {
@@ -74,6 +83,30 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
     );
   }
 
+  function changeIncomeAmount(
+    incomeId: string,
+    newIncomeAmount: string,
+    accountId: string,
+    newAccountAmount: string
+  ) {
+    setIncomes((prev) =>
+      prev.map((income) =>
+        income.id === incomeId ? { ...income, amount: newIncomeAmount } : income
+      )
+    );
+
+    updateProfileAmount({
+      accountId: accountId,
+      newAmount: newAccountAmount,
+    });
+    updateListAmountAccounts([
+      {
+        accountId,
+        amount: newAccountAmount,
+      },
+    ]);
+    // refreshOperations();
+  }
   return (
     <Flex vertical className={styles.container}>
       <AddIncomeSection
@@ -84,6 +117,7 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
 
       <IncomeHistorySection
         handleRenameIncome={renameIncome}
+        handleChangeIncomeAmount={changeIncomeAmount}
         incomes={incomes}
       />
       {((incomes.length >= OFFSET && hasMore) ||

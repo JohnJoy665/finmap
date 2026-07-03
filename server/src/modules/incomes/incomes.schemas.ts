@@ -120,3 +120,31 @@ export const renameIncomeSchema = Joi.object({
     "any.required": "newName is required",
   }),
 });
+
+export const changeIncomeAmountSchema = Joi.object({
+  incomeId: Joi.string().uuid().required().messages({
+    "string.empty": "incomeId is required",
+    "string.guid": "incomeId must be a valid uuid",
+    "any.required": "incomeId is required",
+  }),
+
+  incomeAmount: Joi.string()
+    .pattern(/^[1-9]\d*$/)
+    .custom((value, helpers) => {
+      const amount = BigInt(value);
+
+      const maxAmount = 100_000_000_000n; // 1 миллиард копеек
+
+      if (amount > maxAmount) {
+        return helpers.error("amount.max");
+      }
+
+      return value;
+    })
+    .required()
+    .messages({
+      "string.pattern.base": "Amount must be a positive integer string",
+      "amount.max": "Amount is too large",
+      "any.required": "Amount is required",
+    }),
+});
