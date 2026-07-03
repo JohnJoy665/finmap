@@ -69,7 +69,7 @@ function AccountIncomesSection({ accountId }: AccountIncomesSectionProps) {
   function renameIncome(IncomeId: string, newName: string) {
     setIncomes((prev) =>
       prev.map((income) =>
-        income.id === IncomeId ? { ...income, title: newName } : income
+        income.id === IncomeId ? { ...income, name: newName } : income
       )
     );
   }

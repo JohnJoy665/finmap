@@ -4,6 +4,7 @@ import {
   getAccountIncomesController,
   getAccountInitializationController,
   initializeAccountController,
+  renameIncomeController,
 } from "./incomes.controller";
 
 export const incomesRouter = Router();
@@ -16,3 +17,4 @@ incomesRouter.get(
 incomesRouter.post("/account-initialization", initializeAccountController);
 incomesRouter.post("/account-income", createAccountIncomeController);
 incomesRouter.get("/", getAccountIncomesController);
+incomesRouter.patch("/rename", renameIncomeController);

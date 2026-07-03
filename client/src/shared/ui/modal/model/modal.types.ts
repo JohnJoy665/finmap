@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type ModalType =
   | "confirmAction"
-  | "renameSpending"
+  | "renameItem"
   | "changeSpendingAmount"
   | "changeLocation"
   | "setAccountCurrentAmount";
@@ -32,17 +32,16 @@ export type ConfirmActionModalItem = ModalItem<ConfirmActionModalProps> & {
 
 /////////////////////////////////////////////////
 
-export type RenameSpendingModalProps = {
-  spendingId: string;
-  currentName: string;
-  onRename: (payload: {
-    spendingId: string;
-    name: string;
-  }) => void | Promise<void>;
+export type RenameItemModalProps = {
+  itemId: string;
+  currentValue: string;
+  title: string;
+  placeholder: string;
+  onRename: (payload: { itemId: string; name: string }) => void | Promise<void>;
 };
 
-export type RenameSpendingModalItem = ModalItem<RenameSpendingModalProps> & {
-  type: "renameSpending";
+export type RenameItemModalItem = ModalItem<RenameItemModalProps> & {
+  type: "renameItem";
 };
 
 //////////////////////////////////////////////////
@@ -105,7 +104,7 @@ export type SetAccountCurrentAmountModalItem =
 
 export type AppModalItem =
   | ConfirmActionModalItem
-  | RenameSpendingModalItem
+  | RenameItemModalItem
   | ChangeSpendingAmountModalItem
   | ChangeLocationModalItem
   | SetAccountCurrentAmountModalItem;

@@ -590,3 +590,62 @@ export async function getAccountIncomes({
     throw error;
   }
 }
+
+type RenameIncomePayload = {
+  userId: string;
+  incomeId: string;
+  newName: string;
+};
+
+type RenameIncomeRow = {
+  id: string;
+  name: string | null;
+};
+
+export async function renameIncome({
+  userId,
+  incomeId,
+  newName,
+}: RenameIncomePayload) {
+  try {
+    const normalizedName = newName.trim() === "" ? null : newName.trim();
+
+    const result = await pool.query<RenameIncomeRow>(
+      `
+      UPDATE incomes
+      SET name = $1
+      WHERE id = $2
+        AND user_id = $3
+      RETURNING
+        id,
+        name;
+      `,
+      [normalizedName, incomeId, userId]
+    );
+
+    const updatedIncome = result.rows[0];
+
+    if (!updatedIncome) {
+      throw new AppError(404, "INCOME_NOT_FOUND", "Income not found");
+    }
+
+    return {
+      incomeId: updatedIncome.id,
+      currentName: updatedIncome.name,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}

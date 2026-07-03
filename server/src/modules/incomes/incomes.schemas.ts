@@ -107,3 +107,16 @@ export const getAccountIncomesQuerySchema = Joi.object({
     "any.required": "offsetCount is required",
   }),
 });
+
+export const renameIncomeSchema = Joi.object({
+  incomeId: Joi.string().uuid().required().messages({
+    "string.empty": "incomeId is required",
+    "string.guid": "incomeId must be a valid UUID",
+    "any.required": "incomeId is required",
+  }),
+
+  newName: Joi.string().allow("").max(100).required().messages({
+    "string.max": "newName must be less than or equal to 100 characters",
+    "any.required": "newName is required",
+  }),
+});

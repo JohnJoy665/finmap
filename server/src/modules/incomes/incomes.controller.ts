@@ -7,12 +7,14 @@ import {
   getAccountIncomesQuerySchema,
   getAccountInitializationQuerySchema,
   initializeAccountSchema,
+  renameIncomeSchema,
 } from "./incomes.schemas";
 import {
   createAccountIncome,
   getAccountIncomes,
   getAccountInitialization,
   initializeAccount,
+  renameIncome,
 } from "./incomes.service";
 
 export async function getAccountInitializationController(
@@ -156,6 +158,39 @@ export async function getAccountIncomesController(
       limitCount: value.limitCount,
       offsetCount: value.offsetCount,
       timezone: userSettings.timezone,
+    });
+
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function renameIncomeController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = renameIncomeSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await renameIncome({
+      userId,
+      incomeId: value.incomeId,
+      newName: value.newName,
     });
 
     sendSuccess(res, result);

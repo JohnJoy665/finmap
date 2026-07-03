@@ -4,6 +4,7 @@ import { EditOutlined } from "@ant-design/icons";
 import styles from "./RenameIncomeAction.module.css";
 import type { IncomeItem } from "../accountIncomesSection/AccountIncomesSection";
 import { useModalStore } from "../../../../shared/ui/modal";
+import { renameIncome } from "../../api/renameIncome";
 
 type RenameIncomeActionProps = {
   income: IncomeItem;
@@ -16,19 +17,29 @@ function RenameIncomeAction({
 }: RenameIncomeActionProps) {
   const openModal = useModalStore((store) => store.openModal);
 
-  function getRenamedincome(id, name) {
-    handleRenameIncome(id, name);
+  async function getRenameIncome(incomeId: string, newName: string) {
+    try {
+      const response = await renameIncome({
+        incomeId,
+        newName,
+      });
+      handleRenameIncome(response.data.incomeId, response.data.currentName);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   function handleRenameClick() {
     openModal({
-      type: "renameSpending",
+      type: "renameItem",
       strategy: "destroy",
       props: {
-        spendingId: income.id,
-        currentName: income.name ?? "",
-        onRename: async ({ spendingId, name }) => {
-          await getRenamedincome(spendingId, name);
+        itemId: income.id,
+        currentValue: income.name ?? "",
+        title: "Переименовать пополнение",
+        placeholder: "Название пополнения",
+        onRename: async ({ itemId, name }) => {
+          await getRenameIncome(itemId, name);
         },
       },
     });
