@@ -23,9 +23,9 @@ function ChangeIncomeAmountAction({
   const openModal = useModalStore((store) => store.openModal);
 
   async function getChangeIncomeAmount(
-    incomeId,
-    incomeAmount,
-    conversionFactor
+    incomeId: string,
+    incomeAmount: string,
+    conversionFactor: number
   ) {
     const response = await changeIncomeAmount({
       incomeId,

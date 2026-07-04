@@ -21,7 +21,7 @@ function DeleteIncomeAction({
 }: DeleteIncomeActionProps) {
   const openModal = useModalStore((store) => store.openModal);
 
-  async function getDeleteIncome(incomeId) {
+  async function getDeleteIncome(incomeId: string) {
     try {
       const response = await deleteIncome(incomeId);
       handleDeleteIncome(

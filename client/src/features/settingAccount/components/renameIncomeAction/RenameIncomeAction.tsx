@@ -23,7 +23,10 @@ function RenameIncomeAction({
         incomeId,
         newName,
       });
-      handleRenameIncome(response.data.incomeId, response.data.currentName);
+      handleRenameIncome(
+        response.data.incomeId,
+        response.data.currentName || ""
+      );
     } catch (error) {
       console.log(error);
     }
