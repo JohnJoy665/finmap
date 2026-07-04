@@ -273,6 +273,7 @@ type AccountRowResult = {
   amount: string;
   currency_symbol: string;
   conversion_factor: number;
+  name: string | null;
 };
 
 type AccountResponse = {
@@ -281,6 +282,7 @@ type AccountResponse = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string | null;
 };
 
 export async function changeCurrentAccount({
@@ -300,7 +302,8 @@ export async function changeCurrentAccount({
         a.currency_code,
         a.amount::text AS amount,
         c.currency_symbol,
-        c.conversion_factor
+        c.conversion_factor,
+        a.name
       FROM public.accounts a
       JOIN public.currencies c
         ON c.code = a.currency_code
@@ -353,6 +356,7 @@ export async function changeCurrentAccount({
       amount: account.amount,
       currencySymbol: account.currency_symbol,
       conversionFactor: account.conversion_factor,
+      name: account.name,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");
