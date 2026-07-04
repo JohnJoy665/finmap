@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 import type { AppModalItem } from "../model/modal.types";
 import ConfirmActionModal from "../modals/ConfirmActionModal";
-import RenameSpendingModal from "../modals/RenameSpendingModal";
+import RenameItemModal from "../modals/RenameItemModal";
 import ChangeAmountModal from "../modals/ChangeAmountModal";
 import ChangeLocationModal from "../modals/ChangeLocationModal";
+import SetAccountCurrentAmountModal from "../modals/SetAccountCurrentAmountModal";
 
 type CommonModalProps = {
   modalId: string;
@@ -28,15 +29,18 @@ export const modalRegistry = {
     <ConfirmActionModal {...commonProps} {...modal.props} />
   ),
 
-  renameSpending: (modal, commonProps) => (
-    <RenameSpendingModal {...commonProps} {...modal.props} />
+  renameItem: (modal, commonProps) => (
+    <RenameItemModal {...commonProps} {...modal.props} />
   ),
 
-  changeSpendingAmount: (modal, commonProps) => (
+  changeAmount: (modal, commonProps) => (
     <ChangeAmountModal {...commonProps} {...modal.props} />
   ),
 
   changeLocation: (modal, commonProps) => (
     <ChangeLocationModal {...commonProps} {...modal.props} />
+  ),
+  setAccountCurrentAmount: (modal, commonProps) => (
+    <SetAccountCurrentAmountModal {...commonProps} {...modal.props} />
   ),
 } satisfies ModalRendererMap;

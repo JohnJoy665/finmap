@@ -6,11 +6,17 @@ type ChangedAccount = {
   amount: string;
 };
 
+type changeNameParams = {
+  accountId: string;
+  name: string;
+};
+
 type AccountStore = {
   accounts: Account[];
   setAccounts: (account: Account[]) => void;
   updateListAmountAccounts: (payload: ChangedAccount[]) => void;
   addToListAmountAccounts: (payload: Account) => void;
+  updateNameAccount: (payload: changeNameParams) => void;
   reset: () => void;
 };
 
@@ -23,6 +29,19 @@ export const useAccountsStore = create<AccountStore>((set) => ({
 
   setAccounts: (accounts) => {
     set({ accounts });
+  },
+
+  updateNameAccount: (payload) => {
+    set((state) => ({
+      accounts: state.accounts.map((account) => {
+        if (account.id !== payload.accountId) return account;
+
+        return {
+          ...account,
+          name: payload.name,
+        };
+      }),
+    }));
   },
 
   updateListAmountAccounts: (payload) => {

@@ -1,0 +1,80 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.balanceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balanceLabel {
+  color: var(--ant-color-text-secondary);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.balanceValue {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.balanceAmount {
+  color: var(--ant-color-text);
+  font-size: 34px;
+  line-height: 1.08;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.currencyText {
+  flex-shrink: 0;
+  color: var(--ant-color-text-secondary);
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.accountName {
+  margin-top: 2px;
+  /* color: var(--ant-color-text-secondary); */
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.collapse {
+  width: 100%;
+  background: transparent;
+}
+
+.rootCollapseHeader {
+  padding: 0 !important;
+  align-items: center !important;
+}
+
+.rootCollapseBody {
+  padding: 0 !important;
+}
+
+.collapseTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ant-color-text);
+}
+
+.collapseIcon {
+  line-height: 1;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--ant-padding-md);
+}

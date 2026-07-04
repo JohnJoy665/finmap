@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useModalStore } from "../model/modalStore";
 import BaseModal from "../ui/BaseModal";
 import AmountInput from "../../../components/amountInput/AmountInput";
-import type { ChangeSpendingAmountProps } from "../model/modal.types";
+import type { ChangeAmountProps } from "../model/modal.types";
 
-type ChangeSpendingAmountFormValues = {
+type ChangeAmountFormValues = {
   currencySymbol: string;
   accountAmount: string;
 };
 
-type Props = ChangeSpendingAmountProps & {
+type Props = ChangeAmountProps & {
   modalId: string;
   open: boolean;
 };
@@ -20,12 +20,14 @@ function ChangeAmountModal({
   modalId,
   open,
   currencySymbol,
-  accountAmount,
-  spendingId,
+  oldAmount,
+  itemId,
   conversionFactor,
+  fieldLable,
+  title,
   onChangeAmount,
 }: Props) {
-  const [form] = Form.useForm<ChangeSpendingAmountFormValues>();
+  const [form] = Form.useForm<ChangeAmountFormValues>();
   const closeModalById = useModalStore((store) => store.closeModalById);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +45,7 @@ function ChangeAmountModal({
     const values = form.getFieldsValue();
 
     const nextAmount = values.accountAmount?.trim();
-    const initialAmount = accountAmount.trim();
+    const initialAmount = oldAmount.trim();
 
     const isEmpty = !nextAmount;
     const isNotChanged = nextAmount === initialAmount;
@@ -52,15 +54,14 @@ function ChangeAmountModal({
     setIsSubmitDisabled(hasErrors || isEmpty || isNotChanged || isNull);
   }
 
-  async function handleSubmit(values: ChangeSpendingAmountFormValues) {
+  async function handleSubmit(values: ChangeAmountFormValues) {
     try {
       setIsLoading(true);
 
       await onChangeAmount({
-        spendingId,
+        itemId,
         currencySymbol: values.currencySymbol,
-        spendingAmount: values.accountAmount,
-        accountAmount: values.accountAmount,
+        newAmount: values.accountAmount,
       });
 
       closeModalById(modalId);
@@ -72,7 +73,7 @@ function ChangeAmountModal({
   return (
     <BaseModal
       open={open}
-      title="Изменить сумму покупки"
+      title={title}
       onCancel={handleCancel}
       footer={null}
       keepAlive={false}
@@ -82,13 +83,13 @@ function ChangeAmountModal({
         layout="vertical"
         initialValues={{
           currencySymbol,
-          accountAmount,
+          accountAmount: oldAmount,
           conversionFactor,
         }}
         onFinish={handleSubmit}
         onFieldsChange={handleFieldsChange}
       >
-        <AmountInput lable="Сумма покупки" />
+        <AmountInput lable={fieldLable} />
 
         <Form.Item name="currencySymbol" hidden>
           <input />

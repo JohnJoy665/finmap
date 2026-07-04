@@ -2,6 +2,7 @@ import type { PoolClient } from "pg";
 import { AppError } from "../../utils/AppError";
 import { pool } from "../../db/pool";
 import { getBaseAmountMicro } from "../rates/rates.service";
+import { assertAccountInitialized } from "../../utils/assertAccountInitialized";
 
 type changedAccountRow = {
   id: string;
@@ -48,6 +49,7 @@ export type Account = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string;
 };
 
 type AccountRow = {
@@ -56,6 +58,7 @@ type AccountRow = {
   amount: string;
   currency_symbol: string;
   conversion_factor: number;
+  name: string;
 };
 
 export async function getAccounts({
@@ -69,7 +72,8 @@ export async function getAccounts({
         a.currency_code,
         a.amount AS amount,
         c.currency_symbol,
-        c.conversion_factor
+        c.conversion_factor,
+        a.name
       FROM accounts a
       INNER JOIN currencies c
         ON c.code = a.currency_code
@@ -85,6 +89,7 @@ export async function getAccounts({
       amount: row.amount,
       currencySymbol: row.currency_symbol,
       conversionFactor: row.conversion_factor,
+      name: row.name,
     }));
   } catch (error: any) {
     if (error instanceof AppError) {
@@ -268,6 +273,7 @@ type AccountRowResult = {
   amount: string;
   currency_symbol: string;
   conversion_factor: number;
+  name: string | null;
 };
 
 type AccountResponse = {
@@ -276,6 +282,7 @@ type AccountResponse = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string | null;
 };
 
 export async function changeCurrentAccount({
@@ -295,7 +302,8 @@ export async function changeCurrentAccount({
         a.currency_code,
         a.amount::text AS amount,
         c.currency_symbol,
-        c.conversion_factor
+        c.conversion_factor,
+        a.name
       FROM public.accounts a
       JOIN public.currencies c
         ON c.code = a.currency_code
@@ -348,6 +356,215 @@ export async function changeCurrentAccount({
       amount: account.amount,
       currencySymbol: account.currency_symbol,
       conversionFactor: account.conversion_factor,
+      name: account.name,
+    };
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+type UpdateAccountNameRequest = {
+  userId: string;
+  accountId: string;
+  name: string;
+};
+
+type UpdateAccountNameRow = {
+  account_id: string;
+  name: string;
+};
+
+type UpdateAccountNameResponse = {
+  accountId: string;
+  name: string;
+};
+
+export async function updateAccountName({
+  userId,
+  accountId,
+  name,
+}: UpdateAccountNameRequest): Promise<UpdateAccountNameResponse> {
+  try {
+    const result = await pool.query<UpdateAccountNameRow>(
+      `
+      UPDATE accounts
+      SET
+        name = $1,
+        last_change_date = CURRENT_TIMESTAMP
+      WHERE id = $2
+        AND user_id = $3
+      RETURNING
+        id AS account_id,
+        name
+      `,
+      [name, accountId, userId]
+    );
+
+    const account = result.rows[0];
+
+    if (!account) {
+      throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
+    }
+
+    return {
+      accountId: account.account_id,
+      name: account.name,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}
+
+type CorrectAccountAmountRequest = {
+  userId: string;
+  accountId: string;
+  amount: string;
+};
+
+type AccountForCorrectionRow = {
+  id: string;
+  amount: string;
+  currency_code: string;
+};
+
+type CorrectAccountAmountResponse = {
+  accountId: string;
+  accountAmount: string;
+};
+
+export async function correctAccountAmount({
+  userId,
+  accountId,
+  amount,
+}: CorrectAccountAmountRequest): Promise<CorrectAccountAmountResponse> {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const accountResult = await client.query<AccountForCorrectionRow>(
+      `
+        SELECT
+          id,
+          amount::text,
+          currency_code::text
+        FROM accounts
+        WHERE id = $1
+          AND user_id = $2
+        FOR UPDATE
+      `,
+      [accountId, userId]
+    );
+
+    const account = accountResult.rows[0];
+
+    if (!account) {
+      throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
+    }
+
+    await assertAccountInitialized({ client, accountId, userId });
+
+    const oldAmount = BigInt(account.amount);
+    const newAmount = BigInt(amount);
+    const correctionAmount = newAmount - oldAmount;
+
+    if (correctionAmount === 0n) {
+      throw new AppError(
+        400,
+        "ACCOUNT_AMOUNT_NOT_CHANGED",
+        "Account amount was not changed"
+      );
+    }
+
+    await client.query(
+      `
+        UPDATE accounts
+        SET
+          amount = $1,
+          last_change_date = NOW()
+        WHERE id = $2
+          AND user_id = $3
+      `,
+      [amount, accountId, userId]
+    );
+
+    await client.query(
+      `
+        INSERT INTO incomes (
+          amount,
+          user_id,
+          account_id,
+          statistical,
+          date,
+          currency_code,
+          completed,
+          confirmed,
+          base_amount_micro,
+          conversion_factor,
+          city_id,
+          is_initial,
+          is_adjustment,
+          name
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          false,
+          NOW(),
+          $4,
+          true,
+          true,
+          null,
+          null,
+          null,
+          false,
+          true,
+          $5
+        )
+      `,
+      [
+        correctionAmount.toString(),
+        userId,
+        accountId,
+        account.currency_code,
+        "Correct account",
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      accountId,
+      accountAmount: amount,
     };
   } catch (error: any) {
     await client.query("ROLLBACK");

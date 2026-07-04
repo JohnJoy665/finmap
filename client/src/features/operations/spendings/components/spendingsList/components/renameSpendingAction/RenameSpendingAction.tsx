@@ -30,13 +30,15 @@ function RenameSpendingAction({
 
   function handleRenameClick() {
     openModal({
-      type: "renameSpending",
+      type: "renameItem",
       strategy: "destroy",
       props: {
-        spendingId: spending.id,
-        currentName: spending.title ?? "",
-        onRename: async ({ spendingId, name }) => {
-          await getRenamedSpending(spendingId, name);
+        itemId: spending.id,
+        currentValue: spending.title ?? "",
+        title: "Переименовать покупку",
+        placeholder: "Название покупки",
+        onRename: async ({ itemId, name }) => {
+          await getRenamedSpending(itemId, name);
         },
       },
     });

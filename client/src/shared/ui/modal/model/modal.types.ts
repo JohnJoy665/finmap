@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 export type ModalType =
   | "confirmAction"
-  | "renameSpending"
-  | "changeSpendingAmount"
-  | "changeLocation";
+  | "renameItem"
+  | "changeAmount"
+  | "changeLocation"
+  | "setAccountCurrentAmount";
 
 export type ModalStrategy = "destroy" | "keepAlive";
 
@@ -31,38 +32,37 @@ export type ConfirmActionModalItem = ModalItem<ConfirmActionModalProps> & {
 
 /////////////////////////////////////////////////
 
-export type RenameSpendingModalProps = {
-  spendingId: string;
-  currentName: string;
-  onRename: (payload: {
-    spendingId: string;
-    name: string;
-  }) => void | Promise<void>;
+export type RenameItemModalProps = {
+  itemId: string;
+  currentValue: string;
+  title: string;
+  placeholder: string;
+  onRename: (payload: { itemId: string; name: string }) => void | Promise<void>;
 };
 
-export type RenameSpendingModalItem = ModalItem<RenameSpendingModalProps> & {
-  type: "renameSpending";
+export type RenameItemModalItem = ModalItem<RenameItemModalProps> & {
+  type: "renameItem";
 };
 
 //////////////////////////////////////////////////
 
-export type ChangeSpendingAmountProps = {
-  spendingId: string;
+export type ChangeAmountProps = {
+  itemId: string;
   currencySymbol: string;
-  accountAmount: string;
+  oldAmount: string;
   conversionFactor: number;
+  fieldLable: string;
+  title: string;
   onChangeAmount: (payload: {
-    spendingId: string;
+    itemId: string;
     currencySymbol: string;
-    spendingAmount: string;
-    accountAmount: string;
+    newAmount: string;
   }) => void | Promise<void>;
 };
 
-export type ChangeSpendingAmountModalItem =
-  ModalItem<ChangeSpendingAmountProps> & {
-    type: "changeSpendingAmount";
-  };
+export type ChangeAmountModalItem = ModalItem<ChangeAmountProps> & {
+  type: "changeAmount";
+};
 
 ///////////////////////////////////////////////////////
 
@@ -85,8 +85,26 @@ export type ChangeLocationModalItem = ModalItem<ChangeLocationModalProps> & {
 
 //////////////////////////////////////////////////////
 
+export type SetAccountCurrentAmountModalProps = {
+  accountId: string;
+  currencySymbol: string;
+  conversionFactor: number;
+  currencyCode: string;
+  onSubmit: (payload: {
+    accountId: string;
+    amount: string;
+  }) => void | Promise<void>;
+  onCancel?: () => void;
+};
+
+export type SetAccountCurrentAmountModalItem =
+  ModalItem<SetAccountCurrentAmountModalProps> & {
+    type: "setAccountCurrentAmount";
+  };
+
 export type AppModalItem =
   | ConfirmActionModalItem
-  | RenameSpendingModalItem
-  | ChangeSpendingAmountModalItem
-  | ChangeLocationModalItem;
+  | RenameItemModalItem
+  | ChangeAmountModalItem
+  | ChangeLocationModalItem
+  | SetAccountCurrentAmountModalItem;

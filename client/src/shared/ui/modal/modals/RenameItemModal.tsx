@@ -1,28 +1,30 @@
 import { Button, Flex, Input } from "antd";
 import { useState } from "react";
-import type { RenameSpendingModalProps } from "../model/modal.types";
+import type { RenameItemModalProps } from "../model/modal.types";
 import { useModalStore } from "../model/modalStore";
 import BaseModal from "../ui/BaseModal";
 
-type Props = RenameSpendingModalProps & {
+type Props = RenameItemModalProps & {
   modalId: string;
   open: boolean;
 };
 
-function RenameSpendingModal({
+function RenameItemModal({
   modalId,
   open,
-  spendingId,
-  currentName,
+  itemId,
+  currentValue,
+  title,
+  placeholder,
   onRename,
 }: Props) {
   const closeModalById = useModalStore((store) => store.closeModalById);
 
-  const [name, setName] = useState(currentName);
+  const [name, setName] = useState(currentValue);
   const [isLoading, setIsLoading] = useState(false);
 
   const trimmedName = name.trim();
-  const isNameChanged = trimmedName !== currentName.trim();
+  const isNameChanged = trimmedName !== currentValue.trim();
   const isSubmitDisabled = !trimmedName || !isNameChanged;
 
   function handleCancel() {
@@ -36,7 +38,7 @@ function RenameSpendingModal({
       setIsLoading(true);
 
       await onRename({
-        spendingId,
+        itemId,
         name: trimmedName,
       });
 
@@ -49,7 +51,7 @@ function RenameSpendingModal({
   return (
     <BaseModal
       open={open}
-      title="Переименовать покупку?"
+      title={title}
       onCancel={handleCancel}
       footer={null}
       keepAlive={false}
@@ -57,7 +59,7 @@ function RenameSpendingModal({
       <Input
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="Название покупки"
+        placeholder={placeholder}
         onPressEnter={handleConfirm}
       />
 
@@ -77,4 +79,4 @@ function RenameSpendingModal({
   );
 }
 
-export default RenameSpendingModal;
+export default RenameItemModal;

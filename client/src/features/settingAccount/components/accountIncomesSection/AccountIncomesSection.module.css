@@ -1,0 +1,32 @@
+.collapse {
+  width: 100%;
+  background: transparent;
+}
+
+.rootCollapseHeader {
+  padding: 0 !important;
+  align-items: center !important;
+}
+
+.rootCollapseBody {
+  padding: 0 !important;
+}
+
+.collapseTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ant-color-text);
+}
+
+.collapseIcon {
+  line-height: 1;
+}
+
+.panelContent {
+  padding-top: var(--ant-padding-md);
+  gap: var(--ant-padding-lg);
+}
+
+.showMore {
+  padding: 0;
+}

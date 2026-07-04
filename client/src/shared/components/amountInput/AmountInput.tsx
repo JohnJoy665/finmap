@@ -5,9 +5,10 @@ import type { KeyboardEvent, ClipboardEvent } from "react";
 
 type AmountInputProps = {
   lable?: string;
+  required?: boolean;
 };
 
-function AmountInput({ lable }: AmountInputProps) {
+function AmountInput({ lable, required = false }: AmountInputProps) {
   const form = Form.useFormInstance();
   const currencySymbol = Form.useWatch("currencySymbol", form) || "";
   const conversionFactor = Form.useWatch("conversionFactor", form);
@@ -112,6 +113,7 @@ function AmountInput({ lable }: AmountInputProps) {
       label={lable || null}
       validateTrigger="onChange"
       getValueFromEvent={(value: string | null) => value ?? ""}
+      required={required}
       rules={[
         {
           validator: amountValidate,

@@ -31,16 +31,27 @@ type Location = {
   cityId: number;
 };
 
+type UpdateAccountNamePayload = {
+  accountId: string;
+  name: string;
+};
+
+type UpdateProfileAmountParams = {
+  accountId: string | null;
+  newAmount: string;
+};
+
 type ProfileState = {
   user: User | null;
   account: Account | null;
   settings: Settings | null;
   setProfile: (payload: ProfilePayload) => void;
-  updateProfileAmount: (amount: string) => void;
+  updateProfileAmount: (payload: UpdateProfileAmountParams) => void;
   setupRequired: boolean | null;
   clearProfile: () => void;
   changeProfileAccount: (payload: Account) => void;
   updateLocation: (payload: Location) => void;
+  updateProfileAccountName: (payload: UpdateAccountNamePayload) => void;
   reset: () => void;
 };
 
@@ -54,13 +65,9 @@ const initialState = {
 export const useProfileStore = create<ProfileState>((set) => ({
   ...initialState,
 
-  setProfile: ({ user, account, settings, setupRequired }) => {
-    set((state) => ({ ...state, user, account, settings, setupRequired }));
-  },
-
-  updateProfileAmount: (amount) => {
+  updateProfileAccountName: ({ accountId, name }) => {
     set((state) => {
-      if (!state.account) {
+      if (!state.account || state.account.id !== accountId) {
         return state;
       }
 
@@ -68,7 +75,31 @@ export const useProfileStore = create<ProfileState>((set) => ({
         ...state,
         account: {
           ...state.account,
-          amount,
+          name,
+        },
+      };
+    });
+  },
+
+  setProfile: ({ user, account, settings, setupRequired }) => {
+    set((state) => ({ ...state, user, account, settings, setupRequired }));
+  },
+
+  updateProfileAmount: (payload) => {
+    set((state) => {
+      if (
+        !state.account ||
+        !payload.accountId ||
+        state.account.id !== payload.accountId
+      ) {
+        return state;
+      }
+
+      return {
+        ...state,
+        account: {
+          ...state.account,
+          amount: payload.newAmount,
         },
       };
     });

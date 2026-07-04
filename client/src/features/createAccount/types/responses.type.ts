@@ -4,6 +4,7 @@ export type ChangeCurrentAccountResponseData = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string | null;
 };
 
 export type CreateAccountResponseData = {
@@ -12,4 +13,5 @@ export type CreateAccountResponseData = {
   amount: string;
   currencySymbol: string;
   conversionFactor: number;
+  name: string | null;
 };

@@ -37,6 +37,7 @@ function AccountSelector() {
     >
       <AccountButton
         amount={activeAccount.amount}
+        name={activeAccount.name || ""}
         currency={activeAccount.currencySymbol}
         conversionFactor={activeAccount.conversionFactor}
       />

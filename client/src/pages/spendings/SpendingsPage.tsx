@@ -76,18 +76,20 @@ function SpendingsPage() {
     requestCategories();
   }, []);
 
+  // TODO добавить механику, при которой сброс групп и фильтров происходит и при переходе просто назад.
+
   function handleCancel() {
     clearGroupsFilter();
     setGroups([]);
     navigate("/app/operations");
   }
 
-  function changeAccountAmmount(newAmmount: string, activeAccount: string) {
-    updateProfileAmount(newAmmount);
+  function changeAccountAmmount(newAmount: string, activeAccount: string) {
+    updateProfileAmount({ accountId: activeAccount, newAmount });
     updateListAmountAccounts([
       {
         accountId: activeAccount,
-        amount: newAmmount,
+        amount: newAmount,
       },
     ]);
   }

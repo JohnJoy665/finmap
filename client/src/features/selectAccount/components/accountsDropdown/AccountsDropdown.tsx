@@ -6,6 +6,7 @@ import React from "react";
 import { Settings } from "lucide-react";
 import { changeCurrentAccount } from "../../../createAccount/api/changeCurrentAccount";
 import { useProfileStore } from "../../../../store/profileStore";
+import { fromMinorToMajorNormalize } from "../../../../utils/toMinorAmount";
 
 type AccountsDropdownProps = {
   accounts: Account[];
@@ -55,12 +56,10 @@ function AccountsDropdown({
   return (
     <div className={styles.dropdown}>
       {accounts.map((account) => {
-        const displayAmount = Number(account.amount) / account.conversionFactor;
-        const fraction = String(account.conversionFactor).length - 1;
-        const formattedAmount = new Intl.NumberFormat("ru-RU", {
-          minimumFractionDigits: fraction,
-          maximumFractionDigits: fraction,
-        }).format(displayAmount);
+        const formattedAmount = fromMinorToMajorNormalize(
+          account.amount,
+          account.conversionFactor
+        );
 
         const isActive = account.id === activeAccount?.id;
 
@@ -71,12 +70,22 @@ function AccountsDropdown({
               className={styles.accountButton}
               onClick={() => setActiveAccount(account.id)}
             >
-              <span className={styles.accountMain}>
-                <span className={styles.currency}>
-                  {account.currencySymbol} {account.currencyCode}
+              <span className={styles.accountInfo}>
+                <span className={styles.accountHeader}>
+                  <span className={styles.currency}>
+                    {account.currencySymbol === account.currencyCode
+                      ? account.currencyCode
+                      : account.currencySymbol + " " + account.currencyCode}
+                  </span>
+
+                  {isActive && <span className={styles.active}>Активный</span>}
                 </span>
 
-                {isActive && <span className={styles.active}>Активный</span>}
+                {account.name && (
+                  <span className={styles.accountName} title={account.name}>
+                    {account.name}
+                  </span>
+                )}
               </span>
 
               <span className={styles.amount}>{formattedAmount}</span>
