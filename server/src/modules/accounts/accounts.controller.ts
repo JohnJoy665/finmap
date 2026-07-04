@@ -3,12 +3,14 @@ import { AppError } from "../../utils/AppError";
 import { sendSuccess } from "../../utils/apiResponse";
 import {
   changeCurrentAccount,
+  correctAccountAmount,
   createAccount,
   getAccounts,
   updateAccountName,
 } from "./accounts.service";
 import {
   changeCurrentAccountSchema,
+  correctAccountAmountSchema,
   createAcountSchema,
   updateAccountNameSchema,
 } from "./accounts.schemas";
@@ -114,6 +116,36 @@ export async function updateAccountNameController(
     });
 
     sendSuccess(res, data);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function correctAccountAmountController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = correctAccountAmountSchema.validate(req.body);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const result = await correctAccountAmount({
+      userId,
+      accountId: value.accountId,
+      amount: value.amount,
+    });
+
+    sendSuccess(res, result, "Account amount corrected successfully");
   } catch (error) {
     next(error);
   }

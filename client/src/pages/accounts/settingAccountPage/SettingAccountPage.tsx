@@ -1,24 +1,19 @@
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+
 import styles from "./SettingAccountPage.module.css";
 import { getAccountInitialization } from "../../../features/settingAccount/api/getAccountInitialization";
 import { useModalStore } from "../../../shared/ui/modal";
 import { useAccountsStore } from "../../../store/accountsStore";
 import { initializeAccount } from "../../../features/settingAccount/api/initializeAccount";
 import { useProfileStore } from "../../../store/profileStore";
-import { Typography } from "antd";
 import ContainerSettingAccount from "../../../features/settingAccount/components/containerSettingAccount/ContainerSettingAccount";
-
-const { Title } = Typography;
 
 type SettingAccountPageState = {
   accountId: string | null;
 };
 
 function SettingAccountPage() {
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -43,91 +38,94 @@ function SettingAccountPage() {
 
   const hasOpenedInitModalRef = useRef(false);
 
-  function handleCancelInitModal() {
+  const handleCancelInitModal = useCallback(() => {
     navigate("/app", { replace: true });
-  }
+  }, [navigate]);
 
-  function openInitModal({
-    accountId,
-    conversionFactor,
-    currencyCode,
-    currencySymbol,
-  }: {
-    accountId: string;
-    conversionFactor: number;
-    currencyCode: string;
-    currencySymbol: string;
-  }) {
-    if (hasOpenedInitModalRef.current) return;
+  const openInitModal = useCallback(
+    ({
+      accountId,
+      conversionFactor,
+      currencyCode,
+      currencySymbol,
+    }: {
+      accountId: string;
+      conversionFactor: number;
+      currencyCode: string;
+      currencySymbol: string;
+    }) => {
+      if (hasOpenedInitModalRef.current) return;
 
-    hasOpenedInitModalRef.current = true;
+      hasOpenedInitModalRef.current = true;
 
-    openModal({
-      type: "setAccountCurrentAmount",
-      props: {
-        accountId,
-        currencyCode,
-        currencySymbol,
-        conversionFactor,
-        onSubmit: async ({ accountId, amount }) => {
-          const amountMinor = String(Number(amount) * conversionFactor);
+      openModal({
+        type: "setAccountCurrentAmount",
+        props: {
+          accountId,
+          currencyCode,
+          currencySymbol,
+          conversionFactor,
+          onSubmit: async ({ accountId, amount }) => {
+            const amountMinor = String(
+              Math.round(Number(amount) * conversionFactor)
+            );
 
-          const response = await initializeAccount({
-            accountId,
-            amount: amountMinor,
-          });
-
-          if (response?.data.isInitialized) {
-            setIsInitialized(true);
-            updateProfileAmount({
-              accountId: response.data.accountId,
-              newAmount: response.data.amount,
+            const response = await initializeAccount({
+              accountId,
+              amount: amountMinor,
             });
-            updateListAmountAccounts([
-              {
-                accountId,
-                amount: response.data.amount,
-              },
-            ]);
-          }
+
+            if (response?.data.isInitialized) {
+              updateProfileAmount({
+                accountId: response.data.accountId,
+                newAmount: response.data.amount,
+              });
+
+              updateListAmountAccounts([
+                {
+                  accountId,
+                  amount: response.data.amount,
+                },
+              ]);
+            }
+          },
+          onCancel: handleCancelInitModal,
         },
-        onCancel: handleCancelInitModal,
-      },
-    });
-  }
+      });
+    },
+    [
+      openModal,
+      updateProfileAmount,
+      updateListAmountAccounts,
+      handleCancelInitModal,
+    ]
+  );
+
+  useEffect(() => {
+    hasOpenedInitModalRef.current = false;
+  }, [accountId]);
 
   useEffect(() => {
     let isCancelled = false;
 
     async function loadAccountInitialization() {
-      if (!accountId) {
-        setIsLoading(false);
-        return;
-      }
+      if (!accountId) return;
 
       if (!currentAccount) {
         if (accountsCount === 0) return;
 
-        setIsLoading(false);
         navigate("/app", { replace: true });
         return;
       }
 
       try {
-        setIsLoading(true);
-
         const response = await getAccountInitialization({
           accountId,
         });
 
         if (isCancelled) return;
 
-        if (response.data.isInitialized) {
-          setIsInitialized(true);
-          return;
-        }
-
-        setIsInitialized(false);
+        if (response.data.isInitialized) return;
 
         openInitModal({
           accountId: response.data.accountId,
@@ -140,10 +138,6 @@ function SettingAccountPage() {
 
         console.log(error);
         navigate("/app", { replace: true });
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
       }
     }
 
@@ -160,6 +154,7 @@ function SettingAccountPage() {
     currentAccount?.currencySymbol,
     accountsCount,
     navigate,
+    openInitModal,
   ]);
 
   if (!accountId) {

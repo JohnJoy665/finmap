@@ -1,14 +1,21 @@
-import { Flex } from "antd";
+import { Button, Flex } from "antd";
 
 import AccountInfoSection from "../accountInfoSection/AccountInfoSection";
 import styles from "./ContainerSettingAccount.module.css";
 import AccountIncomesSection from "../accountIncomesSection/AccountIncomesSection";
+import AccountCorrectionSection from "../accountCorrectionSection/AccountCorrectionSection";
+import { useNavigate } from "react-router-dom";
 
 type ContainerSettingAccountProps = {
   accountId: string;
 };
 
 function ContainerSettingAccount({ accountId }: ContainerSettingAccountProps) {
+  const navigate = useNavigate();
+  function handleClose() {
+    navigate("/app");
+  }
+
   return (
     <Flex vertical className={styles.container}>
       <AccountInfoSection
@@ -20,6 +27,17 @@ function ContainerSettingAccount({ accountId }: ContainerSettingAccountProps) {
         key={`account-incomes-${accountId}`}
         accountId={accountId}
       />
+
+      <AccountCorrectionSection
+        key={`account-correction-${accountId}`}
+        accountId={accountId}
+      />
+
+      <Flex gap="middle">
+        <Button block onClick={handleClose}>
+          Назад
+        </Button>
+      </Flex>
     </Flex>
   );
 }

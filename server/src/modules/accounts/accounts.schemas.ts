@@ -75,3 +75,30 @@ export const updateAccountNameSchema = Joi.object({
       "any.required": "Введите название счета",
     }),
 });
+
+export const correctAccountAmountSchema = Joi.object({
+  accountId: Joi.string().uuid().required().messages({
+    "string.guid": "Account ID must be a valid UUID",
+    "any.required": "Account ID is required",
+  }),
+
+  amount: Joi.string()
+    .pattern(/^(0|[1-9]\d*)$/)
+    .custom((value, helpers) => {
+      const amount = BigInt(value);
+
+      const maxAmount = 100_000_000_000n; // 1 миллиард копеек
+
+      if (amount > maxAmount) {
+        return helpers.error("amount.max");
+      }
+
+      return value;
+    })
+    .required()
+    .messages({
+      "string.pattern.base": "Amount must be a non-negative integer string",
+      "amount.max": "Amount is too large",
+      "any.required": "Amount is required",
+    }),
+});

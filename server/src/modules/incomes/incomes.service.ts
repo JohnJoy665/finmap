@@ -1,5 +1,6 @@
 import { pool } from "../../db/pool";
 import { AppError } from "../../utils/AppError";
+import { assertAccountInitialized } from "../../utils/assertAccountInitialized";
 import { changeAccountAmount } from "../accounts/accounts.service";
 import {
   getBaseAmountMicro,
@@ -337,6 +338,8 @@ export async function createAccountIncome({
     if (!account) {
       throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
     }
+
+    await assertAccountInitialized({ client, accountId, userId });
 
     const baseAmountMicro = await getBaseAmountMicro(
       client,
