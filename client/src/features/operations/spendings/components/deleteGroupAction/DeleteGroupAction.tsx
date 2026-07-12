@@ -40,12 +40,12 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
         (item) => item.accountId === activeAccount
       );
 
-      if (!activeAccountAmount) return;
-
-      updateProfileAmount({
-        accountId: activeAccountAmount.accountId,
-        newAmount: activeAccountAmount.amount,
-      });
+      if (activeAccountAmount) {
+        updateProfileAmount({
+          accountId: activeAccountAmount?.accountId,
+          newAmount: activeAccountAmount?.amount,
+        });
+      }
 
       updateListAmountAccounts(deletedGoup.data.accounts);
       return deletedGoup;
