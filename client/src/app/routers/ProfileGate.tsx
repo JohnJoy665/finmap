@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useProfileStore } from "../../store/profileStore";
-import { getProfileRequest, updateProfileTimezone } from "../../api/profileApi";
+import { getProfileRequest } from "../../api/profileApi";
 import ProfileEnvironmentWatcher from "./ProfileEnvironmentWatcher";
 
 function ProfileGate() {
@@ -9,56 +9,27 @@ function ProfileGate() {
 
   const setProfile = useProfileStore((state) => state.setProfile);
   const setupRequired = useProfileStore((state) => state.setupRequired);
-  const lastCheckPosition = useProfileStore(
-    (state) => state.settings?.lastCheckPosition ?? null
-  );
-  const languageCode = useProfileStore((state) => state.settings?.languageCode);
+
+  const settings = useProfileStore((state) => state.settings);
 
   useEffect(() => {
     if (setupRequired !== null) return;
 
     async function getProfile() {
-      const response = await getProfileRequest();
-      const profile = response.data;
-
-      const settings = profile.settings ?? null;
-
-      if (!settings) {
-        setProfile({
-          ...profile,
-          settings: null,
-        });
-
-        return;
+      try {
+        const response = await getProfileRequest();
+        setProfile(response.data);
+      } catch (error) {
+        console.error("Profile loading failed", error);
       }
-
-      const browserTimezone =
-        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-
-      if (settings.timezone !== browserTimezone) {
-        const timezoneResponse = await updateProfileTimezone(browserTimezone);
-
-        setProfile({
-          ...profile,
-          settings: {
-            ...settings,
-            timezone: timezoneResponse.data.timezone,
-          },
-        });
-
-        return;
-      }
-
-      setProfile({
-        ...profile,
-        settings,
-      });
     }
 
-    getProfile();
+    void getProfile();
   }, [setProfile, setupRequired]);
 
-  if (setupRequired === null) return null;
+  if (setupRequired === null) {
+    return null;
+  }
 
   const isUserSetupPage = location.pathname === "/app/user-setup";
 
@@ -72,12 +43,13 @@ function ProfileGate() {
 
   return (
     <>
-      {!setupRequired && languageCode && (
+      {!setupRequired && settings?.languageCode && (
         <ProfileEnvironmentWatcher
-          lastCheckPosition={lastCheckPosition}
-          languageCode={languageCode}
+          profileTimezone={settings.timezone}
+          languageCode={settings.languageCode}
         />
       )}
+
       <Outlet />
     </>
   );

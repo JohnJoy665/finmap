@@ -52,6 +52,7 @@ type ProfileState = {
   changeProfileAccount: (payload: Account) => void;
   updateLocation: (payload: Location) => void;
   updateProfileAccountName: (payload: UpdateAccountNamePayload) => void;
+  updateTimezone: (timezone: string) => void;
   reset: () => void;
 };
 
@@ -140,6 +141,19 @@ export const useProfileStore = create<ProfileState>((set) => ({
           ...state.settings,
           countryCode: location.countryCode,
           cityId: location.cityId,
+        },
+      };
+    });
+  },
+
+  updateTimezone: (timeZone) => {
+    set((state) => {
+      if (!state.settings) return state;
+
+      return {
+        settings: {
+          ...state.settings,
+          timezone: timeZone,
         },
       };
     });

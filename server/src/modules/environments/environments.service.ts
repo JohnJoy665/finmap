@@ -7,7 +7,6 @@ type CheckProfileEnvironmentRequest = {
     timezone: string | null;
     cityId: number | null;
     languageCode: string | null;
-    lastCheckPosition: string | null;
   };
   reqValues: {
     timezone: string;
@@ -24,22 +23,46 @@ type SuggestedLocationRow = {
   distance_meters: string;
 };
 
-const LOCATION_CHECK_INTERVAL_HOURS = 24;
+type CheckProfileEnvironmentResult = {
+  timezoneUpdated: boolean;
+  positionChecked: boolean;
+  locationChanged: boolean;
+  suggestedLocation: {
+    cityId: number;
+    cityName: string;
+    countryCode: string;
+    countryName: string;
+    distanceMeters: string;
+  } | null;
+};
+
 const LOCATION_CHANGE_DISTANCE_METERS = 100_000;
 
 export async function checkProfileEnvironment({
   userId,
   userSettings,
   reqValues,
-}: CheckProfileEnvironmentRequest) {
+}: CheckProfileEnvironmentRequest): Promise<CheckProfileEnvironmentResult> {
   const { timezone, latitude, longitude } = reqValues;
+
+  const normalizedTimezone = timezone.trim() || "UTC";
+
+  const timezoneUpdated = normalizedTimezone !== userSettings.timezone;
+
+  const hasValidCoordinates =
+    latitude !== null &&
+    longitude !== null &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180;
 
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-
-    const timezoneUpdated = timezone !== userSettings.timezone;
 
     if (timezoneUpdated) {
       await client.query(
@@ -48,25 +71,11 @@ export async function checkProfileEnvironment({
           SET timezone = $1
           WHERE user_id = $2
         `,
-        [timezone, userId]
+        [normalizedTimezone, userId]
       );
     }
 
-    const shouldCheckPosition =
-      !userSettings.lastCheckPosition ||
-      Date.now() - new Date(userSettings.lastCheckPosition).getTime() >
-        LOCATION_CHECK_INTERVAL_HOURS * 60 * 60 * 1000;
-
-    await client.query(
-      `
-      UPDATE user_settings
-      SET last_check_position = now()
-      WHERE user_id = $1
-          `,
-      [userId]
-    );
-
-    if (!shouldCheckPosition || latitude === null || longitude === null) {
+    if (!hasValidCoordinates) {
       await client.query("COMMIT");
 
       return {
@@ -81,51 +90,97 @@ export async function checkProfileEnvironment({
 
     const suggestedLocationResult = await client.query<SuggestedLocationRow>(
       `
-        WITH user_point AS (
-          SELECT ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography AS location
-        ),
-        current_city AS (
-          SELECT c.location
-          FROM cities c
-          WHERE c.id = $3
-        ),
-        distance_check AS (
+          WITH user_point AS (
+            SELECT
+              ST_SetSRID(
+                ST_MakePoint($1::double precision, $2::double precision),
+                4326
+              )::geography AS location
+          ),
+
+          current_city AS (
+            SELECT
+              c.id,
+              c.location
+            FROM cities c
+            WHERE c.id = $3
+            LIMIT 1
+          ),
+
+          nearest_city AS (
+            SELECT
+              c.id,
+              c.country_code,
+              c.international_name,
+              c.location
+            FROM cities c
+            CROSS JOIN user_point up
+            WHERE c.location IS NOT NULL
+              AND c.feature_code IN (
+                'PPLC',
+                'PPLA',
+                'PPLA2',
+                'PPLA3',
+                'PPLA4',
+                'PPL'
+              )
+              AND COALESCE(c.population, 0) >= 100000
+            ORDER BY c.location <-> up.location
+            LIMIT 1
+          )
+
           SELECT
-            ST_Distance(cc.location, up.location) AS distance_meters
-          FROM current_city cc
-          CROSS JOIN user_point up
-        )
-        SELECT
-          nearest_city.id AS city_id,
-          COALESCE(cl.translation, nearest_city.international_name) AS city_name,
-          nearest_city.country_code::text AS country_code,
-          COALESCE(cnl.translation, countries.name) AS country_name,
-          ST_Distance(nearest_city.location, up.location)::text AS distance_meters
-        FROM user_point up
-        CROSS JOIN distance_check dc
-        JOIN LATERAL (
-          SELECT
-            c.id,
-            c.country_code,
-            c.international_name,
-            c.location
-          FROM cities c
-          WHERE c.location IS NOT NULL
-            AND c.feature_code IN ('PPLC', 'PPLA', 'PPLA2', 'PPLA3', 'PPLA4', 'PPL')
-            AND COALESCE(c.population, 0) >= 100000
-          ORDER BY c.location <-> up.location
+            nc.id AS city_id,
+
+            COALESCE(
+              cl.translation,
+              nc.international_name
+            ) AS city_name,
+
+            nc.country_code::text AS country_code,
+
+            COALESCE(
+              cnl.translation,
+              countries.name
+            ) AS country_name,
+
+            ST_Distance(
+              nc.location,
+              up.location
+            )::text AS distance_meters
+
+          FROM user_point up
+
+          JOIN nearest_city nc
+            ON true
+
+          JOIN countries
+            ON countries.code = nc.country_code
+
+          LEFT JOIN current_city cc
+            ON true
+
+          LEFT JOIN cities_lang cl
+            ON cl.city_id = nc.id
+            AND cl.lang_code = $4
+
+          LEFT JOIN countries_lang cnl
+            ON cnl.word_code = nc.country_code::text
+            AND cnl.lang_code = $4
+
+          WHERE
+            cc.id IS NULL
+            OR
+            cc.location IS NULL
+
+            OR
+            ST_Distance(
+              cc.location,
+              up.location
+            ) > $5
+
           LIMIT 1
-        ) nearest_city ON true
-        JOIN countries ON countries.code = nearest_city.country_code
-        LEFT JOIN cities_lang cl
-          ON cl.city_id = nearest_city.id
-          AND cl.lang_code = $4
-        LEFT JOIN countries_lang cnl
-          ON cnl.word_code = nearest_city.country_code::text
-          AND cnl.lang_code = $4
-        WHERE dc.distance_meters > $5
-        LIMIT 1
-      `,
+        `,
       [
         longitude,
         latitude,
@@ -135,32 +190,41 @@ export async function checkProfileEnvironment({
       ]
     );
 
-    const suggestedLocation = suggestedLocationResult.rows[0];
+    const suggestedLocationRow = suggestedLocationResult.rows[0] ?? null;
+
+    await client.query(
+      `
+        UPDATE user_settings
+        SET last_check_position = now()
+        WHERE user_id = $1
+      `,
+      [userId]
+    );
 
     await client.query("COMMIT");
 
     return {
       timezoneUpdated,
       positionChecked: true,
-      locationChanged: Boolean(suggestedLocation),
-      suggestedLocation: suggestedLocation
+      locationChanged: suggestedLocationRow !== null,
+      suggestedLocation: suggestedLocationRow
         ? {
-            cityId: suggestedLocation.city_id,
-            cityName: suggestedLocation.city_name,
-            countryCode: suggestedLocation.country_code,
-            countryName: suggestedLocation.country_name,
-            distanceMeters: suggestedLocation.distance_meters,
+            cityId: suggestedLocationRow.city_id,
+            cityName: suggestedLocationRow.city_name,
+            countryCode: suggestedLocationRow.country_code,
+            countryName: suggestedLocationRow.country_name,
+            distanceMeters: suggestedLocationRow.distance_meters,
           }
         : null,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     await client.query("ROLLBACK");
 
     if (error instanceof AppError) {
       throw error;
     }
 
-    if (error?.severity === "ERROR") {
+    if (isPostgresError(error)) {
       throw new AppError(
         400,
         error.code ?? "DATABASE_ERROR",
@@ -172,6 +236,23 @@ export async function checkProfileEnvironment({
   } finally {
     client.release();
   }
+}
+
+type PostgresError = {
+  severity?: string;
+  code?: string;
+  detail?: string;
+  message?: string;
+};
+
+function isPostgresError(error: unknown): error is PostgresError {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const candidate = error as PostgresError;
+
+  return candidate.severity === "ERROR" || typeof candidate.code === "string";
 }
 
 type LocationProps = {

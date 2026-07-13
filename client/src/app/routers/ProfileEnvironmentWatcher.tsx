@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import { checkProfileEnvironment } from "../../features/checkEnvironment/api/checkProfileEnvironmet";
-import { useModalStore } from "../../shared/ui/modal";
 import { changeProfileLocation } from "../../features/checkEnvironment/api/changeProfileLocation";
+import { useModalStore } from "../../shared/ui/modal";
 import { useProfileStore } from "../../store/profileStore";
 
 type ProfileEnvironmentWatcherProps = {
-  lastCheckPosition: string | null;
+  profileTimezone: string | null;
   languageCode: string;
 };
 
@@ -14,16 +14,15 @@ type ChangeLocationPayload = {
   cityId: number;
 };
 
-const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
-
 function ProfileEnvironmentWatcher({
-  lastCheckPosition,
+  profileTimezone,
   languageCode,
 }: ProfileEnvironmentWatcherProps) {
-  const alreadyCheckedRef = useRef(false);
+  const checkStartedRef = useRef(false);
 
   const openModal = useModalStore((state) => state.openModal);
-  const updateLocation = useProfileStore((store) => store.updateLocation);
+  const updateLocation = useProfileStore((state) => state.updateLocation);
+  const updateTimezone = useProfileStore((state) => state.updateTimezone);
 
   const handleChangeLocation = useCallback(
     async (value: ChangeLocationPayload) => {
@@ -33,78 +32,85 @@ function ProfileEnvironmentWatcher({
           cityId: value.cityId,
         });
 
-        const newLocation = response.data;
-
         updateLocation({
-          countryCode: newLocation.countryCode,
-          cityId: newLocation.cityId,
+          countryCode: response.data.countryCode,
+          cityId: response.data.cityId,
         });
       } catch (error) {
-        console.log(error);
+        console.error("Location change failed", error);
       }
     },
     [updateLocation]
   );
 
   useEffect(() => {
-    if (alreadyCheckedRef.current) {
+    if (checkStartedRef.current) {
       return;
     }
 
-    alreadyCheckedRef.current = true;
+    checkStartedRef.current = true;
 
-    async function getEnvironment() {
+    async function checkEnvironment() {
+      const browserTimezone =
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+
       try {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const shouldCheckPosition =
-          !lastCheckPosition ||
-          Date.now() - new Date(lastCheckPosition).getTime() >
-            CHECK_INTERVAL_MS;
+        const position = await getCurrentPosition();
 
-        let latitude: number | null = null;
-        let longitude: number | null = null;
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } catch (error) {
+        console.info("Geolocation is unavailable", error);
+      }
 
-        if (shouldCheckPosition) {
-          try {
-            const position = await getCurrentPosition();
-
-            latitude = position.coords.latitude;
-            longitude = position.coords.longitude;
-          } catch (error) {
-            console.log("Geolocation failed", error);
-          }
-        }
-
-        const environment = await checkProfileEnvironment({
-          timezone,
+      try {
+        const response = await checkProfileEnvironment({
+          timezone: browserTimezone,
           latitude,
           longitude,
         });
 
-        const suggestedLocation = environment.data.suggestedLocation;
+        const environment = response.data;
 
-        if (environment.data.locationChanged && suggestedLocation) {
-          openModal({
-            type: "changeLocation",
-            strategy: "destroy",
-            props: {
-              countryCode: suggestedLocation.countryCode,
-              countryName: suggestedLocation.countryName,
-              cityId: suggestedLocation.cityId,
-              cityName: suggestedLocation.cityName,
-              languageCode,
-              content: "Подтвердите свою локацию или выберите новую",
-              onChangeLocation: handleChangeLocation,
-            },
-          });
+        if (environment.timezoneUpdated) {
+          updateTimezone(browserTimezone);
         }
+
+        const suggestedLocation = environment.suggestedLocation;
+
+        if (!environment.locationChanged || !suggestedLocation) {
+          return;
+        }
+
+        openModal({
+          type: "changeLocation",
+          strategy: "destroy",
+          props: {
+            countryCode: suggestedLocation.countryCode,
+            countryName: suggestedLocation.countryName,
+            cityId: suggestedLocation.cityId,
+            cityName: suggestedLocation.cityName,
+            languageCode,
+            content: "Подтвердите свою локацию или выберите новую",
+            onChangeLocation: handleChangeLocation,
+          },
+        });
       } catch (error) {
-        console.log(error);
+        console.error("Environment check failed", error);
       }
     }
 
-    getEnvironment();
-  }, [lastCheckPosition, openModal, languageCode, handleChangeLocation]);
+    void checkEnvironment();
+  }, [
+    profileTimezone,
+    languageCode,
+    openModal,
+    handleChangeLocation,
+    updateTimezone,
+  ]);
 
   return null;
 }
@@ -120,8 +126,8 @@ function getCurrentPosition(): Promise<GeolocationPosition> {
 
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: false,
-      timeout: 15000,
-      maximumAge: 1000 * 60 * 30,
+      timeout: 15_000,
+      maximumAge: 30 * 60 * 1000,
     });
   });
 }
