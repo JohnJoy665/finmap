@@ -3,6 +3,7 @@ import { AppError } from "../../utils/AppError";
 import { pool } from "../../db/pool";
 import { getBaseAmountMicro } from "../rates/rates.service";
 import { assertAccountInitialized } from "../../utils/assertAccountInitialized";
+import { UserSettings } from "../../types/middlewares/userSettings.types";
 
 type changedAccountRow = {
   id: string;
@@ -445,6 +446,7 @@ export async function updateAccountName({
 
 type CorrectAccountAmountRequest = {
   userId: string;
+  userSettings: UserSettings;
   accountId: string;
   amount: string;
 };
@@ -453,6 +455,7 @@ type AccountForCorrectionRow = {
   id: string;
   amount: string;
   currency_code: string;
+  conversion_factor: number;
 };
 
 type CorrectAccountAmountResponse = {
@@ -462,6 +465,7 @@ type CorrectAccountAmountResponse = {
 
 export async function correctAccountAmount({
   userId,
+  userSettings,
   accountId,
   amount,
 }: CorrectAccountAmountRequest): Promise<CorrectAccountAmountResponse> {
@@ -473,13 +477,16 @@ export async function correctAccountAmount({
     const accountResult = await client.query<AccountForCorrectionRow>(
       `
         SELECT
-          id,
-          amount::text,
-          currency_code::text
-        FROM accounts
-        WHERE id = $1
-          AND user_id = $2
-        FOR UPDATE
+          a.id,
+          a.amount::text,
+          a.currency_code::text,
+          c.conversion_factor
+        FROM accounts a
+        INNER JOIN currencies c
+          ON c.code = a.currency_code
+        WHERE a.id = $1
+          AND a.user_id = $2
+        FOR UPDATE OF a
       `,
       [accountId, userId]
     );
@@ -503,6 +510,15 @@ export async function correctAccountAmount({
         "Account amount was not changed"
       );
     }
+
+    const baseAmountMicro = await getBaseAmountMicro(
+      client,
+      correctionAmount.toString(),
+      {
+        currencyCode: account.currency_code,
+        conversionFactor: account.conversion_factor,
+      }
+    );
 
     await client.query(
       `
@@ -543,12 +559,12 @@ export async function correctAccountAmount({
           $4,
           true,
           true,
-          null,
-          null,
-          null,
+          $5,
+          $6,
+          $7,
           false,
           true,
-          $5
+          $8
         )
       `,
       [
@@ -556,6 +572,9 @@ export async function correctAccountAmount({
         userId,
         accountId,
         account.currency_code,
+        baseAmountMicro?.toString() ?? null,
+        account.conversion_factor,
+        userSettings.cityId,
         "Correct account",
       ]
     );
