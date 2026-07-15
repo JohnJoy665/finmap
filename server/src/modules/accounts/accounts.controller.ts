@@ -134,13 +134,15 @@ export async function correctAccountAmountController(
     }
 
     const userId = req.user?.userId;
+    const userSettings = req.userSettings;
 
-    if (!userId) {
+    if (!userId || !userSettings) {
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
     }
 
     const result = await correctAccountAmount({
       userId,
+      userSettings: userSettings,
       accountId: value.accountId,
       amount: value.amount,
     });

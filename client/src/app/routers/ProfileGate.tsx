@@ -9,7 +9,6 @@ function ProfileGate() {
 
   const setProfile = useProfileStore((state) => state.setProfile);
   const setupRequired = useProfileStore((state) => state.setupRequired);
-
   const settings = useProfileStore((state) => state.settings);
 
   useEffect(() => {
@@ -26,6 +25,12 @@ function ProfileGate() {
 
     void getProfile();
   }, [setProfile, setupRequired]);
+
+  useEffect(() => {
+    if (!settings?.languageCode) return;
+
+    document.documentElement.lang = settings.languageCode;
+  }, [settings?.languageCode]);
 
   if (setupRequired === null) {
     return null;

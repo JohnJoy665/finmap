@@ -23,6 +23,12 @@ function SearchGroup() {
         onChange={setSearchGroup}
         placeholder="Поиск группы"
         variant="borderless"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        inputMode="search"
+        name="group-search"
         suffix={
           searchString ? (
             <CloseOutlined
