@@ -5,13 +5,16 @@ type GroupStore = {
   groups: Group[];
   setGroups: (groups: Group[]) => void;
   reset: () => void;
+  searchString: string;
+  setSearchString: (searchStr: string) => void;
 };
 
 const initialState = {
   groups: [],
+  searchString: "",
 };
 
-export const useGroupStrore = create<GroupStore>((set) => ({
+export const useGroupStore = create<GroupStore>((set) => ({
   ...initialState,
 
   setGroups: (groups) => {
@@ -20,5 +23,9 @@ export const useGroupStrore = create<GroupStore>((set) => ({
 
   reset: () => {
     set(initialState);
+  },
+
+  setSearchString: (searchStr) => {
+    set({ searchString: searchStr });
   },
 }));

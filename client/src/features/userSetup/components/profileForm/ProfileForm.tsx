@@ -16,7 +16,7 @@ import AmountInput from "../../../../shared/components/amountInput/AmountInput";
 import type { Currency } from "../../../../shared/types/currency.types";
 import { useAuthStore } from "../../../../store/authStore";
 import { useFiltersStore } from "../../../../store/filtersStore";
-import { useGroupStrore } from "../../../../store/groupStore";
+import { useGroupStore } from "../../../../store/groupStore";
 import { usePurchaseStore } from "../../../../store/purchaseStore";
 
 type ProfileFormProps = {
@@ -79,7 +79,7 @@ function ProfileForm({
     useAuthStore.getState().logout();
     useProfileStore.getState().reset();
     useFiltersStore.getState().reset();
-    useGroupStrore.getState().reset();
+    useGroupStore.getState().reset();
     usePurchaseStore.getState().reset();
   }
 

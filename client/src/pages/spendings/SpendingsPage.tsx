@@ -15,7 +15,7 @@ import { useAccountsStore } from "../../store/accountsStore";
 import SpendingsListContainer from "../../features/operations/spendings/components/spendingsList/components/spendingsListContainer/SpendingsListContainer";
 import { useModalStore } from "../../shared/ui/modal";
 import { useFiltersStore } from "../../store/filtersStore";
-import { useGroupStrore } from "../../store/groupStore";
+import { useGroupStore } from "../../store/groupStore";
 
 function SpendingsPage() {
   const openModal = useModalStore((state) => state.openModal);
@@ -61,7 +61,7 @@ function SpendingsPage() {
   const currencyCode = useProfileStore((store) => store.account?.currencyCode);
 
   const clearGroupsFilter = useFiltersStore((store) => store.clearGroupsFilter);
-  const setGroups = useGroupStrore((store) => store.setGroups);
+  const setGroups = useGroupStore((store) => store.setGroups);
 
   useEffect(() => {
     async function requestCategories() {
