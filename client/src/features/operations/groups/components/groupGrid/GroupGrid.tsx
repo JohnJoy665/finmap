@@ -8,7 +8,7 @@ import styles from "./GroupGrid.module.css";
 
 import GroupCard from "../groupCard/GroupCard";
 import type { Group } from "../../../../../shared/types/group.types";
-import { useGroupStrore } from "../../../../../store/groupStore";
+import { useGroupStore } from "../../../../../store/groupStore";
 import { useProfileStore } from "../../../../../store/profileStore";
 import { useState } from "react";
 import { Button } from "antd";
@@ -18,7 +18,8 @@ function GroupGrid() {
   const VISIBLE_CARDS_COUNT = 12;
   const VISIBLE_GROUPS_COUNT = VISIBLE_CARDS_COUNT - 1;
 
-  const groups = useGroupStrore((store) => store.groups);
+  const groups = useGroupStore((store) => store.groups);
+  const searchString = useGroupStore((store) => store.searchString);
 
   const conversionFactor = useProfileStore(
     (store) => store.account?.conversionFactor
@@ -31,9 +32,16 @@ function GroupGrid() {
 
   if (!conversionFactor || !currencySymbol) return;
 
-  const visibleGroups = showAll
-    ? groups
-    : groups.slice(0, VISIBLE_GROUPS_COUNT);
+  const visibleGroups =
+    searchString === ""
+      ? showAll
+        ? groups
+        : groups.slice(0, VISIBLE_GROUPS_COUNT)
+      : groups.filter((group) =>
+          group.title
+            .toLocaleLowerCase()
+            .includes(searchString.toLocaleLowerCase())
+        );
 
   const renderGroups = visibleGroups.map((group) => {
     return (
@@ -80,7 +88,7 @@ function GroupGrid() {
         </GroupCard>
         {renderGroups}
       </div>
-      {groups.length > VISIBLE_GROUPS_COUNT && (
+      {searchString === "" && groups.length > VISIBLE_GROUPS_COUNT && (
         <Button
           block
           type="link"

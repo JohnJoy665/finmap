@@ -3,7 +3,7 @@ import styles from "./MenuButton.module.css";
 import { useAuthStore } from "../../../store/authStore";
 import { useProfileStore } from "../../../store/profileStore";
 import { useFiltersStore } from "../../../store/filtersStore";
-import { useGroupStrore } from "../../../store/groupStore";
+import { useGroupStore } from "../../../store/groupStore";
 import { usePurchaseStore } from "../../../store/purchaseStore";
 
 function MenuButton() {
@@ -12,7 +12,7 @@ function MenuButton() {
 
     useProfileStore.getState().reset();
     useFiltersStore.getState().reset();
-    useGroupStrore.getState().reset();
+    useGroupStore.getState().reset();
     usePurchaseStore.getState().reset();
   }
 

@@ -6,7 +6,7 @@ import { deleteGroupWithSpending } from "../../../groups/api/deleteGroupWithSpen
 import { useNavigate } from "react-router-dom";
 import { useAccountsStore } from "../../../../../store/accountsStore";
 import { useFiltersStore } from "../../../../../store/filtersStore";
-import { useGroupStrore } from "../../../../../store/groupStore";
+import { useGroupStore } from "../../../../../store/groupStore";
 
 type DeleteGroupButtonProps = {
   groupId: string;
@@ -24,7 +24,7 @@ function DeleteGroupAction({ groupId }: DeleteGroupButtonProps) {
   );
   const activeAccount = useProfileStore((state) => state.account?.id);
   const clearGroupsFilter = useFiltersStore((store) => store.clearGroupsFilter);
-  const setGroups = useGroupStrore((store) => store.setGroups);
+  const setGroups = useGroupStore((store) => store.setGroups);
 
   function handleCancel() {
     clearGroupsFilter();

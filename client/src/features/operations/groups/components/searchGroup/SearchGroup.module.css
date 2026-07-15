@@ -15,3 +15,12 @@
 .input {
   flex: 1;
 }
+
+.clearIcon {
+  cursor: pointer;
+  color: var(--ant-color-error);
+}
+
+.searchIcon {
+  pointer-events: none;
+}

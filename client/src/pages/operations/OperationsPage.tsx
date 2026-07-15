@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import GroupGrid from "../../features/operations/groups/components/groupGrid/GroupGrid";
 import SearchGroup from "../../features/operations/groups/components/searchGroup/SearchGroup";
 import { getGroupsRequest } from "../../features/operations/groups/api/getGroups";
-import { useGroupStrore } from "../../store/groupStore";
+import { useGroupStore } from "../../store/groupStore";
 import { useProfileStore } from "../../store/profileStore";
 import FilterGroupContainer from "../../features/operations/groups/components/filterGroupContainer/FilterGroupContainer";
 import { getGroupsFilters } from "../../features/operations/groups/api/getGroupsFilters";
@@ -20,7 +20,8 @@ function Operations() {
 
   const requestIdRef = useRef(0);
 
-  const setGroups = useGroupStrore((store) => store.setGroups);
+  const setGroups = useGroupStore((store) => store.setGroups);
+  const setSearchString = useGroupStore((store) => store.setSearchString);
 
   const groupsFilter = useFiltersStore((store) => store.groupsFilter);
   const setGroupsFilter = useFiltersStore((store) => store.setGroupsFilter);
@@ -43,6 +44,12 @@ function Operations() {
   const selectedGroupFilterRef = useRef<GroupFilterValue | null>(
     selectedGroupFilter
   );
+
+  useEffect(() => {
+    return () => {
+      setSearchString("");
+    };
+  }, [setSearchString]);
 
   useEffect(() => {
     selectedGroupFilterRef.current = selectedGroupFilter;
