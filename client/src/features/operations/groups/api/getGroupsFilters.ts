@@ -5,14 +5,22 @@ import type { GetGroupsFiltersResponse } from "../types/responses.type";
 
 type GetGroupsFiltersParams = {
   groupFilterPeriod: GroupFilterValue | null;
+  dateFromUTC?: string;
+  dateToUTC?: string;
 };
 
 export async function getGroupsFilters({
   groupFilterPeriod,
-}: GetGroupsFiltersParams): Promise<ApiSuccess<GetGroupsFiltersResponse[]>> {
-  return request<GetGroupsFiltersResponse[]>({
+  dateFromUTC,
+  dateToUTC,
+}: GetGroupsFiltersParams): Promise<ApiSuccess<GetGroupsFiltersResponse>> {
+  return request<GetGroupsFiltersResponse>({
     method: "GET",
     url: "/groups/filters",
-    params: { groupFilterPeriod },
+    params: {
+      groupFilterPeriod,
+      dateFromUTC,
+      dateToUTC,
+    },
   });
 }

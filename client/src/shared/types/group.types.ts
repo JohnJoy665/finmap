@@ -12,20 +12,26 @@ export type Group = {
   is_converted: boolean;
 };
 
-export type GroupFilterValue = "today" | "week" | "month" | "year";
+export type GroupFilterValue = "today" | "week" | "month" | "year" | "custom";
+
+export type CustomGroupFilter = {
+  dateFromUTC: string;
+  dateToUTC: string;
+};
 
 export type FilterItem = {
   value: GroupFilterValue;
   label: string;
   amount: string | null;
   isActive: boolean;
-  daysInPeriod: number;
 
-  dateFromLocal: string;
-  dateToLocal: string;
+  daysInPeriod: number | null;
 
-  dateFromUTC: string;
-  dateToUTC: string;
+  dateFromLocal: string | null;
+  dateToLocal: string | null;
+
+  dateFromUTC: string | null;
+  dateToUTC: string | null;
 
   timezone: string;
 };
