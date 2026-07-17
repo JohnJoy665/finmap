@@ -510,20 +510,20 @@ export async function deleteGroupWithSpendings({
   }
 }
 
-export type GroupFilterValue = "today" | "week" | "month" | "year";
+export type GroupFilterValue = "today" | "week" | "month" | "year" | "custom";
 
-type FilterItem = {
+export type FilterItem = {
   value: GroupFilterValue;
   label: string;
   amount: string | null;
   isActive: boolean;
-  daysInPeriod: number;
+  daysInPeriod: number | null;
 
-  dateFromLocal: string;
-  dateToLocal: string;
+  dateFromLocal: string | null;
+  dateToLocal: string | null;
 
-  dateFromUTC: string;
-  dateToUTC: string;
+  dateFromUTC: string | null;
+  dateToUTC: string | null;
 
   timezone: string;
 };
@@ -532,6 +532,8 @@ type GetGroupsFiltersRequest = {
   userId: string;
   userSettings: UserSettings;
   groupFilterPeriod: GroupFilterValue | null;
+  dateFromUTC?: string;
+  dateToUTC?: string;
 };
 
 type GroupFilterRow = {
@@ -550,11 +552,43 @@ type GroupFilterRow = {
   timezone: string;
 };
 
+type CustomGroupFilterRow = {
+  value: "custom";
+  label: string;
+  amount: string;
+  days_in_period: number;
+
+  date_from_local: string;
+  date_to_local: string;
+
+  date_from_utc: string;
+  date_to_utc: string;
+
+  timezone: string;
+};
+
+type GroupFiltersAvailableRange = {
+  minDateLocal: string | null;
+  maxDateLocal: string | null;
+};
+
+type GetGroupsFiltersResponse = {
+  filters: FilterItem[];
+  availableRange: GroupFiltersAvailableRange;
+};
+
+type SpendingDateRangeRow = {
+  min_date_local: string | null;
+  max_date_local: string | null;
+};
+
 export async function getGroupsFilters({
   userId,
   userSettings,
   groupFilterPeriod,
-}: GetGroupsFiltersRequest): Promise<FilterItem[]> {
+  dateFromUTC,
+  dateToUTC,
+}: GetGroupsFiltersRequest): Promise<GetGroupsFiltersResponse> {
   try {
     const currencyCode = userSettings.currencyCode;
     const timeZone = userSettings.timezone?.trim() || "UTC";
@@ -563,6 +597,39 @@ export async function getGroupsFilters({
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
     }
 
+    if (groupFilterPeriod === "custom") {
+      if (!dateFromUTC || !dateToUTC) {
+        throw new AppError(
+          400,
+          "CUSTOM_PERIOD_REQUIRED",
+          "Custom period dates are required"
+        );
+      }
+
+      const dateFrom = new Date(dateFromUTC);
+      const dateTo = new Date(dateToUTC);
+
+      if (Number.isNaN(dateFrom.getTime()) || Number.isNaN(dateTo.getTime())) {
+        throw new AppError(
+          400,
+          "INVALID_CUSTOM_PERIOD",
+          "Invalid custom period dates"
+        );
+      }
+
+      if (dateFrom >= dateTo) {
+        throw new AppError(
+          400,
+          "INVALID_CUSTOM_PERIOD",
+          "The period start must be earlier than the period end"
+        );
+      }
+    }
+
+    /*
+     * Существующий запрос стандартных фильтров.
+     * Логика today/week/month/year не изменена.
+     */
     const result = await pool.query<GroupFilterRow>(
       `
       WITH params AS (
@@ -573,56 +640,55 @@ export async function getGroupsFilters({
           $4::text AS time_zone,
           NOW() AS current_at
       ),
-     period_boundaries AS (
-  SELECT
-    p.*,
+      period_boundaries AS (
+        SELECT
+          p.*,
 
-    (
-      date_trunc('day', p.current_at AT TIME ZONE p.time_zone)
-      AT TIME ZONE p.time_zone
-    ) AS today_start_utc
+          (
+            date_trunc(
+              'day',
+              p.current_at AT TIME ZONE p.time_zone
+            )
+            AT TIME ZONE p.time_zone
+          ) AS today_start_utc
 
-  FROM params p
-),
+        FROM params p
+      ),
+      periods AS (
+        SELECT
+          p.user_id,
+          p.currency_code,
+          p.conversion_factor,
+          p.time_zone,
+          p.current_at,
 
-periods AS (
-  SELECT
-    p.user_id,
-    p.currency_code,
-    p.conversion_factor,
-    p.time_zone,
-    p.current_at,
+          -- today: с 00:00 локального дня до now
+          p.today_start_utc AS today_from,
+          p.current_at AS today_to,
 
-    -- today теперь календарный: с 00:00 локального дня до now
-    p.today_start_utc AS today_from,
-    p.current_at AS today_to,
+          p.current_at - INTERVAL '7 days' AS week_from,
+          p.current_at AS week_to,
 
-    p.current_at - INTERVAL '7 days' AS week_from,
-    p.current_at AS week_to,
+          p.current_at - INTERVAL '30 days' AS month_from,
+          p.current_at AS month_to,
 
-    p.current_at - INTERVAL '30 days' AS month_from,
-    p.current_at AS month_to,
+          p.current_at - INTERVAL '365 days' AS year_from,
+          p.current_at AS year_to,
 
-    p.current_at - INTERVAL '365 days' AS year_from,
-    p.current_at AS year_to,
+          p.today_start_utc AS today_layer_from,
+          p.current_at AS today_layer_to,
 
-    -- today layer тоже календарный today
-    p.today_start_utc AS today_layer_from,
-    p.current_at AS today_layer_to,
+          p.current_at - INTERVAL '7 days' AS week_layer_from,
+          p.today_start_utc AS week_layer_to,
 
-    -- week layer теперь должен заканчиваться на начале today,
-    -- чтобы не было пересечения с today и не было дырки
-    p.current_at - INTERVAL '7 days' AS week_layer_from,
-    p.today_start_utc AS week_layer_to,
+          p.current_at - INTERVAL '30 days' AS month_layer_from,
+          p.current_at - INTERVAL '7 days' AS month_layer_to,
 
-    p.current_at - INTERVAL '30 days' AS month_layer_from,
-    p.current_at - INTERVAL '7 days' AS month_layer_to,
+          p.current_at - INTERVAL '365 days' AS year_layer_from,
+          p.current_at - INTERVAL '30 days' AS year_layer_to
 
-    p.current_at - INTERVAL '365 days' AS year_layer_from,
-    p.current_at - INTERVAL '30 days' AS year_layer_to
-
-  FROM period_boundaries p
-),
+        FROM period_boundaries p
+      ),
       period_rows AS (
         SELECT
           p.user_id,
@@ -630,67 +696,94 @@ periods AS (
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+
           'today'::text AS value,
           'Сегодня'::text AS label,
+
           1::int AS sort_order,
           1::int AS period_limit_days,
+
           p.today_from AS period_from_utc,
           p.today_to AS period_to_utc,
+
           p.today_layer_from AS layer_from_utc,
           p.today_layer_to AS layer_to_utc
+
         FROM periods p
+
         UNION ALL
+
         SELECT
           p.user_id,
           p.currency_code,
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+
           'week'::text AS value,
           'Неделя'::text AS label,
+
           2::int AS sort_order,
           7::int AS period_limit_days,
+
           p.week_from AS period_from_utc,
           p.week_to AS period_to_utc,
+
           p.week_layer_from AS layer_from_utc,
           p.week_layer_to AS layer_to_utc
+
         FROM periods p
+
         UNION ALL
+
         SELECT
           p.user_id,
           p.currency_code,
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+
           'month'::text AS value,
           'Месяц'::text AS label,
+
           3::int AS sort_order,
           30::int AS period_limit_days,
+
           p.month_from AS period_from_utc,
           p.month_to AS period_to_utc,
+
           p.month_layer_from AS layer_from_utc,
           p.month_layer_to AS layer_to_utc
+
         FROM periods p
+
         UNION ALL
+
         SELECT
           p.user_id,
           p.currency_code,
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+
           'year'::text AS value,
           'Год'::text AS label,
+
           4::int AS sort_order,
           365::int AS period_limit_days,
+
           p.year_from AS period_from_utc,
           p.year_to AS period_to_utc,
+
           p.year_layer_from AS layer_from_utc,
           p.year_layer_to AS layer_to_utc
+
         FROM periods p
       ),
       visible_periods AS (
         SELECT
           pr.*,
+
           EXISTS (
             SELECT 1
             FROM spendings s
@@ -698,13 +791,16 @@ periods AS (
               AND s.spending_date >= pr.layer_from_utc
               AND s.spending_date < pr.layer_to_utc
           ) AS has_spendings_in_layer
+
         FROM period_rows pr
       ),
       oldest_spending AS (
         SELECT
           MIN(s.spending_date) AS oldest_spending_date
+
         FROM spendings s
         CROSS JOIN params p
+
         WHERE s.user_id = p.user_id
           AND s.spending_date >= p.current_at - INTERVAL '365 days'
           AND s.spending_date < p.current_at
@@ -724,8 +820,11 @@ periods AS (
               GREATEST(
                 1,
                 CEIL(
-                  EXTRACT(EPOCH FROM (vp.current_at - os.oldest_spending_date))
-                  / 86400
+                  EXTRACT(
+                    EPOCH FROM (
+                      vp.current_at - os.oldest_spending_date
+                    )
+                  ) / 86400
                 )::int
               )
             )
@@ -751,8 +850,11 @@ periods AS (
           pwd.period_from_utc AS date_from_utc,
           pwd.period_to_utc AS date_to_utc,
 
-          pwd.period_from_utc AT TIME ZONE pwd.time_zone AS date_from_local,
-          pwd.period_to_utc AT TIME ZONE pwd.time_zone AS date_to_local,
+          pwd.period_from_utc
+            AT TIME ZONE pwd.time_zone AS date_from_local,
+
+          pwd.period_to_utc
+            AT TIME ZONE pwd.time_zone AS date_to_local,
 
           pwd.layer_from_utc,
           pwd.layer_to_utc,
@@ -767,13 +869,16 @@ periods AS (
           rpb.label,
           rpb.sort_order,
           rpb.days_in_period,
+
           rpb.currency_code AS target_currency_code,
           rpb.conversion_factor AS target_conversion_factor,
+
           rpb.date_from_utc,
           rpb.date_to_utc,
 
           s.id AS spending_id,
           s.spending_date,
+
           s.amount AS original_amount_minor,
           s.currency_code AS original_currency_code,
           s.conversion_factor AS original_conversion_factor,
@@ -788,14 +893,19 @@ periods AS (
 
             WHEN s.currency_code = 'USD' THEN
               ROUND(
-                (s.amount::numeric / s.conversion_factor::numeric) * 1000000
+                (
+                  s.amount::numeric /
+                  s.conversion_factor::numeric
+                ) * 1000000
               )
 
             WHEN original_rate.exchange_rate IS NOT NULL THEN
               ROUND(
                 (
-                  (s.amount::numeric / s.conversion_factor::numeric)
-                  / original_rate.exchange_rate
+                  (
+                    s.amount::numeric /
+                    s.conversion_factor::numeric
+                  ) / original_rate.exchange_rate
                 ) * 1000000
               )
 
@@ -812,14 +922,19 @@ periods AS (
 
                     WHEN s.currency_code = 'USD' THEN
                       ROUND(
-                        (s.amount::numeric / s.conversion_factor::numeric) * 1000000
+                        (
+                          s.amount::numeric /
+                          s.conversion_factor::numeric
+                        ) * 1000000
                       )
 
                     WHEN original_rate.exchange_rate IS NOT NULL THEN
                       ROUND(
                         (
-                          (s.amount::numeric / s.conversion_factor::numeric)
-                          / original_rate.exchange_rate
+                          (
+                            s.amount::numeric /
+                            s.conversion_factor::numeric
+                          ) / original_rate.exchange_rate
                         ) * 1000000
                       )
 
@@ -839,14 +954,19 @@ periods AS (
 
                       WHEN s.currency_code = 'USD' THEN
                         ROUND(
-                          (s.amount::numeric / s.conversion_factor::numeric) * 1000000
+                          (
+                            s.amount::numeric /
+                            s.conversion_factor::numeric
+                          ) * 1000000
                         )
 
                       WHEN original_rate.exchange_rate IS NOT NULL THEN
                         ROUND(
                           (
-                            (s.amount::numeric / s.conversion_factor::numeric)
-                            / original_rate.exchange_rate
+                            (
+                              s.amount::numeric /
+                              s.conversion_factor::numeric
+                            ) / original_rate.exchange_rate
                           ) * 1000000
                         )
 
@@ -863,31 +983,40 @@ periods AS (
           END AS target_amount_minor
 
         FROM response_periods_base rpb
+
         JOIN spendings s
           ON s.user_id = rpb.user_id
-        AND s.spending_date >= rpb.date_from_utc
-        AND s.spending_date < rpb.date_to_utc
+         AND s.spending_date >= rpb.date_from_utc
+         AND s.spending_date < rpb.date_to_utc
 
-      LEFT JOIN LATERAL (
-        SELECT er.exchange_rate
-        FROM exchange_rates er
-        WHERE er.base_currency = 'USD'
-          AND er.target_currency = s.currency_code
-          AND er.date_rate <= s.spending_date
-        ORDER BY er.date_rate DESC
-        LIMIT 1
-      ) original_rate ON s.base_amount_micro IS NULL
-                      AND s.currency_code <> 'USD'
+        LEFT JOIN LATERAL (
+          SELECT er.exchange_rate
 
-      LEFT JOIN LATERAL (
-        SELECT er.exchange_rate
-        FROM exchange_rates er
-        WHERE er.base_currency = 'USD'
-          AND er.target_currency = rpb.currency_code
-          AND er.date_rate <= s.spending_date
-        ORDER BY er.date_rate DESC
-        LIMIT 1
-      ) target_rate ON rpb.currency_code <> 'USD'
+          FROM exchange_rates er
+
+          WHERE er.base_currency = 'USD'
+            AND er.target_currency = s.currency_code
+            AND er.date_rate <= s.spending_date
+
+          ORDER BY er.date_rate DESC
+          LIMIT 1
+        ) original_rate
+          ON s.base_amount_micro IS NULL
+         AND s.currency_code <> 'USD'
+
+        LEFT JOIN LATERAL (
+          SELECT er.exchange_rate
+
+          FROM exchange_rates er
+
+          WHERE er.base_currency = 'USD'
+            AND er.target_currency = rpb.currency_code
+            AND er.date_rate <= s.spending_date
+
+          ORDER BY er.date_rate DESC
+          LIMIT 1
+        ) target_rate
+          ON rpb.currency_code <> 'USD'
       ),
       period_amounts AS (
         SELECT
@@ -912,8 +1041,10 @@ periods AS (
           )::bigint AS amount_minor
 
         FROM period_spendings_raw psr
+
         JOIN response_periods_base rpb
           ON rpb.value = psr.value
+
         GROUP BY
           psr.value,
           psr.label,
@@ -951,13 +1082,20 @@ periods AS (
         is_active,
         days_in_period,
 
-        date_from_local,
-        date_to_local,
+        TO_CHAR(
+          date_from_local,
+          'YYYY-MM-DD"T"HH24:MI:SS'
+        ) AS date_from_local,
+
+        TO_CHAR(
+          date_to_local,
+          'YYYY-MM-DD"T"HH24:MI:SS'
+        ) AS date_to_local,
 
         date_from_utc,
         date_to_utc,
 
-        time_zone,
+        time_zone AS timezone,
 
         amount_minor::text AS amount
 
@@ -967,30 +1105,249 @@ periods AS (
       [userId, currencyCode, userSettings.conversionFactor, timeZone]
     );
 
-    const filters = result.rows.map((row) => {
-      const filter: FilterItem = {
-        value: row.value,
-        label: row.label,
-        isActive: false,
-        daysInPeriod: row.days_in_period,
+    const filters: FilterItem[] = result.rows.map((row) => ({
+      value: row.value,
+      label: row.label,
+      amount: row.amount,
+      isActive: false,
+      daysInPeriod: row.days_in_period,
 
-        dateFromLocal: row.date_from_local,
-        dateToLocal: row.date_to_local,
+      dateFromLocal: row.date_from_local,
+      dateToLocal: row.date_to_local,
 
-        dateFromUTC: row.date_from_utc,
-        dateToUTC: row.date_to_utc,
+      dateFromUTC: row.date_from_utc,
+      dateToUTC: row.date_to_utc,
 
-        timezone: row.timezone,
+      timezone: row.timezone,
+    }));
 
-        amount: row.amount,
-      };
+    let customFilter: FilterItem = {
+      value: "custom",
+      label: "Произвольный",
+      amount: null,
+      isActive: false,
+      daysInPeriod: null,
 
-      if (row.amount !== null) {
-        filter.amount = row.amount;
+      dateFromLocal: null,
+      dateToLocal: null,
+
+      dateFromUTC: null,
+      dateToUTC: null,
+
+      timezone: timeZone,
+    };
+
+    /*
+     * Для custom используем отдельный запрос.
+     * Существующий запрос стандартных фильтров не меняется.
+     */
+    if (groupFilterPeriod === "custom" && dateFromUTC && dateToUTC) {
+      const customResult = await pool.query<CustomGroupFilterRow>(
+        `
+        WITH params AS (
+          SELECT
+            $1::uuid AS user_id,
+            $2::varchar AS currency_code,
+            $3::numeric AS conversion_factor,
+            $4::text AS time_zone,
+            $5::timestamptz AS date_from_utc,
+            $6::timestamptz AS date_to_utc
+        ),
+        custom_spendings_raw AS (
+          SELECT
+            s.id AS spending_id,
+            s.spending_date,
+
+            s.amount AS original_amount_minor,
+            s.currency_code AS original_currency_code,
+            s.conversion_factor AS original_conversion_factor,
+            s.base_amount_micro AS stored_base_amount_micro,
+
+            original_rate.exchange_rate AS original_currency_rate,
+            target_rate.exchange_rate AS target_currency_rate,
+
+            CASE
+              WHEN p.currency_code = 'USD' THEN
+                ROUND(
+                  (
+                    CASE
+                      WHEN s.base_amount_micro IS NOT NULL THEN
+                        s.base_amount_micro::numeric
+
+                      WHEN s.currency_code = 'USD' THEN
+                        ROUND(
+                          (
+                            s.amount::numeric /
+                            s.conversion_factor::numeric
+                          ) * 1000000
+                        )
+
+                      WHEN original_rate.exchange_rate IS NOT NULL THEN
+                        ROUND(
+                          (
+                            (
+                              s.amount::numeric /
+                              s.conversion_factor::numeric
+                            ) / original_rate.exchange_rate
+                          ) * 1000000
+                        )
+
+                      ELSE NULL
+                    END
+                    / 1000000
+                  ) * p.conversion_factor
+                )::bigint
+
+              WHEN target_rate.exchange_rate IS NOT NULL THEN
+                ROUND(
+                  (
+                    (
+                      CASE
+                        WHEN s.base_amount_micro IS NOT NULL THEN
+                          s.base_amount_micro::numeric
+
+                        WHEN s.currency_code = 'USD' THEN
+                          ROUND(
+                            (
+                              s.amount::numeric /
+                              s.conversion_factor::numeric
+                            ) * 1000000
+                          )
+
+                        WHEN original_rate.exchange_rate IS NOT NULL THEN
+                          ROUND(
+                            (
+                              (
+                                s.amount::numeric /
+                                s.conversion_factor::numeric
+                              ) / original_rate.exchange_rate
+                            ) * 1000000
+                          )
+
+                        ELSE NULL
+                      END
+                      / 1000000
+                    )
+                    * target_rate.exchange_rate
+                    * p.conversion_factor
+                  )
+                )::bigint
+
+              ELSE NULL
+            END AS target_amount_minor
+
+          FROM params p
+
+          JOIN spendings s
+            ON s.user_id = p.user_id
+           AND s.spending_date >= p.date_from_utc
+           AND s.spending_date < p.date_to_utc
+
+          LEFT JOIN LATERAL (
+            SELECT er.exchange_rate
+
+            FROM exchange_rates er
+
+            WHERE er.base_currency = 'USD'
+              AND er.target_currency = s.currency_code
+              AND er.date_rate <= s.spending_date
+
+            ORDER BY er.date_rate DESC
+            LIMIT 1
+          ) original_rate
+            ON s.base_amount_micro IS NULL
+           AND s.currency_code <> 'USD'
+
+          LEFT JOIN LATERAL (
+            SELECT er.exchange_rate
+
+            FROM exchange_rates er
+
+            WHERE er.base_currency = 'USD'
+              AND er.target_currency = p.currency_code
+              AND er.date_rate <= s.spending_date
+
+            ORDER BY er.date_rate DESC
+            LIMIT 1
+          ) target_rate
+            ON p.currency_code <> 'USD'
+        )
+        SELECT
+          'custom'::text AS value,
+          'Произвольный'::text AS label,
+
+          COALESCE(
+            SUM(csr.target_amount_minor),
+            0
+          )::bigint::text AS amount,
+
+          GREATEST(
+            1,
+            (
+              (
+                p.date_to_utc
+                AT TIME ZONE p.time_zone
+              )::date
+              -
+              (
+                p.date_from_utc
+                AT TIME ZONE p.time_zone
+              )::date
+            )::int
+          ) AS days_in_period,
+
+          p.date_from_utc
+            AT TIME ZONE p.time_zone AS date_from_local,
+
+          p.date_to_utc
+            AT TIME ZONE p.time_zone AS date_to_local,
+
+          p.date_from_utc AS date_from_utc,
+          p.date_to_utc AS date_to_utc,
+
+          p.time_zone AS timezone
+
+        FROM params p
+        LEFT JOIN custom_spendings_raw csr
+          ON true
+
+        GROUP BY
+          p.date_from_utc,
+          p.date_to_utc,
+          p.time_zone;
+        `,
+        [
+          userId,
+          currencyCode,
+          userSettings.conversionFactor,
+          timeZone,
+          dateFromUTC,
+          dateToUTC,
+        ]
+      );
+
+      const customRow = customResult.rows[0];
+
+      if (customRow) {
+        customFilter = {
+          value: customRow.value,
+          label: customRow.label,
+          amount: customRow.amount,
+          isActive: false,
+          daysInPeriod: customRow.days_in_period,
+
+          dateFromLocal: customRow.date_from_local,
+          dateToLocal: customRow.date_to_local,
+
+          dateFromUTC: customRow.date_from_utc,
+          dateToUTC: customRow.date_to_utc,
+
+          timezone: customRow.timezone,
+        };
       }
+    }
 
-      return filter;
-    });
+    filters.push(customFilter);
 
     const activeFilter =
       filters.find((filter) => filter.value === groupFilterPeriod) ??
@@ -1001,7 +1358,36 @@ periods AS (
       activeFilter.isActive = true;
     }
 
-    return filters;
+    const availableRangeResult = await pool.query<SpendingDateRangeRow>(
+      `
+        SELECT
+          TO_CHAR(
+            MIN(s.spending_date) AT TIME ZONE $2::text,
+            'YYYY-MM-DD'
+          ) AS min_date_local,
+
+          TO_CHAR(
+            MAX(s.spending_date) AT TIME ZONE $2::text,
+            'YYYY-MM-DD'
+          ) AS max_date_local
+
+        FROM spendings s
+        WHERE s.user_id = $1::uuid;
+        `,
+      [userId, timeZone]
+    );
+
+    const availableRangeRow = availableRangeResult.rows[0];
+
+    return {
+      filters,
+
+      availableRange: {
+        minDateLocal: availableRangeRow?.min_date_local ?? null,
+
+        maxDateLocal: availableRangeRow?.max_date_local ?? null,
+      },
+    };
   } catch (error: any) {
     if (error instanceof AppError) {
       throw error;

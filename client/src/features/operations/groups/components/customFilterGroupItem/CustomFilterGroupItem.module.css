@@ -1,0 +1,141 @@
+.item {
+  height: 30px;
+  min-width: fit-content;
+  padding: 0 12px;
+  border-radius: 999px;
+
+  border: 1px solid var(--ant-color-border);
+  background: var(--ant-color-fill-quaternary);
+
+  box-shadow: none;
+}
+
+.active {
+  border: 1px solid var(--app-accent);
+  background: var(--ant-color-bg-container);
+}
+
+.item:hover {
+  border-color: var(--app-accent) !important;
+  color: var(--ant-color-text) !important;
+}
+
+.active:hover {
+  border-color: var(--app-accent) !important;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.label {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ant-color-text-secondary);
+}
+
+.amount {
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--ant-color-text);
+}
+
+.active .label {
+  color: var(--app-accent);
+}
+
+.popoverPopup {
+  max-width: calc(100vw - 24px);
+}
+
+.popoverPopup :global(.ant-popover-inner) {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.popoverContent {
+  width: 320px;
+  max-width: 100%;
+}
+
+.popoverContent :global(.ant-picker) {
+  width: 100%;
+  min-width: 0;
+}
+
+.rangePickerPopup {
+  max-width: calc(100vw - 16px);
+}
+
+.rangePickerPopup :global(.ant-picker-panel-container) {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Мобильный Popover с формой */
+.popoverPopupMobile {
+  inset-inline-start: 8px !important;
+  width: calc(100vw - 16px) !important;
+  max-width: calc(100vw - 16px) !important;
+}
+
+.popoverPopupMobile :global(.ant-popover-inner) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.popoverPopupMobile .popoverContent {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Мобильный выпадающий календарь */
+.rangePickerPopupMobile {
+  inset-inline-start: 8px !important;
+  width: calc(100vw - 16px) !important;
+  max-width: calc(100vw - 16px) !important;
+}
+
+.rangePickerPopupMobile :global(.ant-picker-panel-container) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.rangePickerPopupMobile :global(.ant-picker-panel-layout),
+.rangePickerPopupMobile :global(.ant-picker-panels) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+.rangePickerPopupMobile
+  :global(.ant-picker-panels)
+  > :global(.ant-picker-panel):last-child {
+  display: none;
+}
+
+.rangePickerPopupMobile :global(.ant-picker-panel),
+.rangePickerPopupMobile :global(.ant-picker-date-panel) {
+  width: 100%;
+  max-width: 100%;
+}
+
+.rangePickerPopupMobile :global(.ant-picker-body) {
+  padding-inline: 8px;
+}
+
+.rangePickerPopupMobile :global(.ant-picker-content) {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.rangePickerPopupMobile :global(.ant-picker-cell) {
+  padding-inline: 0;
+}

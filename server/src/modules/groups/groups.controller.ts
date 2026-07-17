@@ -126,13 +126,15 @@ export async function getGroupsFiltersController(
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
     }
 
-    const filters = await getGroupsFilters({
+    const result = await getGroupsFilters({
       userId,
       userSettings,
       groupFilterPeriod: value.groupFilterPeriod ?? null,
+      dateFromUTC: value.dateFromUTC,
+      dateToUTC: value.dateToUTC,
     });
 
-    return sendSuccess(res, filters);
+    return sendSuccess(res, result);
   } catch (error) {
     next(error);
   }

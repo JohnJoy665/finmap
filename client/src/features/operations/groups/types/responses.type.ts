@@ -12,17 +12,24 @@ export type deleteGroupWithSpendingResponse = {
 };
 
 export type GetGroupsFiltersResponse = {
-  value: GroupFilterValue;
-  label: string;
-  amount: string | null;
-  isActive: boolean;
-  daysInPeriod: number;
+  filters: {
+    value: GroupFilterValue;
+    label: string;
+    amount: string | null;
+    isActive: boolean;
+    daysInPeriod: number | null;
 
-  dateFromLocal: string;
-  dateToLocal: string;
+    dateFromLocal: string | null;
+    dateToLocal: string | null;
 
-  dateFromUTC: string;
-  dateToUTC: string;
+    dateFromUTC: string | null;
+    dateToUTC: string | null;
 
-  timezone: string;
+    timezone: string;
+  }[];
+
+  availableRange: {
+    minDateLocal: string | null;
+    maxDateLocal: string | null;
+  };
 };
