@@ -17,8 +17,8 @@ type FilterGroupContainerProps = {
   filters: FilterItem[];
   conversionFactor: number;
   customGroupFilter: CustomGroupFilter | null;
-  minDateLocal: string;
-  maxDateLocal: string;
+  minDateLocal: string | null;
+  maxDateLocal: string | null;
 };
 
 function getFormattedAmount(amount: string | null, conversionFactor: number) {
