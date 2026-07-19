@@ -25,10 +25,10 @@ async function getCategoryIdForSpending(
 
   const spendingGroup = await pool.query<SpendingGroupResult>(
     `
-    SELECT sg.category_id
-    FROM spendings_group sg
-    WHERE sg.id = $1
-    LIMIT 1;
+      SELECT sg.category_id
+      FROM spendings_group sg
+      WHERE sg.id = $1
+      LIMIT 1;
     `,
     [groupId]
   );
@@ -62,7 +62,10 @@ export async function createSpending({
   try {
     await client.query("BEGIN");
 
-    if (!userSettings.currencyCode) {
+    const currencyCode = userSettings.currencyCode?.trim();
+    const timezone = userSettings.timezone?.trim();
+
+    if (!currencyCode) {
       throw new AppError(
         404,
         "CURRENCY_CODE_NOT_FOUND",
@@ -70,44 +73,54 @@ export async function createSpending({
       );
     }
 
+    if (!timezone) {
+      throw new AppError(
+        400,
+        "TIMEZONE_REQUIRED",
+        "User timezone is required to create a spending"
+      );
+    }
+
     const baseAmountMicro = await getBaseAmountMicro(client, reqValues.amount, {
-      currencyCode: userSettings.currencyCode,
+      currencyCode,
       conversionFactor: userSettings.conversionFactor,
     });
 
-    const newSpending = await client.query<NewSpendingResult>(
+    const newSpendingResult = await client.query<NewSpendingResult>(
       `
-      INSERT INTO spendings (
-        amount,
-        currency_code,
-        user_id,
-        group_id,
-        statistical,
-        account_id,
-        name,
-        category_id,
-        base_amount_micro,
-        conversion_factor,
-        city_id
-      )
-      VALUES (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6,
-        $7,
-        $8,
-        $9,
-        $10,
-        $11
-      )
-      RETURNING id;
+        INSERT INTO spendings (
+          amount,
+          currency_code,
+          user_id,
+          group_id,
+          statistical,
+          account_id,
+          name,
+          category_id,
+          base_amount_micro,
+          conversion_factor,
+          city_id,
+          timezone
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12
+        )
+        RETURNING id;
       `,
       [
         reqValues.amount.toString(),
-        userSettings.currencyCode,
+        currencyCode,
         userId,
         reqValues.groupId,
         statistical,
@@ -117,8 +130,19 @@ export async function createSpending({
         baseAmountMicro,
         userSettings.conversionFactor,
         userSettings.cityId,
+        timezone,
       ]
     );
+
+    const newSpending = newSpendingResult.rows[0];
+
+    if (!newSpending) {
+      throw new AppError(
+        500,
+        "SPENDING_CREATE_FAILED",
+        "Spending was not created"
+      );
+    }
 
     const updatedAccount = await changeAccountAmount(client, {
       accountId: userSettings.accountId,
@@ -129,7 +153,7 @@ export async function createSpending({
     await client.query("COMMIT");
 
     return {
-      spendingId: newSpending.rows[0].id,
+      spendingId: newSpending.id,
       accountAmount: updatedAccount.amount,
     };
   } catch (error: any) {

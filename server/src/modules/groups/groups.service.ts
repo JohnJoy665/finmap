@@ -43,38 +43,65 @@ export async function createGroup({
   reqValues,
 }: CreateGroupRequest) {
   const client = await pool.connect();
+
   try {
     await client.query("BEGIN");
+
+    const currencyCode = userSettings.currencyCode?.trim();
+    const timezone = userSettings.timezone?.trim();
+
+    if (!currencyCode) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    if (!timezone) {
+      throw new AppError(
+        400,
+        "TIMEZONE_REQUIRED",
+        "User timezone is required to create a spending"
+      );
+    }
+
     const normalisedGroupName = reqValues.groupName.trim().toLowerCase();
+
     const oldGroup = await client.query<SpendingGroupRow>(
-      "select sg.id, sg.name from spendings_group sg where trim(lower(sg.name)) = $1 and sg.user_id = $2;",
+      `
+        SELECT
+          sg.id,
+          sg.name
+        FROM spendings_group sg
+        WHERE TRIM(LOWER(sg.name)) = $1
+          AND sg.user_id = $2;
+      `,
       [normalisedGroupName, userId]
     );
 
     let groupForSpending: SpendingGroupRow;
+
     if (oldGroup.rows.length > 0) {
       groupForSpending = oldGroup.rows[0];
     } else {
-      const newGroupId = await client.query<SpendingGroupRow>(
-        "\
-        insert into spendings_group (name, category_id, user_id)\
-        values ( $1, $2, $3 ) RETURNING id, name;",
-        [reqValues.groupName, reqValues.categoryId, userId]
+      const newGroupResult = await client.query<SpendingGroupRow>(
+        `
+          INSERT INTO spendings_group (
+            name,
+            category_id,
+            user_id
+          )
+          VALUES ($1, $2, $3)
+          RETURNING id, name;
+        `,
+        [reqValues.groupName.trim(), reqValues.categoryId, userId]
       );
-      groupForSpending = newGroupId.rows[0];
+
+      groupForSpending = newGroupResult.rows[0];
     }
 
     if (!groupForSpending) {
       throw new AppError(500, "GROUP_CREATE_FAILED", "Group was not created");
     }
 
-    const product_name = null;
-
-    const currencyCode = userSettings.currencyCode;
-
-    if (!currencyCode) {
-      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
-    }
+    const productName = null;
 
     const baseAmountMicro = await getBaseAmountMicro(client, reqValues.amount, {
       currencyCode,
@@ -82,32 +109,59 @@ export async function createGroup({
     });
 
     const spendingResult = await client.query<SpendingRow>(
-      `insert into spendings (
-          amount, 
-          user_id, 
-          currency_code, 
-          group_id, 
+      `
+        INSERT INTO spendings (
+          amount,
+          user_id,
+          currency_code,
+          group_id,
           name,
           account_id,
           category_id,
           base_amount_micro,
           conversion_factor,
-          city_id
+          city_id,
+          timezone
         )
-        values ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 ) RETURNING id;`,
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11
+        )
+        RETURNING id;
+      `,
       [
         reqValues.amount,
         userId,
-        userSettings.currencyCode,
+        currencyCode,
         groupForSpending.id,
-        product_name,
+        productName,
         userSettings.accountId,
         reqValues.categoryId,
         baseAmountMicro,
         userSettings.conversionFactor,
         userSettings.cityId,
+        timezone,
       ]
     );
+
+    const spending = spendingResult.rows[0];
+
+    if (!spending) {
+      throw new AppError(
+        500,
+        "SPENDING_CREATE_FAILED",
+        "Spending was not created"
+      );
+    }
 
     const changedAccount = await changeAccountAmount(client, {
       accountId: userSettings.accountId,
@@ -120,7 +174,7 @@ export async function createGroup({
     return {
       groupId: groupForSpending.id,
       groupName: groupForSpending.name,
-      spendingId: spendingResult.rows[0].id,
+      spendingId: spending.id,
       accountAmount: changedAccount.amount,
     };
   } catch (error: any) {

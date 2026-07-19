@@ -73,6 +73,11 @@ export async function initializeAccountController(
 
     const userId = req.user?.userId;
     const cityId = req.userSettings?.cityId;
+    const timezone = req.userSettings?.timezone;
+
+    if (!timezone) {
+      throw new AppError(401, "NOT FOUND TIMEZONE", "Not found timezone");
+    }
 
     if (!userId || !cityId) {
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
@@ -83,6 +88,7 @@ export async function initializeAccountController(
       cityId,
       accountId: value.accountId,
       amount: value.amount,
+      timezone,
     });
 
     sendSuccess(res, data);

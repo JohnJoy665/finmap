@@ -85,6 +85,7 @@ type InitializeAccountRequest = {
   cityId: number;
   accountId: string;
   amount: string;
+  timezone: string;
 };
 
 type InitializeAccountResponse = {
@@ -98,6 +99,7 @@ export async function initializeAccount({
   cityId,
   accountId,
   amount,
+  timezone,
 }: InitializeAccountRequest): Promise<InitializeAccountResponse> {
   const enteredAmount = BigInt(amount);
 
@@ -163,6 +165,8 @@ export async function initializeAccount({
       }
     );
 
+    const normalizedTimezone = timezone.trim();
+
     await client.query(
       `
       INSERT INTO incomes (
@@ -175,9 +179,10 @@ export async function initializeAccount({
         city_id,
         base_amount_micro,
         is_initial,
-        is_adjustment
+        is_adjustment,
+        timezone
       )
-      VALUES ($1, $2, $3, false, $4, $5, $6, $7, true, false)
+      VALUES ($1, $2, $3, false, $4, $5, $6, $7, true, false, $8)
       `,
       [
         incomeAmount.toString(),
@@ -187,6 +192,7 @@ export async function initializeAccount({
         account.conversion_factor,
         cityId,
         baseAmountMicro,
+        normalizedTimezone,
       ]
     );
 
@@ -288,6 +294,7 @@ export async function createAccountIncome({
   date,
 }: CreateAccountIncomeRequest): Promise<CreateAccountIncomeResponse> {
   const incomeAmount = BigInt(amount);
+  const normalizedTimezone = timezone.trim();
 
   const client = await pool.connect();
 
@@ -296,13 +303,25 @@ export async function createAccountIncome({
 
     const dateValidationResult = await client.query<{ is_valid: boolean }>(
       `
-      SELECT
-        (
-          $1::timestamp >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE $2) - INTERVAL '7 days'
-          AND $1::timestamp <= CURRENT_TIMESTAMP AT TIME ZONE $2
-        ) AS is_valid
+        WITH params AS (
+          SELECT
+            $1::timestamptz AS income_date,
+            $2::text AS timezone,
+            CURRENT_TIMESTAMP AS current_at
+        )
+        SELECT
+          (
+            p.income_date >= (
+              date_trunc(
+                'day',
+                p.current_at AT TIME ZONE p.timezone
+              ) - INTERVAL '7 days'
+            ) AT TIME ZONE p.timezone
+            AND p.income_date <= p.current_at
+          ) AS is_valid
+        FROM params p;
       `,
-      [date, timezone]
+      [date, normalizedTimezone]
     );
 
     const isDateValid = dateValidationResult.rows[0]?.is_valid;
@@ -317,18 +336,18 @@ export async function createAccountIncome({
 
     const accountResult = await client.query<AccountForIncomeRow>(
       `
-      SELECT
-        a.id,
-        a.amount::text,
-        TRIM(a.currency_code) AS currency_code,
-        c.currency_symbol,
-        c.conversion_factor
-      FROM accounts a
-      JOIN currencies c
-        ON c.code = TRIM(a.currency_code)
-      WHERE a.id = $1
-        AND a.user_id = $2
-      FOR UPDATE OF a
+        SELECT
+          a.id,
+          a.amount::text,
+          TRIM(a.currency_code) AS currency_code,
+          c.currency_symbol,
+          c.conversion_factor
+        FROM accounts a
+        JOIN currencies c
+          ON c.code = TRIM(a.currency_code)
+        WHERE a.id = $1
+          AND a.user_id = $2
+        FOR UPDATE OF a;
       `,
       [accountId, userId]
     );
@@ -339,63 +358,67 @@ export async function createAccountIncome({
       throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
     }
 
-    await assertAccountInitialized({ client, accountId, userId });
-
-    const baseAmountMicro = await getBaseAmountMicro(
+    await assertAccountInitialized({
       client,
-      incomeAmount.toString(),
-      {
-        currencyCode: account.currency_code,
-        conversionFactor: account.conversion_factor,
-      }
-    );
+      accountId,
+      userId,
+    });
+
+    const baseAmountMicro = await getBaseAmountMicroByIncomeDate(client, {
+      minorAmountOriginal: incomeAmount.toString(),
+      currencyCode: account.currency_code,
+      conversionFactor: account.conversion_factor,
+      incomeDate: new Date(date),
+    });
 
     const updatedAccountAmount = BigInt(account.amount) + incomeAmount;
 
     const incomeResult = await client.query<CreatedIncomeRow>(
       `
-      INSERT INTO incomes (
-        amount,
-        user_id,
-        account_id,
-        name,
-        date,
-        statistical,
-        currency_code,
-        conversion_factor,
-        city_id,
-        base_amount_micro,
-        completed,
-        confirmed,
-        is_initial,
-        is_adjustment
-      )
-      VALUES (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5::timestamp,
-        true,
-        $6,
-        $7,
-        $8,
-        $9,
-        true,
-        true,
-        false,
-        false
-      )
-      RETURNING
-        id::text,
-        account_id::text,
-        name,
-        amount::text,
-        TO_CHAR(date AT TIME ZONE $10, 'DD.MM') AS date,
-        TO_CHAR(date AT TIME ZONE $10, 'HH24:MI') AS time,
-        TRIM(currency_code) AS currency_code,
-        $11::text AS currency_symbol,
-        conversion_factor
+        INSERT INTO incomes (
+          amount,
+          user_id,
+          account_id,
+          name,
+          date,
+          statistical,
+          currency_code,
+          conversion_factor,
+          city_id,
+          timezone,
+          base_amount_micro,
+          completed,
+          confirmed,
+          is_initial,
+          is_adjustment
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5::timestamptz,
+          true,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          true,
+          true,
+          false,
+          false
+        )
+        RETURNING
+          id::text,
+          account_id::text,
+          name,
+          amount::text,
+          TO_CHAR(date AT TIME ZONE timezone, 'DD.MM') AS date,
+          TO_CHAR(date AT TIME ZONE timezone, 'HH24:MI') AS time,
+          TRIM(currency_code) AS currency_code,
+          $11::text AS currency_symbol,
+          conversion_factor;
       `,
       [
         incomeAmount.toString(),
@@ -406,22 +429,26 @@ export async function createAccountIncome({
         account.currency_code,
         account.conversion_factor,
         cityId,
-        baseAmountMicro,
-        timezone,
+        normalizedTimezone,
+        baseAmountMicro?.toString() ?? null,
         account.currency_symbol,
       ]
     );
 
     const income = incomeResult.rows[0];
 
+    if (!income) {
+      throw new AppError(500, "INCOME_CREATE_FAILED", "Income was not created");
+    }
+
     await client.query(
       `
-      UPDATE accounts
-      SET
-        amount = $1,
-        last_change_date = CURRENT_TIMESTAMP
-      WHERE id = $2
-        AND user_id = $3
+        UPDATE accounts
+        SET
+          amount = $1,
+          last_change_date = CURRENT_TIMESTAMP
+        WHERE id = $2
+          AND user_id = $3;
       `,
       [updatedAccountAmount.toString(), accountId, userId]
     );
