@@ -920,7 +920,29 @@ export async function getGroupsFilters({
                 p.time_zone
               )
             )::date
-          ) AS oldest_spending_local_date
+          ) FILTER (
+            WHERE (
+              s.spending_date AT TIME ZONE COALESCE(
+                NULLIF(BTRIM(s.timezone), ''),
+                c.timezone,
+                p.time_zone
+              )
+            )::date >= (
+              p.current_at AT TIME ZONE p.time_zone
+            )::date - 364
+          ) AS oldest_spending_local_date,
+
+          BOOL_OR(
+            (
+              s.spending_date AT TIME ZONE COALESCE(
+                NULLIF(BTRIM(s.timezone), ''),
+                c.timezone,
+                p.time_zone
+              )
+            )::date < (
+              p.current_at AT TIME ZONE p.time_zone
+            )::date - 364
+          ) AS has_spending_before_year
 
         FROM spendings s
         CROSS JOIN params p
@@ -929,15 +951,6 @@ export async function getGroupsFilters({
           ON c.id = s.city_id
 
         WHERE s.user_id = p.user_id
-          AND (
-            s.spending_date AT TIME ZONE COALESCE(
-              NULLIF(BTRIM(s.timezone), ''),
-              c.timezone,
-              p.time_zone
-            )
-          )::date >= (
-            p.current_at AT TIME ZONE p.time_zone
-          )::date - 364
           AND (
             s.spending_date AT TIME ZONE COALESCE(
               NULLIF(BTRIM(s.timezone), ''),
@@ -953,11 +966,18 @@ export async function getGroupsFilters({
         SELECT
           vp.*,
           os.oldest_spending_local_date,
+          os.has_spending_before_year,
 
           CASE
-            WHEN os.oldest_spending_local_date IS NULL THEN NULL
+            WHEN os.oldest_spending_local_date IS NULL
+              AND COALESCE(os.has_spending_before_year, false) = false
+            THEN NULL
 
             WHEN vp.value = 'today' THEN 1
+
+            WHEN vp.value = 'year'
+              AND COALESCE(os.has_spending_before_year, false) = true
+            THEN 365
 
             ELSE LEAST(
               vp.period_limit_days,
@@ -994,8 +1014,16 @@ export async function getGroupsFilters({
 
           (
             GREATEST(
-              pwd.period_from_local_date,
-              pwd.oldest_spending_local_date
+              CASE
+                WHEN pwd.value = 'year'
+                  AND COALESCE(pwd.has_spending_before_year, false) = true
+                THEN pwd.period_from_local_date
+
+                ELSE GREATEST(
+                  pwd.period_from_local_date,
+                  pwd.oldest_spending_local_date
+                )
+              END
             )::timestamp
             AT TIME ZONE pwd.time_zone
           ) AS date_from_utc,
@@ -1003,16 +1031,32 @@ export async function getGroupsFilters({
           pwd.period_to_utc AS date_to_utc,
 
           GREATEST(
-            pwd.period_from_local_date,
-            pwd.oldest_spending_local_date
+            CASE
+              WHEN pwd.value = 'year'
+                AND COALESCE(pwd.has_spending_before_year, false) = true
+              THEN pwd.period_from_local_date
+
+              ELSE GREATEST(
+                pwd.period_from_local_date,
+                pwd.oldest_spending_local_date
+              )
+            END
           )::timestamp AS date_from_local,
 
           pwd.period_to_utc
             AT TIME ZONE pwd.time_zone AS date_to_local,
 
           GREATEST(
-            pwd.period_from_local_date,
-            pwd.oldest_spending_local_date
+            CASE
+              WHEN pwd.value = 'year'
+                AND COALESCE(pwd.has_spending_before_year, false) = true
+              THEN pwd.period_from_local_date
+
+              ELSE GREATEST(
+                pwd.period_from_local_date,
+                pwd.oldest_spending_local_date
+              )
+            END
           ) AS period_from_local_date,
 
           pwd.layer_from_local_date,
