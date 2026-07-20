@@ -33,7 +33,12 @@ function validateConfirmPassword(
 function Registration() {
   return (
     <div className={style.container}>
-      <Form className={style.form} layout="vertical" onFinish={handleSubmit}>
+      <Form
+        autoComplete="off"
+        className={style.form}
+        layout="vertical"
+        onFinish={handleSubmit}
+      >
         <Item>
           <h1>Регистрация</h1>
         </Item>

@@ -171,6 +171,7 @@ function AddIncomeSection({
   return (
     <section className={styles.section}>
       <Form
+        autoComplete="off"
         form={form}
         layout="vertical"
         initialValues={{

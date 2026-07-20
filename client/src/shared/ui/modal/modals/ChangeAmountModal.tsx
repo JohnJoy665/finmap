@@ -79,6 +79,7 @@ function ChangeAmountModal({
       keepAlive={false}
     >
       <Form
+        autoComplete="off"
         form={form}
         layout="vertical"
         initialValues={{

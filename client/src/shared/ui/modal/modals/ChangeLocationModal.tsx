@@ -74,6 +74,7 @@ function ChangeLocationModal({
       {content}
 
       <Form
+        autoComplete="off"
         form={form}
         layout="vertical"
         onFinish={handleSubmit}

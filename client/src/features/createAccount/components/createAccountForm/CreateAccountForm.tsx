@@ -62,6 +62,7 @@ function CreateAccountForm({ currencies }: CreateAccountFormProps) {
   return (
     <Form
       form={form}
+      autoComplete="off"
       layout="vertical"
       initialValues={{
         currencyName: undefined,
