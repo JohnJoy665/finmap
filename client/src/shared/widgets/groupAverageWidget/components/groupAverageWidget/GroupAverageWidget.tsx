@@ -43,11 +43,13 @@ function GroupAverageWidget({
 
   const dateFromUTC = activeFilter?.dateFromUTC ?? null;
   const dateToUTC = activeFilter?.dateToUTC ?? null;
+  const dateFromLocal = activeFilter?.dateFromLocal ?? null;
+  const dateToLocal = activeFilter?.dateToLocal ?? null;
 
   const accountReloadKey = reloadOnAccountChange ? accountId : "Ignore-case";
 
   useEffect(() => {
-    if (!dateFromUTC || !dateToUTC) return;
+    if (!dateFromUTC || !dateToUTC || !dateFromLocal || !dateToLocal) return;
 
     if (reloadOnAccountChange && !accountId) return;
 
@@ -60,6 +62,8 @@ function GroupAverageWidget({
         const response = await getGroupAverageWidget({
           dateFromUTC,
           dateToUTC,
+          dateFromLocal,
+          dateToLocal,
         });
 
         if (isCancelled) return;

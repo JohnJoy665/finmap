@@ -1,6 +1,23 @@
 import { pool } from "../../db/pool";
 import { AppError } from "../../utils/AppError";
 
+function formatLocalDateRange(dateFrom: string, dateTo: string): string {
+  const fromDate = dateFrom.slice(0, 10);
+  const toDate = dateTo.slice(0, 10);
+
+  function formatDate(date: string): string {
+    const [year, month, day] = date.split("-");
+
+    return `${day}.${month}.${year}`;
+  }
+
+  if (fromDate === toDate) {
+    return formatDate(fromDate);
+  }
+
+  return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
+}
+
 type UserSettings = {
   id: string;
   userId: string;
@@ -30,6 +47,8 @@ type GetCategoryStatisticsWidgetRequest = {
   userSettings: UserSettings;
   dateFromUTC: string;
   dateToUTC: string;
+  dateFromLocal: string;
+  dateToLocal: string;
 };
 
 type CategoryStatisticsRow = {
@@ -60,47 +79,13 @@ type CategoryStatisticsWidgetResponse = {
   categories: CategoryStatisticsItem[];
 };
 
-function formatDateForSubtitle(dateTimeUTC: string, timezone?: string) {
-  if (!dateTimeUTC) return "";
-
-  const date = new Date(dateTimeUTC);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const formatter = new Intl.DateTimeFormat("ru-RU", {
-    timeZone: timezone || "UTC",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-
-  return formatter.format(date);
-}
-
-function formatPeriodSubtitle(
-  dateFromUTC: string,
-  dateToUTC: string,
-  timezone?: string
-) {
-  const from = formatDateForSubtitle(dateFromUTC, timezone);
-  const to = formatDateForSubtitle(dateToUTC, timezone);
-
-  if (!from || !to) return "";
-
-  if (from === to) {
-    return from;
-  }
-
-  return `${from} - ${to}`;
-}
-
 export async function getCategoryStatisticsWidget({
   userId,
   userSettings,
   dateFromUTC,
   dateToUTC,
+  dateFromLocal,
+  dateToLocal,
 }: GetCategoryStatisticsWidgetRequest): Promise<CategoryStatisticsWidgetResponse> {
   try {
     const langCode = userSettings.languageCode ?? "en";
@@ -265,7 +250,7 @@ export async function getCategoryStatisticsWidget({
       subTitles: [
         {
           subTitle: "За период:",
-          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+          value: formatLocalDateRange(dateFromLocal, dateToLocal),
         },
         {
           subTitle: "Всего категорий:",
@@ -296,6 +281,8 @@ type GetGroupStatisticsWidgetRequest = {
   userSettings: UserSettings;
   dateFromUTC: string;
   dateToUTC: string;
+  dateFromLocal: string;
+  dateToLocal: string;
 };
 
 type GroupStatisticsWidgetRow = {
@@ -333,6 +320,8 @@ export async function getGroupStatisticsWidget({
   userSettings,
   dateFromUTC,
   dateToUTC,
+  dateFromLocal,
+  dateToLocal,
 }: GetGroupStatisticsWidgetRequest): Promise<GroupStatisticsWidgetResponse> {
   try {
     const langCode = userSettings.languageCode ?? "en";
@@ -471,7 +460,7 @@ export async function getGroupStatisticsWidget({
       subTitles: [
         {
           subTitle: "За период:",
-          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+          value: formatLocalDateRange(dateFromLocal, dateToLocal),
         },
         {
           subTitle: "Всего групп:",
@@ -534,6 +523,8 @@ export async function getCategoryAverageWidget({
   userSettings,
   dateFromUTC,
   dateToUTC,
+  dateFromLocal,
+  dateToLocal,
 }: GetCategoryStatisticsWidgetRequest): Promise<CategoryAverageWidgetResponse> {
   try {
     const langCode = userSettings.languageCode ?? "en";
@@ -690,7 +681,7 @@ export async function getCategoryAverageWidget({
       subTitles: [
         {
           subTitle: "За период:",
-          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+          value: formatLocalDateRange(dateFromLocal, dateToLocal),
         },
         {
           subTitle: "Всего категорий:",
@@ -721,6 +712,8 @@ type GetGroupAverageWidgetRequest = {
   userSettings: UserSettings;
   dateFromUTC: string;
   dateToUTC: string;
+  dateFromLocal: string;
+  dateToLocal: string;
 };
 
 type GroupAverageWidgetRow = {
@@ -760,6 +753,8 @@ export async function getGroupAverageWidget({
   userSettings,
   dateFromUTC,
   dateToUTC,
+  dateFromLocal,
+  dateToLocal,
 }: GetGroupAverageWidgetRequest): Promise<GroupAverageWidgetResponse> {
   try {
     const currencyCode = userSettings.currencyCode;
@@ -887,7 +882,7 @@ export async function getGroupAverageWidget({
       subTitles: [
         {
           subTitle: "За период:",
-          value: formatPeriodSubtitle(dateFromUTC, dateToUTC, timeZone),
+          value: formatLocalDateRange(dateFromLocal, dateToLocal),
         },
         {
           subTitle: "Всего групп:",

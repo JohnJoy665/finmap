@@ -36,11 +36,13 @@ function GroupWidget({ reloadOnAccountChange = true }: GroupWidgetProps) {
 
   const dateFromUTC = activeFilter?.dateFromUTC ?? null;
   const dateToUTC = activeFilter?.dateToUTC ?? null;
+  const dateFromLocal = activeFilter?.dateFromLocal ?? null;
+  const dateToLocal = activeFilter?.dateToLocal ?? null;
 
   const accountReloadKey = reloadOnAccountChange ? accountId : "Ignore-case";
 
   useEffect(() => {
-    if (!dateFromUTC || !dateToUTC) return;
+    if (!dateFromUTC || !dateToUTC || !dateFromLocal || !dateToLocal) return;
 
     if (reloadOnAccountChange && !accountId) return;
 
@@ -53,6 +55,8 @@ function GroupWidget({ reloadOnAccountChange = true }: GroupWidgetProps) {
         const response = await getGroupStatisticsWidget({
           dateFromUTC,
           dateToUTC,
+          dateFromLocal,
+          dateToLocal,
         });
 
         if (isCancelled) return;

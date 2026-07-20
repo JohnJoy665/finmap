@@ -231,7 +231,8 @@ export async function getGroups({
     $3::numeric          AS conversion_factor,
     $4::varchar(10)      AS lang_code,
     $5::timestamptz      AS date_from_utc,
-    $6::timestamptz      AS date_to_utc
+    $6::timestamptz      AS date_to_utc,
+    $7::text             AS time_zone
 ), 
 group_spendings AS (
   SELECT
@@ -252,8 +253,22 @@ group_spendings AS (
   LEFT JOIN spendings s
     ON s.group_id = sg.id
    AND s.user_id = p.user_id
-   AND s.spending_date >= p.date_from_utc
-   AND s.spending_date < p.date_to_utc
+   AND (
+     s.spending_date AT TIME ZONE COALESCE(
+       NULLIF(BTRIM(s.timezone), ''),
+       p.time_zone
+     )
+   ) >= (
+     p.date_from_utc AT TIME ZONE p.time_zone
+   )
+   AND (
+     s.spending_date AT TIME ZONE COALESCE(
+       NULLIF(BTRIM(s.timezone), ''),
+       p.time_zone
+     )
+   ) < (
+     p.date_to_utc AT TIME ZONE p.time_zone
+   )
 )
 , spendings_with_base AS (
   SELECT
@@ -335,16 +350,16 @@ group_spendings AS (
       WHEN swb.effective_base_amount_micro IS NULL THEN
         NULL
 
-			WHEN p.currency_code = 'USD' THEN
-			  swb.effective_base_amount_micro::numeric
-			  / 1000000
-			  * p.conversion_factor
-			
-			WHEN target_rate.exchange_rate IS NOT NULL THEN
-			  swb.effective_base_amount_micro::numeric
-			  / 1000000
-			  * target_rate.exchange_rate
-			  * p.conversion_factor
+      WHEN p.currency_code = 'USD' THEN
+        swb.effective_base_amount_micro::numeric
+        / 1000000
+        * p.conversion_factor
+
+      WHEN target_rate.exchange_rate IS NOT NULL THEN
+        swb.effective_base_amount_micro::numeric
+        / 1000000
+        * target_rate.exchange_rate
+        * p.conversion_factor
 
       ELSE NULL
     END AS view_amount_minor_raw,
@@ -429,6 +444,7 @@ ORDER BY
         userSettings.languageCode,
         dateFromUTC,
         dateToUTC,
+        userSettings.timezone?.trim() || "UTC",
       ]
     );
 
@@ -1542,7 +1558,7 @@ export async function getGroupsFilters({
           ) AS date_from_local,
 
           TO_CHAR(
-            p.date_to_utc AT TIME ZONE p.time_zone,
+            (p.date_to_utc AT TIME ZONE p.time_zone) - INTERVAL '1 second',
             'YYYY-MM-DD"T"HH24:MI:SS'
           ) AS date_to_local,
 
