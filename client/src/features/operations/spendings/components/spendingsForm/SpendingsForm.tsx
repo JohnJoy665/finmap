@@ -67,6 +67,7 @@ function SpendingsForm({
 
   return (
     <Form
+      autoComplete="off"
       className={styles.form}
       form={form}
       layout="vertical"

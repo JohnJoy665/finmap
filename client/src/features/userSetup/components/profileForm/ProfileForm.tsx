@@ -89,6 +89,7 @@ function ProfileForm({
 
   return (
     <Form
+      autoComplete="off"
       form={form}
       layout="vertical"
       initialValues={{

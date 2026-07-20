@@ -40,6 +40,8 @@ export async function getCategoryStatisticsWidgetController(
       userSettings,
       dateFromUTC: value.dateFromUTC,
       dateToUTC: value.dateToUTC,
+      dateFromLocal: value.dateFromLocal,
+      dateToLocal: value.dateToLocal,
     });
 
     sendSuccess(res, data);
@@ -78,6 +80,8 @@ export async function getGroupStatisticsWidgetController(
       userSettings,
       dateFromUTC: value.dateFromUTC,
       dateToUTC: value.dateToUTC,
+      dateFromLocal: value.dateFromLocal,
+      dateToLocal: value.dateToLocal,
     });
 
     sendSuccess(res, data);
@@ -116,6 +120,8 @@ export async function getCategoryAverageWidgetController(
       userSettings,
       dateFromUTC: value.dateFromUTC,
       dateToUTC: value.dateToUTC,
+      dateFromLocal: value.dateFromLocal,
+      dateToLocal: value.dateToLocal,
     });
 
     sendSuccess(res, data);
@@ -154,6 +160,8 @@ export async function getGroupAverageWidgetController(
       userSettings,
       dateFromUTC: value.dateFromUTC,
       dateToUTC: value.dateToUTC,
+      dateFromLocal: value.dateFromLocal,
+      dateToLocal: value.dateToLocal,
     });
 
     sendSuccess(res, data);

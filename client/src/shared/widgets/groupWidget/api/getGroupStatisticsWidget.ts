@@ -4,6 +4,8 @@ import type { ApiSuccess } from "../../../../shared/api/types";
 type GetGroupStatisticsWidgetParams = {
   dateFromUTC: string;
   dateToUTC: string;
+  dateFromLocal: string;
+  dateToLocal: string;
 };
 
 export type GroupStatisticsWidgetSubTitle = {
@@ -30,6 +32,8 @@ export type GroupStatisticsWidgetResponse = {
 export async function getGroupStatisticsWidget({
   dateFromUTC,
   dateToUTC,
+  dateFromLocal,
+  dateToLocal,
 }: GetGroupStatisticsWidgetParams): Promise<
   ApiSuccess<GroupStatisticsWidgetResponse>
 > {
@@ -39,6 +43,8 @@ export async function getGroupStatisticsWidget({
     params: {
       dateFromUTC,
       dateToUTC,
+      dateFromLocal,
+      dateToLocal,
     },
   });
 }

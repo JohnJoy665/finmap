@@ -33,7 +33,12 @@ function Login() {
 
   return (
     <div className={style.container}>
-      <Form className={style.form} layout="vertical" onFinish={handleSubmit}>
+      <Form
+        autoComplete="off"
+        className={style.form}
+        layout="vertical"
+        onFinish={handleSubmit}
+      >
         <Title className={style.title} level={3}>
           Вход
         </Title>

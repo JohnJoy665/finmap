@@ -4,6 +4,8 @@ import type { ApiSuccess } from "../../../api/types";
 type GetCategoryAverageWidgetParams = {
   dateFromUTC: string;
   dateToUTC: string;
+  dateFromLocal: string;
+  dateToLocal: string;
 };
 
 export type CategoryAverageWidgetSubTitle = {
@@ -31,6 +33,8 @@ export type CategoryAverageWidgetResponse = {
 export async function getCategoryAverageWidget({
   dateFromUTC,
   dateToUTC,
+  dateFromLocal,
+  dateToLocal,
 }: GetCategoryAverageWidgetParams): Promise<
   ApiSuccess<CategoryAverageWidgetResponse>
 > {
@@ -40,6 +44,8 @@ export async function getCategoryAverageWidget({
     params: {
       dateFromUTC,
       dateToUTC,
+      dateFromLocal,
+      dateToLocal,
     },
   });
 }

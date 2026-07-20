@@ -228,6 +228,7 @@ export async function getSpendingsByGroup({
         SELECT
           s.id,
           s.spending_date,
+          s.timezone,
           s.amount,
           s.name,
           s.currency_code,
@@ -261,8 +262,22 @@ export async function getSpendingsByGroup({
             SELECT jsonb_agg(
               jsonb_build_object(
                 'id', i.id::text,
-                'date', TO_CHAR(i.spending_date AT TIME ZONE p.timezone, 'DD.MM'),
-                'time', TO_CHAR(i.spending_date AT TIME ZONE p.timezone, 'HH24:MI'),
+                'date',
+                  TO_CHAR(
+                    i.spending_date AT TIME ZONE COALESCE(
+                      NULLIF(BTRIM(i.timezone), ''),
+                      p.timezone
+                    ),
+                    'DD.MM'
+                  ),
+                'time',
+                  TO_CHAR(
+                    i.spending_date AT TIME ZONE COALESCE(
+                      NULLIF(BTRIM(i.timezone), ''),
+                      p.timezone
+                    ),
+                    'HH24:MI'
+                  ),
                 'amount', i.amount::text,
                 'conversionFactor', i.conversion_factor,
                 'currencySymbol', i.currency_symbol,

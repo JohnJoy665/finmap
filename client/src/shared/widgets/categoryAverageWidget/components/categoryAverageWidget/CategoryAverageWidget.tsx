@@ -43,11 +43,13 @@ function CategoryAverageWidget({
 
   const dateFromUTC = activeFilter?.dateFromUTC ?? null;
   const dateToUTC = activeFilter?.dateToUTC ?? null;
+  const dateFromLocal = activeFilter?.dateFromLocal ?? null;
+  const dateToLocal = activeFilter?.dateToLocal ?? null;
 
   const accountReloadKey = reloadOnAccountChange ? accountId : "Ignore-case";
 
   useEffect(() => {
-    if (!dateFromUTC || !dateToUTC) return;
+    if (!dateFromUTC || !dateToUTC || !dateFromLocal || !dateToLocal) return;
 
     if (reloadOnAccountChange && !accountId) return;
 
@@ -57,11 +59,14 @@ function CategoryAverageWidget({
       try {
         setIsLoading(true);
 
-        if (!dateFromUTC || !dateToUTC) return;
+        if (!dateFromUTC || !dateToUTC || !dateFromLocal || !dateToLocal)
+          return;
 
         const response = await getCategoryAverageWidget({
           dateFromUTC,
           dateToUTC,
+          dateFromLocal,
+          dateToLocal,
         });
 
         if (isCancelled) return;
