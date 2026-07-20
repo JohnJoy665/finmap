@@ -58,7 +58,8 @@ function GroupAverageWidget({
     async function getWidget() {
       try {
         setIsLoading(true);
-        if (!dateFromUTC || !dateToUTC) return;
+        if (!dateFromUTC || !dateToUTC || !dateFromLocal || !dateToLocal)
+          return;
         const response = await getGroupAverageWidget({
           dateFromUTC,
           dateToUTC,
