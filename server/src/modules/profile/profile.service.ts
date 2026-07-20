@@ -223,6 +223,8 @@ export async function createProfile({
   try {
     await client.query("BEGIN");
 
+    const normalizedTimezone = timezone.trim();
+
     const usetResult = await client.query(
       `
         UPDATE users
@@ -368,9 +370,10 @@ export async function createProfile({
             conversion_factor,
             city_id,
             base_amount_micro,
-            is_initial
+            is_initial,
+            timezone
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8)
           RETURNING amount
         `,
         [
@@ -381,6 +384,7 @@ export async function createProfile({
           currency.conversion_factor,
           cityId,
           baseAmountMicro,
+          normalizedTimezone,
         ]
       );
 
@@ -439,7 +443,7 @@ export async function createProfile({
         cityName,
         currency.conversion_factor,
         currency.currency_symbol,
-        timezone,
+        normalizedTimezone,
       ]
     );
 

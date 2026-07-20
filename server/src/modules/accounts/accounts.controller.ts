@@ -47,12 +47,18 @@ export async function createAccountController(
     });
     const userId = req.user?.userId;
     const cityId = req.userSettings?.cityId;
+    const timezone = req.userSettings?.timezone;
 
-    if (!userId || !cityId) {
+    if (!userId || !cityId || !timezone) {
       throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
     }
 
-    const newAccount = await createAccount({ userId, ...value, cityId });
+    const newAccount = await createAccount({
+      userId,
+      ...value,
+      cityId,
+      timezone,
+    });
     sendSuccess(res, newAccount);
   } catch (error) {
     next(error);

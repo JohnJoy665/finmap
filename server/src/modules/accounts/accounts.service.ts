@@ -114,12 +114,21 @@ type CreateAccountRequest = {
   currencyCode: string;
   accountAmount: string;
   cityId: number;
+  timezone: string;
 };
 
 type CurrencyRow = {
   code: string;
   conversion_factor: number;
   currency_symbol: string;
+};
+
+type AccountCreateRow = {
+  id: string;
+};
+
+type IncomeAmountRow = {
+  amount: string;
 };
 
 type CreateAccountResponse = {
@@ -135,22 +144,35 @@ export async function createAccount({
   currencyCode,
   accountAmount,
   cityId,
+  timezone,
 }: CreateAccountRequest): Promise<CreateAccountResponse> {
   const client = await pool.connect();
+
   try {
     await client.query("BEGIN");
 
+    const normalizedCurrencyCode = currencyCode.trim();
+    const normalizedTimezone = timezone.trim();
+
+    if (!normalizedTimezone) {
+      throw new AppError(
+        400,
+        "TIMEZONE_REQUIRED",
+        "User timezone is required to create an account"
+      );
+    }
+
     const currencyResult = await client.query<CurrencyRow>(
       `
-        SELECT 
+        SELECT
           code,
           conversion_factor,
           currency_symbol
         FROM currencies
         WHERE code = $1
-        LIMIT 1
+        LIMIT 1;
       `,
-      [currencyCode]
+      [normalizedCurrencyCode]
     );
 
     if (currencyResult.rows.length === 0) {
@@ -159,13 +181,7 @@ export async function createAccount({
 
     const currency = currencyResult.rows[0];
 
-    type IncomeAmountRow = {
-      amount: string;
-    };
-
-    let initialAccountAmount = 0;
-
-    const accountResult = await client.query<AccountRow>(
+    const accountResult = await client.query<AccountCreateRow>(
       `
         INSERT INTO accounts (
           currency_code,
@@ -173,25 +189,46 @@ export async function createAccount({
           amount
         )
         VALUES ($1, $2, 0)
-        RETURNING id
+        RETURNING id;
       `,
-      [currencyCode, userId]
+      [normalizedCurrencyCode, userId]
     );
 
-    const accountId = accountResult.rows[0].id;
+    const account = accountResult.rows[0];
 
+    if (!account) {
+      throw new AppError(
+        500,
+        "ACCOUNT_CREATE_FAILED",
+        "Account was not created"
+      );
+    }
+
+    const accountId = account.id;
     const normalizedAccountAmount = accountAmount.trim();
 
+    let initialAccountAmount = 0;
+
     if (normalizedAccountAmount !== "" && normalizedAccountAmount !== "0") {
+      const accountAmountMajor = Number(normalizedAccountAmount);
+
+      if (!Number.isFinite(accountAmountMajor)) {
+        throw new AppError(
+          400,
+          "INVALID_ACCOUNT_AMOUNT",
+          "Account amount is invalid"
+        );
+      }
+
       const incomeAmount = Math.round(
-        Number(normalizedAccountAmount) * currency.conversion_factor
+        accountAmountMajor * currency.conversion_factor
       );
 
       const baseAmountMicro = await getBaseAmountMicro(
         client,
         String(incomeAmount),
         {
-          currencyCode,
+          currencyCode: normalizedCurrencyCode,
           conversionFactor: currency.conversion_factor,
         }
       );
@@ -205,39 +242,62 @@ export async function createAccount({
             currency_code,
             conversion_factor,
             city_id,
+            timezone,
             base_amount_micro,
             is_initial
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, true)
-          RETURNING amount
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            true
+          )
+          RETURNING amount;
         `,
         [
           incomeAmount,
           userId,
           accountId,
-          currencyCode,
+          normalizedCurrencyCode,
           currency.conversion_factor,
           cityId,
+          normalizedTimezone,
           baseAmountMicro,
         ]
       );
 
-      initialAccountAmount = Number(incomeResult.rows[0].amount);
+      const initialIncome = incomeResult.rows[0];
+
+      if (!initialIncome) {
+        throw new AppError(
+          500,
+          "INITIAL_INCOME_CREATE_FAILED",
+          "Initial income was not created"
+        );
+      }
+
+      initialAccountAmount = Number(initialIncome.amount);
 
       await client.query(
         `
           UPDATE accounts
           SET amount = $1
-          WHERE id = $2
+          WHERE id = $2;
         `,
         [initialAccountAmount, accountId]
       );
     }
+
     await client.query("COMMIT");
 
     return {
       id: accountId,
-      currencyCode: currencyCode,
+      currencyCode: currency.code,
       amount: String(initialAccountAmount),
       currencySymbol: currency.currency_symbol,
       conversionFactor: currency.conversion_factor,
@@ -474,6 +534,16 @@ export async function correctAccountAmount({
   try {
     await client.query("BEGIN");
 
+    const timezone = userSettings.timezone?.trim();
+
+    if (!timezone) {
+      throw new AppError(
+        400,
+        "TIMEZONE_REQUIRED",
+        "User timezone is required to correct account amount"
+      );
+    }
+
     const accountResult = await client.query<AccountForCorrectionRow>(
       `
         SELECT
@@ -486,7 +556,7 @@ export async function correctAccountAmount({
           ON c.code = a.currency_code
         WHERE a.id = $1
           AND a.user_id = $2
-        FOR UPDATE OF a
+        FOR UPDATE OF a;
       `,
       [accountId, userId]
     );
@@ -497,7 +567,11 @@ export async function correctAccountAmount({
       throw new AppError(404, "ACCOUNT_NOT_FOUND", "Account not found");
     }
 
-    await assertAccountInitialized({ client, accountId, userId });
+    await assertAccountInitialized({
+      client,
+      accountId,
+      userId,
+    });
 
     const oldAmount = BigInt(account.amount);
     const newAmount = BigInt(amount);
@@ -527,7 +601,7 @@ export async function correctAccountAmount({
           amount = $1,
           last_change_date = NOW()
         WHERE id = $2
-          AND user_id = $3
+          AND user_id = $3;
       `,
       [amount, accountId, userId]
     );
@@ -546,6 +620,7 @@ export async function correctAccountAmount({
           base_amount_micro,
           conversion_factor,
           city_id,
+          timezone,
           is_initial,
           is_adjustment,
           name
@@ -562,10 +637,11 @@ export async function correctAccountAmount({
           $5,
           $6,
           $7,
+          $8,
           false,
           true,
-          $8
-        )
+          $9
+        );
       `,
       [
         correctionAmount.toString(),
@@ -575,6 +651,7 @@ export async function correctAccountAmount({
         baseAmountMicro?.toString() ?? null,
         account.conversion_factor,
         userSettings.cityId,
+        timezone,
         "Correct account",
       ]
     );

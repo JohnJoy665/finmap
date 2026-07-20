@@ -43,38 +43,65 @@ export async function createGroup({
   reqValues,
 }: CreateGroupRequest) {
   const client = await pool.connect();
+
   try {
     await client.query("BEGIN");
+
+    const currencyCode = userSettings.currencyCode?.trim();
+    const timezone = userSettings.timezone?.trim();
+
+    if (!currencyCode) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    if (!timezone) {
+      throw new AppError(
+        400,
+        "TIMEZONE_REQUIRED",
+        "User timezone is required to create a spending"
+      );
+    }
+
     const normalisedGroupName = reqValues.groupName.trim().toLowerCase();
+
     const oldGroup = await client.query<SpendingGroupRow>(
-      "select sg.id, sg.name from spendings_group sg where trim(lower(sg.name)) = $1 and sg.user_id = $2;",
+      `
+        SELECT
+          sg.id,
+          sg.name
+        FROM spendings_group sg
+        WHERE TRIM(LOWER(sg.name)) = $1
+          AND sg.user_id = $2;
+      `,
       [normalisedGroupName, userId]
     );
 
     let groupForSpending: SpendingGroupRow;
+
     if (oldGroup.rows.length > 0) {
       groupForSpending = oldGroup.rows[0];
     } else {
-      const newGroupId = await client.query<SpendingGroupRow>(
-        "\
-        insert into spendings_group (name, category_id, user_id)\
-        values ( $1, $2, $3 ) RETURNING id, name;",
-        [reqValues.groupName, reqValues.categoryId, userId]
+      const newGroupResult = await client.query<SpendingGroupRow>(
+        `
+          INSERT INTO spendings_group (
+            name,
+            category_id,
+            user_id
+          )
+          VALUES ($1, $2, $3)
+          RETURNING id, name;
+        `,
+        [reqValues.groupName.trim(), reqValues.categoryId, userId]
       );
-      groupForSpending = newGroupId.rows[0];
+
+      groupForSpending = newGroupResult.rows[0];
     }
 
     if (!groupForSpending) {
       throw new AppError(500, "GROUP_CREATE_FAILED", "Group was not created");
     }
 
-    const product_name = null;
-
-    const currencyCode = userSettings.currencyCode;
-
-    if (!currencyCode) {
-      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
-    }
+    const productName = null;
 
     const baseAmountMicro = await getBaseAmountMicro(client, reqValues.amount, {
       currencyCode,
@@ -82,32 +109,59 @@ export async function createGroup({
     });
 
     const spendingResult = await client.query<SpendingRow>(
-      `insert into spendings (
-          amount, 
-          user_id, 
-          currency_code, 
-          group_id, 
+      `
+        INSERT INTO spendings (
+          amount,
+          user_id,
+          currency_code,
+          group_id,
           name,
           account_id,
           category_id,
           base_amount_micro,
           conversion_factor,
-          city_id
+          city_id,
+          timezone
         )
-        values ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 ) RETURNING id;`,
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11
+        )
+        RETURNING id;
+      `,
       [
         reqValues.amount,
         userId,
-        userSettings.currencyCode,
+        currencyCode,
         groupForSpending.id,
-        product_name,
+        productName,
         userSettings.accountId,
         reqValues.categoryId,
         baseAmountMicro,
         userSettings.conversionFactor,
         userSettings.cityId,
+        timezone,
       ]
     );
+
+    const spending = spendingResult.rows[0];
+
+    if (!spending) {
+      throw new AppError(
+        500,
+        "SPENDING_CREATE_FAILED",
+        "Spending was not created"
+      );
+    }
 
     const changedAccount = await changeAccountAmount(client, {
       accountId: userSettings.accountId,
@@ -120,7 +174,7 @@ export async function createGroup({
     return {
       groupId: groupForSpending.id,
       groupName: groupForSpending.name,
-      spendingId: spendingResult.rows[0].id,
+      spendingId: spending.id,
       accountAmount: changedAccount.amount,
     };
   } catch (error: any) {
@@ -627,8 +681,8 @@ export async function getGroupsFilters({
     }
 
     /*
-     * Существующий запрос стандартных фильтров.
-     * Логика today/week/month/year не изменена.
+     * Запрос стандартных фильтров.
+     * Периоды today/week/month/year считаются по локальным календарным дням.
      */
     const result = await pool.query<GroupFilterRow>(
       `
@@ -650,7 +704,41 @@ export async function getGroupsFilters({
               p.current_at AT TIME ZONE p.time_zone
             )
             AT TIME ZONE p.time_zone
-          ) AS today_start_utc
+          ) AS today_start_utc,
+
+          (
+            (
+              date_trunc(
+                'day',
+                p.current_at AT TIME ZONE p.time_zone
+              ) - INTERVAL '6 days'
+            )
+            AT TIME ZONE p.time_zone
+          ) AS week_start_utc,
+
+          (
+            (
+              date_trunc(
+                'day',
+                p.current_at AT TIME ZONE p.time_zone
+              ) - INTERVAL '29 days'
+            )
+            AT TIME ZONE p.time_zone
+          ) AS month_start_utc,
+
+          (
+            (
+              date_trunc(
+                'day',
+                p.current_at AT TIME ZONE p.time_zone
+              ) - INTERVAL '364 days'
+            )
+            AT TIME ZONE p.time_zone
+          ) AS year_start_utc,
+
+          (
+            p.current_at AT TIME ZONE p.time_zone
+          )::date AS current_local_date
 
         FROM params p
       ),
@@ -661,31 +749,32 @@ export async function getGroupsFilters({
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+          p.current_local_date,
 
           -- today: с 00:00 локального дня до now
           p.today_start_utc AS today_from,
           p.current_at AS today_to,
 
-          p.current_at - INTERVAL '7 days' AS week_from,
+          p.week_start_utc AS week_from,
           p.current_at AS week_to,
 
-          p.current_at - INTERVAL '30 days' AS month_from,
+          p.month_start_utc AS month_from,
           p.current_at AS month_to,
 
-          p.current_at - INTERVAL '365 days' AS year_from,
+          p.year_start_utc AS year_from,
           p.current_at AS year_to,
 
-          p.today_start_utc AS today_layer_from,
-          p.current_at AS today_layer_to,
+          p.current_local_date AS today_layer_from,
+          p.current_local_date + 1 AS today_layer_to,
 
-          p.current_at - INTERVAL '7 days' AS week_layer_from,
-          p.today_start_utc AS week_layer_to,
+          p.current_local_date - 6 AS week_layer_from,
+          p.current_local_date AS week_layer_to,
 
-          p.current_at - INTERVAL '30 days' AS month_layer_from,
-          p.current_at - INTERVAL '7 days' AS month_layer_to,
+          p.current_local_date - 29 AS month_layer_from,
+          p.current_local_date - 6 AS month_layer_to,
 
-          p.current_at - INTERVAL '365 days' AS year_layer_from,
-          p.current_at - INTERVAL '30 days' AS year_layer_to
+          p.current_local_date - 364 AS year_layer_from,
+          p.current_local_date - 29 AS year_layer_to
 
         FROM period_boundaries p
       ),
@@ -696,6 +785,7 @@ export async function getGroupsFilters({
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+          p.current_local_date,
 
           'today'::text AS value,
           'Сегодня'::text AS label,
@@ -706,8 +796,10 @@ export async function getGroupsFilters({
           p.today_from AS period_from_utc,
           p.today_to AS period_to_utc,
 
-          p.today_layer_from AS layer_from_utc,
-          p.today_layer_to AS layer_to_utc
+          p.current_local_date AS period_from_local_date,
+
+          p.today_layer_from AS layer_from_local_date,
+          p.today_layer_to AS layer_to_local_date
 
         FROM periods p
 
@@ -719,6 +811,7 @@ export async function getGroupsFilters({
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+          p.current_local_date,
 
           'week'::text AS value,
           'Неделя'::text AS label,
@@ -729,8 +822,10 @@ export async function getGroupsFilters({
           p.week_from AS period_from_utc,
           p.week_to AS period_to_utc,
 
-          p.week_layer_from AS layer_from_utc,
-          p.week_layer_to AS layer_to_utc
+          p.current_local_date - 6 AS period_from_local_date,
+
+          p.week_layer_from AS layer_from_local_date,
+          p.week_layer_to AS layer_to_local_date
 
         FROM periods p
 
@@ -742,6 +837,7 @@ export async function getGroupsFilters({
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+          p.current_local_date,
 
           'month'::text AS value,
           'Месяц'::text AS label,
@@ -752,8 +848,10 @@ export async function getGroupsFilters({
           p.month_from AS period_from_utc,
           p.month_to AS period_to_utc,
 
-          p.month_layer_from AS layer_from_utc,
-          p.month_layer_to AS layer_to_utc
+          p.current_local_date - 29 AS period_from_local_date,
+
+          p.month_layer_from AS layer_from_local_date,
+          p.month_layer_to AS layer_to_local_date
 
         FROM periods p
 
@@ -765,6 +863,7 @@ export async function getGroupsFilters({
           p.conversion_factor,
           p.time_zone,
           p.current_at,
+          p.current_local_date,
 
           'year'::text AS value,
           'Год'::text AS label,
@@ -775,8 +874,10 @@ export async function getGroupsFilters({
           p.year_from AS period_from_utc,
           p.year_to AS period_to_utc,
 
-          p.year_layer_from AS layer_from_utc,
-          p.year_layer_to AS layer_to_utc
+          p.current_local_date - 364 AS period_from_local_date,
+
+          p.year_layer_from AS layer_from_local_date,
+          p.year_layer_to AS layer_to_local_date
 
         FROM periods p
       ),
@@ -787,44 +888,107 @@ export async function getGroupsFilters({
           EXISTS (
             SELECT 1
             FROM spendings s
+            LEFT JOIN cities c
+              ON c.id = s.city_id
             WHERE s.user_id = pr.user_id
-              AND s.spending_date >= pr.layer_from_utc
-              AND s.spending_date < pr.layer_to_utc
+              AND (
+                s.spending_date AT TIME ZONE COALESCE(
+                  NULLIF(BTRIM(s.timezone), ''),
+                  c.timezone,
+                  pr.time_zone
+                )
+              )::date >= pr.layer_from_local_date
+              AND (
+                s.spending_date AT TIME ZONE COALESCE(
+                  NULLIF(BTRIM(s.timezone), ''),
+                  c.timezone,
+                  pr.time_zone
+                )
+              )::date < pr.layer_to_local_date
+              AND s.spending_date < pr.current_at
           ) AS has_spendings_in_layer
 
         FROM period_rows pr
       ),
       oldest_spending AS (
         SELECT
-          MIN(s.spending_date) AS oldest_spending_date
+          MIN(
+            (
+              s.spending_date AT TIME ZONE COALESCE(
+                NULLIF(BTRIM(s.timezone), ''),
+                c.timezone,
+                p.time_zone
+              )
+            )::date
+          ) FILTER (
+            WHERE (
+              s.spending_date AT TIME ZONE COALESCE(
+                NULLIF(BTRIM(s.timezone), ''),
+                c.timezone,
+                p.time_zone
+              )
+            )::date >= (
+              p.current_at AT TIME ZONE p.time_zone
+            )::date - 364
+          ) AS oldest_spending_local_date,
+
+          BOOL_OR(
+            (
+              s.spending_date AT TIME ZONE COALESCE(
+                NULLIF(BTRIM(s.timezone), ''),
+                c.timezone,
+                p.time_zone
+              )
+            )::date < (
+              p.current_at AT TIME ZONE p.time_zone
+            )::date - 364
+          ) AS has_spending_before_year
 
         FROM spendings s
         CROSS JOIN params p
 
+        LEFT JOIN cities c
+          ON c.id = s.city_id
+
         WHERE s.user_id = p.user_id
-          AND s.spending_date >= p.current_at - INTERVAL '365 days'
+          AND (
+            s.spending_date AT TIME ZONE COALESCE(
+              NULLIF(BTRIM(s.timezone), ''),
+              c.timezone,
+              p.time_zone
+            )
+          )::date <= (
+            p.current_at AT TIME ZONE p.time_zone
+          )::date
           AND s.spending_date < p.current_at
       ),
       periods_with_days AS (
         SELECT
           vp.*,
-          os.oldest_spending_date,
+          os.oldest_spending_local_date,
+          os.has_spending_before_year,
 
           CASE
-            WHEN os.oldest_spending_date IS NULL THEN NULL
+            WHEN os.oldest_spending_local_date IS NULL
+              AND COALESCE(os.has_spending_before_year, false) = false
+            THEN NULL
 
             WHEN vp.value = 'today' THEN 1
+
+            WHEN vp.value = 'year'
+              AND COALESCE(os.has_spending_before_year, false) = true
+            THEN 365
 
             ELSE LEAST(
               vp.period_limit_days,
               GREATEST(
                 1,
-                CEIL(
-                  EXTRACT(
-                    EPOCH FROM (
-                      vp.current_at - os.oldest_spending_date
-                    )
-                  ) / 86400
+                (
+                  vp.current_local_date
+                  -
+                  os.oldest_spending_local_date
+                  +
+                  1
                 )::int
               )
             )
@@ -840,6 +1004,7 @@ export async function getGroupsFilters({
           pwd.conversion_factor,
           pwd.time_zone,
           pwd.current_at,
+          pwd.current_local_date,
 
           pwd.value,
           pwd.label,
@@ -847,18 +1012,56 @@ export async function getGroupsFilters({
           pwd.period_limit_days,
           pwd.days_in_period,
 
-          pwd.period_from_utc AS date_from_utc,
+          (
+            GREATEST(
+              CASE
+                WHEN pwd.value = 'year'
+                  AND COALESCE(pwd.has_spending_before_year, false) = true
+                THEN pwd.period_from_local_date
+
+                ELSE GREATEST(
+                  pwd.period_from_local_date,
+                  pwd.oldest_spending_local_date
+                )
+              END
+            )::timestamp
+            AT TIME ZONE pwd.time_zone
+          ) AS date_from_utc,
+
           pwd.period_to_utc AS date_to_utc,
 
-          pwd.period_from_utc
-            AT TIME ZONE pwd.time_zone AS date_from_local,
+          GREATEST(
+            CASE
+              WHEN pwd.value = 'year'
+                AND COALESCE(pwd.has_spending_before_year, false) = true
+              THEN pwd.period_from_local_date
+
+              ELSE GREATEST(
+                pwd.period_from_local_date,
+                pwd.oldest_spending_local_date
+              )
+            END
+          )::timestamp AS date_from_local,
 
           pwd.period_to_utc
             AT TIME ZONE pwd.time_zone AS date_to_local,
 
-          pwd.layer_from_utc,
-          pwd.layer_to_utc,
-          pwd.oldest_spending_date
+          GREATEST(
+            CASE
+              WHEN pwd.value = 'year'
+                AND COALESCE(pwd.has_spending_before_year, false) = true
+              THEN pwd.period_from_local_date
+
+              ELSE GREATEST(
+                pwd.period_from_local_date,
+                pwd.oldest_spending_local_date
+              )
+            END
+          ) AS period_from_local_date,
+
+          pwd.layer_from_local_date,
+          pwd.layer_to_local_date,
+          pwd.oldest_spending_local_date
 
         FROM periods_with_days pwd
         WHERE pwd.has_spendings_in_layer = true
@@ -986,8 +1189,9 @@ export async function getGroupsFilters({
 
         JOIN spendings s
           ON s.user_id = rpb.user_id
-         AND s.spending_date >= rpb.date_from_utc
-         AND s.spending_date < rpb.date_to_utc
+
+        LEFT JOIN cities c
+          ON c.id = s.city_id
 
         LEFT JOIN LATERAL (
           SELECT er.exchange_rate
@@ -1017,6 +1221,22 @@ export async function getGroupsFilters({
           LIMIT 1
         ) target_rate
           ON rpb.currency_code <> 'USD'
+
+        WHERE (
+          s.spending_date AT TIME ZONE COALESCE(
+            NULLIF(BTRIM(s.timezone), ''),
+            c.timezone,
+            rpb.time_zone
+          )
+        )::date >= rpb.period_from_local_date
+          AND (
+            s.spending_date AT TIME ZONE COALESCE(
+              NULLIF(BTRIM(s.timezone), ''),
+              c.timezone,
+              rpb.time_zone
+            )
+          )::date <= rpb.current_local_date
+          AND s.spending_date < rpb.date_to_utc
       ),
       period_amounts AS (
         SELECT
@@ -1240,8 +1460,9 @@ export async function getGroupsFilters({
 
           JOIN spendings s
             ON s.user_id = p.user_id
-           AND s.spending_date >= p.date_from_utc
-           AND s.spending_date < p.date_to_utc
+
+          LEFT JOIN cities c
+            ON c.id = s.city_id
 
           LEFT JOIN LATERAL (
             SELECT er.exchange_rate
@@ -1271,6 +1492,25 @@ export async function getGroupsFilters({
             LIMIT 1
           ) target_rate
             ON p.currency_code <> 'USD'
+
+          WHERE (
+            s.spending_date AT TIME ZONE COALESCE(
+              NULLIF(BTRIM(s.timezone), ''),
+              c.timezone,
+              p.time_zone
+            )
+          )::date >= (
+            p.date_from_utc AT TIME ZONE p.time_zone
+          )::date
+            AND (
+              s.spending_date AT TIME ZONE COALESCE(
+                NULLIF(BTRIM(s.timezone), ''),
+                c.timezone,
+                p.time_zone
+              )
+            )::date < (
+              p.date_to_utc AT TIME ZONE p.time_zone
+            )::date
         )
         SELECT
           'custom'::text AS value,
@@ -1296,11 +1536,15 @@ export async function getGroupsFilters({
             )::int
           ) AS days_in_period,
 
-          p.date_from_utc
-            AT TIME ZONE p.time_zone AS date_from_local,
+          TO_CHAR(
+            p.date_from_utc AT TIME ZONE p.time_zone,
+            'YYYY-MM-DD"T"HH24:MI:SS'
+          ) AS date_from_local,
 
-          p.date_to_utc
-            AT TIME ZONE p.time_zone AS date_to_local,
+          TO_CHAR(
+            p.date_to_utc AT TIME ZONE p.time_zone,
+            'YYYY-MM-DD"T"HH24:MI:SS'
+          ) AS date_to_local,
 
           p.date_from_utc AS date_from_utc,
           p.date_to_utc AS date_to_utc,
@@ -1347,17 +1591,6 @@ export async function getGroupsFilters({
       }
     }
 
-    filters.push(customFilter);
-
-    const activeFilter =
-      filters.find((filter) => filter.value === groupFilterPeriod) ??
-      filters.find((filter) => filter.value === "week") ??
-      filters[0];
-
-    if (activeFilter) {
-      activeFilter.isActive = true;
-    }
-
     const availableRangeResult = await pool.query<SpendingDateRangeRow>(
       `
         SELECT
@@ -1378,6 +1611,22 @@ export async function getGroupsFilters({
     );
 
     const availableRangeRow = availableRangeResult.rows[0];
+
+    if (
+      availableRangeRow?.min_date_local &&
+      (groupFilterPeriod !== "custom" || customFilter.amount !== null)
+    ) {
+      filters.push(customFilter);
+    }
+
+    const activeFilter =
+      filters.find((filter) => filter.value === groupFilterPeriod) ??
+      filters.find((filter) => filter.value === "week") ??
+      filters[0];
+
+    if (activeFilter) {
+      activeFilter.isActive = true;
+    }
 
     return {
       filters,
