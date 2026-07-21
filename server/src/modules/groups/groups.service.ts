@@ -1669,3 +1669,65 @@ export async function getGroupsFilters({
     throw error;
   }
 }
+
+type RenameGroupRequest = {
+  userId: string;
+  groupId: string;
+  groupName: string;
+};
+
+type RenameGroupResponse = {
+  groupId: string;
+  groupName: string;
+};
+
+type RenameGroupRow = {
+  group_id: string;
+  group_name: string;
+};
+
+export async function renameGroup({
+  userId,
+  groupId,
+  groupName,
+}: RenameGroupRequest): Promise<RenameGroupResponse> {
+  try {
+    const result = await pool.query<RenameGroupRow>(
+      `
+        UPDATE spendings_group
+        SET name = $1
+        WHERE id = $2
+          AND user_id = $3
+        RETURNING
+          id AS group_id,
+          name AS group_name
+      `,
+      [groupName, groupId, userId]
+    );
+
+    const renamedGroup = result.rows[0];
+
+    if (!renamedGroup) {
+      throw new AppError(404, "GROUP_NOT_FOUND", "Group not found");
+    }
+
+    return {
+      groupId: renamedGroup.group_id,
+      groupName: renamedGroup.group_name,
+    };
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    if (error?.severity === "ERROR") {
+      throw new AppError(
+        400,
+        error.code ?? "DATABASE_ERROR",
+        error.detail ?? error.message ?? "Database error"
+      );
+    }
+
+    throw error;
+  }
+}

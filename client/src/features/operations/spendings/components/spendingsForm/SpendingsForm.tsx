@@ -54,16 +54,14 @@ function SpendingsForm({
       return Promise.reject(new Error("Введите сумму покупки"));
     }
 
-    // if (!/^\d+(\.\d{1,2})?$/.test(value)) {
-    //   return Promise.reject(new Error("Некорректный формат суммы"));
-    // }
-
     if (Number(value) <= 0) {
       return Promise.reject(new Error("Сумма должна быть больше 0"));
     }
 
     return Promise.resolve();
   }
+
+  console.log(group);
 
   return (
     <Form
