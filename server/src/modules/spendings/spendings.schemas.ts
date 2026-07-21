@@ -53,10 +53,10 @@ export const renameSpendingSchema = Joi.object({
     "any.required": "spendingId is required",
   }),
 
-  currentName: Joi.string().trim().min(1).max(255).required().messages({
+  currentName: Joi.string().trim().min(2).max(25).required().messages({
     "string.empty": "currentName is required",
-    "string.min": "currentName must not be empty",
-    "string.max": "currentName must be less than or equal to 255 characters",
+    "string.min": "currentName must contain at least 2 characters",
+    "string.max": "currentName must contain no more than 25 characters",
     "any.required": "currentName is required",
   }),
 });

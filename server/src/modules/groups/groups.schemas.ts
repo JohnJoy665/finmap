@@ -37,3 +37,18 @@ export const getGroupsFiltersQuerySchema = Joi.object({
   dateFromUTC: Joi.date().iso().optional(),
   dateToUTC: Joi.date().iso().optional(),
 }).unknown(false);
+
+export const renameGroupQuerySchema = Joi.object({
+  groupName: Joi.string().trim().min(2).max(25).required().messages({
+    "string.empty": "groupName is required",
+    "string.min": "groupName must contain at least 2 characters",
+    "string.max": "groupName must contain no more than 25 characters",
+    "any.required": "groupName is required",
+  }),
+
+  groupId: Joi.string().uuid().required().messages({
+    "string.empty": "groupId is required",
+    "string.guid": "groupId must be a valid UUID",
+    "any.required": "groupId is required",
+  }),
+});

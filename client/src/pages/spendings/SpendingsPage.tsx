@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import SpendingsForm from "../../features/operations/spendings/components/spendingsForm/SpendingsForm";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePurchaseStore } from "../../store/purchaseStore";
 import { getCategories } from "../../features/operations/spendings/api/getCategories";
 import type { Group } from "../../shared/types/group.types";
@@ -16,20 +16,23 @@ import SpendingsListContainer from "../../features/operations/spendings/componen
 import { useModalStore } from "../../shared/ui/modal";
 import { useFiltersStore } from "../../store/filtersStore";
 import { useGroupStore } from "../../store/groupStore";
+import RenameGroupAction from "../../features/operations/spendings/components/renameGroupAction/RenameGroupAction";
+import { Flex } from "antd";
 
 function SpendingsPage() {
-  const openModal = useModalStore((state) => state.openModal);
   const navigate = useNavigate();
-  // const { state } = useLocation();
-
   const location = useLocation();
+
   const state = location.state as {
     mode?: "add-purchase" | "edit-group";
     group?: Group;
   } | null;
 
-  const group: Group | undefined = state?.group;
   const mode = state?.mode;
+
+  const [group, setGroup] = useState<Group | undefined>(() => state?.group);
+
+  const openModal = useModalStore((state) => state.openModal);
 
   useEffect(() => {
     if (!mode) {
@@ -158,6 +161,19 @@ function SpendingsPage() {
     }
   }
 
+  function renameGroup({ id, title }: { id: string; title: string }) {
+    setGroup((currentGroup) => {
+      if (!currentGroup || currentGroup.id !== id) {
+        return currentGroup;
+      }
+
+      return {
+        ...currentGroup,
+        title,
+      };
+    });
+  }
+
   return (
     <>
       <SpendingsForm
@@ -187,7 +203,16 @@ function SpendingsPage() {
           groupId={group.id}
         />
       )}
-      {group?.id && <DeleteGroupAction groupId={group.id} />}
+      <Flex vertical gap={"small"}>
+        {group?.id && (
+          <RenameGroupAction
+            groupId={group.id}
+            groupName={group.title}
+            renameHandle={renameGroup}
+          />
+        )}
+        {group?.id && <DeleteGroupAction groupId={group.id} />}
+      </Flex>
     </>
   );
 }

@@ -4,12 +4,14 @@ import {
   deleteGroupWithSpendings,
   getGroups,
   getGroupsFilters,
+  renameGroup,
 } from "./groups.service";
 import { sendSuccess } from "../../utils/apiResponse";
 import {
   createGroupSchema,
   getGroupSchema,
   getGroupsFiltersQuerySchema,
+  renameGroupQuerySchema,
 } from "./groups.schemas";
 import { AppError } from "../../utils/AppError";
 
@@ -135,6 +137,36 @@ export async function getGroupsFiltersController(
     });
 
     return sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function renameGroupController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { error, value } = renameGroupQuerySchema.validate(req.body);
+
+    if (error) {
+      throw new AppError(400, "VALIDATION_ERROR", error.message);
+    }
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const updatedSpending = await renameGroup({
+      userId,
+      groupId: value.groupId,
+      groupName: value.groupName,
+    });
+
+    sendSuccess(res, updatedSpending, "Spending renamed successfully");
   } catch (error) {
     next(error);
   }
