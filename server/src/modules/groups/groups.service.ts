@@ -1681,6 +1681,10 @@ type RenameGroupResponse = {
   groupName: string;
 };
 
+type ExistingGroupRow = {
+  id: string;
+};
+
 type RenameGroupRow = {
   group_id: string;
   group_name: string;
@@ -1691,7 +1695,29 @@ export async function renameGroup({
   groupId,
   groupName,
 }: RenameGroupRequest): Promise<RenameGroupResponse> {
+  const normalizedGroupName = groupName.trim();
+
   try {
+    const existingGroupResult = await pool.query<ExistingGroupRow>(
+      `
+        SELECT id
+        FROM spendings_group
+        WHERE user_id = $1
+          AND id <> $2
+          AND LOWER(TRIM(name)) = LOWER($3)
+        LIMIT 1
+      `,
+      [userId, groupId, normalizedGroupName]
+    );
+
+    if (existingGroupResult.rows.length > 0) {
+      throw new AppError(
+        409,
+        "GROUP_NAME_ALREADY_EXISTS",
+        "Group with this name already exists"
+      );
+    }
+
     const result = await pool.query<RenameGroupRow>(
       `
         UPDATE spendings_group
@@ -1702,7 +1728,7 @@ export async function renameGroup({
           id AS group_id,
           name AS group_name
       `,
-      [groupName, groupId, userId]
+      [normalizedGroupName, groupId, userId]
     );
 
     const renamedGroup = result.rows[0];

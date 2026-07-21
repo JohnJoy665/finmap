@@ -2,6 +2,7 @@ import { Button } from "antd";
 import { useModalStore } from "../../../../../shared/ui/modal";
 import { useRequestLock } from "../../../../../hooks/useRequestLock";
 import { renameGroup as renameGroupReq } from "../../api/renameGroup";
+import { useGroupStore } from "../../../../../store/groupStore";
 
 type RenameGroupActionProps = {
   groupId: string;
@@ -16,6 +17,7 @@ function RenameGroupAction({
 }: RenameGroupActionProps) {
   const openModal = useModalStore((store) => store.openModal);
   const { isSubmitting, withRequestLock } = useRequestLock();
+  const groups = useGroupStore((store) => store.groups);
 
   async function getRenamedGroup(groupId: string, groupName: string) {
     try {
@@ -32,11 +34,24 @@ function RenameGroupAction({
     }
   }
 
+  function checkGroupName(newName: string) {
+    const trimmedName = newName.trim();
+    const normolizedNewName = trimmedName.toLowerCase();
+    return groups.find(
+      (group) => group.title.toLowerCase() === normolizedNewName
+    )
+      ? "Группа с подобным названием уже есть"
+      : null;
+  }
+
   function onRename() {
     openModal({
       type: "renameItem",
       strategy: "destroy",
       props: {
+        validateValue: (value) => {
+          return checkGroupName(value);
+        },
         itemId: groupId,
         currentValue: groupName ?? "",
         title: "Переименовать группу",

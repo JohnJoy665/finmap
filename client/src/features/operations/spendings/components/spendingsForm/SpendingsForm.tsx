@@ -61,8 +61,6 @@ function SpendingsForm({
     return Promise.resolve();
   }
 
-  console.log(group);
-
   return (
     <Form
       autoComplete="off"

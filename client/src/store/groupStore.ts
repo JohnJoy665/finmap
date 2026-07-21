@@ -1,50 +1,55 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type { Group } from "../shared/types/group.types";
 
 type RenameGroupPayload = Pick<Group, "id" | "title">;
 
 type GroupStore = {
   groups: Group[];
-  setGroups: (groups: Group[]) => void;
-  reset: () => void;
   searchString: string;
+
+  setGroups: (groups: Group[]) => void;
   setSearchString: (searchStr: string) => void;
   renameGroup: (group: RenameGroupPayload) => void;
+  reset: () => void;
 };
 
 const initialState = {
-  groups: [],
+  groups: [] as Group[],
   searchString: "",
 };
 
-export const useGroupStore = create<GroupStore>((set) => ({
-  ...initialState,
+export const useGroupStore = create<GroupStore>()(
+  devtools(
+    (set) => ({
+      ...initialState,
 
-  setGroups: (groups) => {
-    set({ groups });
-  },
+      setGroups: (groups) => {
+        set({ groups }, false, "groups/setGroups");
+      },
 
-  reset: () => {
-    set(initialState);
-  },
+      setSearchString: (searchString) => {
+        set({ searchString }, false, "groups/setSearchString");
+      },
 
-  setSearchString: (searchStr) => {
-    set({ searchString: searchStr });
-  },
+      renameGroup: ({ id, title }) => {
+        set(
+          (state) => ({
+            groups: state.groups.map((group) =>
+              group.id === id ? { ...group, title } : group
+            ),
+          }),
+          false,
+          "groups/renameGroup"
+        );
+      },
 
-  renameGroup: ({ id, title }) => {
-    set((state) => {
-      const foundGroup = state.groups.find((group) => group.id === id);
-
-      console.log("Переименовываем:", { id, title });
-      console.log("Группа в store:", foundGroup);
-      console.log("Все группы:", state.groups);
-
-      return {
-        groups: state.groups.map((group) =>
-          group.id === id ? { ...group, title } : group
-        ),
-      };
-    });
-  },
-}));
+      reset: () => {
+        set(initialState, false, "groups/reset");
+      },
+    }),
+    {
+      name: "GroupStore",
+    }
+  )
+);

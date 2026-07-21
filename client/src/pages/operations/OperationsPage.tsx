@@ -159,7 +159,6 @@ function Operations() {
       requestIdRef.current += 1;
 
       clearGroupsFilter();
-      setGroups([]);
     };
   }, [
     currencyCode,

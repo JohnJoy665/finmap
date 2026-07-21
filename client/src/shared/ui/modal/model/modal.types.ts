@@ -37,6 +37,7 @@ export type RenameItemModalProps = {
   currentValue: string;
   title: string;
   placeholder: string;
+  validateValue?: (value: string) => null | string;
   onRename: (payload: { itemId: string; name: string }) => void | Promise<void>;
 };
 
